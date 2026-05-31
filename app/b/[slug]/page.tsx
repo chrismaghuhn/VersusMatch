@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { preload } from "react-dom";
-import { BattleVote } from "@/components/battle-vote";
+import { BattleVoteSection } from "@/components/battle-vote-section";
 import { getCachedBattleBySlug, getCachedBattleResults } from "@/lib/battles-cache";
 import { getAppUrl, getPublicImageUrl } from "@/lib/utils";
 
@@ -74,7 +74,7 @@ export default async function BattlePage({ params }: PageProps) {
       {lcpImage ? (
         <link rel="preload" as="image" href={lcpImage} fetchPriority="high" />
       ) : null}
-      <BattleVote battle={battle} initialResults={results} shareUrl={shareUrl} />
+      <BattleVoteSection battle={battle} initialResults={results} shareUrl={shareUrl} />
     </>
   );
 }
