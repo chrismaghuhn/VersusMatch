@@ -53,50 +53,50 @@ const admin = createClient(url, serviceKey, {
 });
 
 const SEED_BATTLES = [
-  { title: "Pizza vs Burger", slug: "pizza-vs-burger-seed01", category: "food", optionA: "Pizza", optionB: "Burger" },
-  { title: "Coffee vs Tea", slug: "coffee-vs-tea-seed01", category: "food", optionA: "Coffee", optionB: "Tea" },
-  { title: "PC vs Console", slug: "pc-vs-console-seed01", category: "gaming", optionA: "PC Master Race", optionB: "Console" },
-  { title: "Minecraft vs Fortnite", slug: "minecraft-vs-fortnite-seed01", category: "gaming", optionA: "Minecraft", optionB: "Fortnite" },
-  { title: "Dark Mode vs Light Mode", slug: "dark-mode-vs-light-mode-seed01", category: "design", optionA: "Dark Mode", optionB: "Light Mode" },
-  { title: "Tabs vs Spaces", slug: "tabs-vs-spaces-seed01", category: "memes", optionA: "Tabs", optionB: "Spaces" },
-  { title: "Summer vs Winter", slug: "summer-vs-winter-seed01", category: "general", optionA: "Summer", optionB: "Winter" },
-  { title: "Cats vs Dogs", slug: "cats-vs-dogs-seed01", category: "memes", optionA: "Cats", optionB: "Dogs" },
-  { title: "iPhone vs Android", slug: "iphone-vs-android-seo01", category: "general", optionA: "iPhone", optionB: "Android" },
-  { title: "Marvel vs DC", slug: "marvel-vs-dc-seo01", category: "general", optionA: "Marvel", optionB: "DC" },
-  { title: "PlayStation vs Xbox", slug: "playstation-vs-xbox-seo01", category: "gaming", optionA: "PlayStation", optionB: "Xbox" },
-  { title: "Coke vs Pepsi", slug: "coke-vs-pepsi-seo01", category: "food", optionA: "Coke", optionB: "Pepsi" },
-  { title: "Star Wars vs Star Trek", slug: "star-wars-vs-star-trek-seo01", category: "general", optionA: "Star Wars", optionB: "Star Trek" },
-  { title: "Anime vs Cartoons", slug: "anime-vs-cartoons-seo01", category: "memes", optionA: "Anime", optionB: "Cartoons" },
-  { title: "TikTok vs Instagram", slug: "tiktok-vs-instagram-seo01", category: "general", optionA: "TikTok", optionB: "Instagram" },
-  { title: "Messi vs Ronaldo", slug: "messi-vs-ronaldo-seo01", category: "general", optionA: "Messi", optionB: "Ronaldo" },
-  { title: "Taylor Swift vs Beyoncé", slug: "taylor-swift-vs-beyonce-seo01", category: "music", optionA: "Taylor Swift", optionB: "Beyoncé" },
-  { title: "Rock vs Pop", slug: "rock-vs-pop-seo01", category: "music", optionA: "Rock", optionB: "Pop" },
-  { title: "Netflix vs YouTube", slug: "netflix-vs-youtube-seo01", category: "general", optionA: "Netflix", optionB: "YouTube" },
-  { title: "Pineapple on Pizza", slug: "pineapple-on-pizza-seo01", category: "food", optionA: "Yes, delicious", optionB: "No, crime" },
-  { title: "Remote Work vs Office", slug: "remote-work-vs-office-seo01", category: "general", optionA: "Remote Work", optionB: "Office" },
-  { title: "AI vs Human Art", slug: "ai-vs-human-art-seo01", category: "design", optionA: "AI Art", optionB: "Human Art" },
-  { title: "Vinyl vs Streaming", slug: "vinyl-vs-streaming-seo01", category: "music", optionA: "Vinyl", optionB: "Streaming" },
-  { title: "Call of Duty vs Battlefield", slug: "cod-vs-battlefield-seo01", category: "gaming", optionA: "Call of Duty", optionB: "Battlefield" },
-  { title: "Mac vs Windows", slug: "mac-vs-windows-seo02", category: "general", optionA: "Mac", optionB: "Windows" },
-  { title: "Spotify vs Apple Music", slug: "spotify-vs-apple-music-seo02", category: "music", optionA: "Spotify", optionB: "Apple Music" },
-  { title: "Valorant vs CS2", slug: "valorant-vs-cs2-seo02", category: "gaming", optionA: "Valorant", optionB: "CS2" },
-  { title: "Beer vs Wine", slug: "beer-vs-wine-seo02", category: "food", optionA: "Beer", optionB: "Wine" },
-  { title: "City vs Country", slug: "city-vs-country-seo02", category: "general", optionA: "City Life", optionB: "Country Life" },
-  { title: "Nintendo vs Steam Deck", slug: "nintendo-vs-steam-deck-seo02", category: "gaming", optionA: "Nintendo", optionB: "Steam Deck" },
-  { title: "Gym vs Home Workout", slug: "gym-vs-home-workout-seo02", category: "general", optionA: "Gym", optionB: "Home Workout" },
-  { title: "Book vs Movie", slug: "book-vs-movie-seo02", category: "general", optionA: "Read the Book", optionB: "Watch the Movie" },
-  { title: "Reddit vs X", slug: "reddit-vs-x-seo02", category: "memes", optionA: "Reddit", optionB: "X" },
-  { title: "Electric vs Gas Cars", slug: "electric-vs-gas-seo02", category: "general", optionA: "Electric", optionB: "Gas" },
-  { title: "Harry Potter vs LOTR", slug: "harry-potter-vs-lotr-seo02", category: "general", optionA: "Harry Potter", optionB: "Lord of the Rings" },
-  { title: "Jordan vs LeBron", slug: "jordan-vs-lebron-seo02", category: "general", optionA: "Jordan", optionB: "LeBron" },
-  { title: "Hot Dog vs Sandwich", slug: "hot-dog-vs-sandwich-seo02", category: "food", optionA: "Hot Dog", optionB: "Sandwich" },
-  { title: "Chrome vs Firefox", slug: "chrome-vs-firefox-seo02", category: "design", optionA: "Chrome", optionB: "Firefox" },
-  { title: "Sushi vs Burger", slug: "sushi-vs-burger-seo02", category: "food", optionA: "Sushi", optionB: "Burger" },
-  { title: "Early Bird vs Night Owl", slug: "early-bird-vs-night-owl-seo02", category: "general", optionA: "Early Bird", optionB: "Night Owl" },
-  { title: "Brainrot vs Classic Memes", slug: "brainrot-vs-classic-seo02", category: "memes", optionA: "Brainrot", optionB: "Classic Memes" },
-  { title: "Batman vs Superman", slug: "batman-vs-superman-seo02", category: "general", optionA: "Batman", optionB: "Superman" },
-  { title: "Manual vs Automatic", slug: "manual-vs-automatic-seo02", category: "general", optionA: "Manual", optionB: "Automatic" },
-  { title: "Breakfast vs Brunch", slug: "breakfast-vs-brunch-seo02", category: "food", optionA: "Breakfast", optionB: "Brunch" },
+  { title: "Pizza vs Burger", slug: "pizza-vs-burger", category: "food", optionA: "Pizza", optionB: "Burger" },
+  { title: "Coffee vs Tea", slug: "coffee-vs-tea", category: "food", optionA: "Coffee", optionB: "Tea" },
+  { title: "PC vs Console", slug: "pc-vs-console", category: "gaming", optionA: "PC Master Race", optionB: "Console" },
+  { title: "Minecraft vs Fortnite", slug: "minecraft-vs-fortnite", category: "gaming", optionA: "Minecraft", optionB: "Fortnite" },
+  { title: "Dark Mode vs Light Mode", slug: "dark-mode-vs-light-mode", category: "design", optionA: "Dark Mode", optionB: "Light Mode" },
+  { title: "Tabs vs Spaces", slug: "tabs-vs-spaces", category: "memes", optionA: "Tabs", optionB: "Spaces" },
+  { title: "Summer vs Winter", slug: "summer-vs-winter", category: "general", optionA: "Summer", optionB: "Winter" },
+  { title: "Cats vs Dogs", slug: "cats-vs-dogs", category: "memes", optionA: "Cats", optionB: "Dogs" },
+  { title: "iPhone vs Android", slug: "iphone-vs-android", category: "general", optionA: "iPhone", optionB: "Android" },
+  { title: "Marvel vs DC", slug: "marvel-vs-dc", category: "general", optionA: "Marvel", optionB: "DC" },
+  { title: "PlayStation vs Xbox", slug: "playstation-vs-xbox", category: "gaming", optionA: "PlayStation", optionB: "Xbox" },
+  { title: "Coke vs Pepsi", slug: "coke-vs-pepsi", category: "food", optionA: "Coke", optionB: "Pepsi" },
+  { title: "Star Wars vs Star Trek", slug: "star-wars-vs-star-trek", category: "general", optionA: "Star Wars", optionB: "Star Trek" },
+  { title: "Anime vs Cartoons", slug: "anime-vs-cartoons", category: "memes", optionA: "Anime", optionB: "Cartoons" },
+  { title: "TikTok vs Instagram", slug: "tiktok-vs-instagram", category: "general", optionA: "TikTok", optionB: "Instagram" },
+  { title: "Messi vs Ronaldo", slug: "messi-vs-ronaldo", category: "general", optionA: "Messi", optionB: "Ronaldo" },
+  { title: "Taylor Swift vs Beyoncé", slug: "taylor-swift-vs-beyonce", category: "music", optionA: "Taylor Swift", optionB: "Beyoncé" },
+  { title: "Rock vs Pop", slug: "rock-vs-pop", category: "music", optionA: "Rock", optionB: "Pop" },
+  { title: "Netflix vs YouTube", slug: "netflix-vs-youtube", category: "general", optionA: "Netflix", optionB: "YouTube" },
+  { title: "Pineapple on Pizza", slug: "pineapple-on-pizza", category: "food", optionA: "Yes, delicious", optionB: "No, crime" },
+  { title: "Remote Work vs Office", slug: "remote-work-vs-office", category: "general", optionA: "Remote Work", optionB: "Office" },
+  { title: "AI vs Human Art", slug: "ai-vs-human-art", category: "design", optionA: "AI Art", optionB: "Human Art" },
+  { title: "Vinyl vs Streaming", slug: "vinyl-vs-streaming", category: "music", optionA: "Vinyl", optionB: "Streaming" },
+  { title: "Call of Duty vs Battlefield", slug: "cod-vs-battlefield", category: "gaming", optionA: "Call of Duty", optionB: "Battlefield" },
+  { title: "Mac vs Windows", slug: "mac-vs-windows", category: "general", optionA: "Mac", optionB: "Windows" },
+  { title: "Spotify vs Apple Music", slug: "spotify-vs-apple-music", category: "music", optionA: "Spotify", optionB: "Apple Music" },
+  { title: "Valorant vs CS2", slug: "valorant-vs-cs2", category: "gaming", optionA: "Valorant", optionB: "CS2" },
+  { title: "Beer vs Wine", slug: "beer-vs-wine", category: "food", optionA: "Beer", optionB: "Wine" },
+  { title: "City vs Country", slug: "city-vs-country", category: "general", optionA: "City Life", optionB: "Country Life" },
+  { title: "Nintendo vs Steam Deck", slug: "nintendo-vs-steam-deck", category: "gaming", optionA: "Nintendo", optionB: "Steam Deck" },
+  { title: "Gym vs Home Workout", slug: "gym-vs-home-workout", category: "general", optionA: "Gym", optionB: "Home Workout" },
+  { title: "Book vs Movie", slug: "book-vs-movie", category: "general", optionA: "Read the Book", optionB: "Watch the Movie" },
+  { title: "Reddit vs X", slug: "reddit-vs-x", category: "memes", optionA: "Reddit", optionB: "X" },
+  { title: "Electric vs Gas Cars", slug: "electric-vs-gas", category: "general", optionA: "Electric", optionB: "Gas" },
+  { title: "Harry Potter vs LOTR", slug: "harry-potter-vs-lotr", category: "general", optionA: "Harry Potter", optionB: "Lord of the Rings" },
+  { title: "Jordan vs LeBron", slug: "jordan-vs-lebron", category: "general", optionA: "Jordan", optionB: "LeBron" },
+  { title: "Hot Dog vs Sandwich", slug: "hot-dog-vs-sandwich", category: "food", optionA: "Hot Dog", optionB: "Sandwich" },
+  { title: "Chrome vs Firefox", slug: "chrome-vs-firefox", category: "design", optionA: "Chrome", optionB: "Firefox" },
+  { title: "Sushi vs Burger", slug: "sushi-vs-burger", category: "food", optionA: "Sushi", optionB: "Burger" },
+  { title: "Early Bird vs Night Owl", slug: "early-bird-vs-night-owl", category: "general", optionA: "Early Bird", optionB: "Night Owl" },
+  { title: "Brainrot vs Classic Memes", slug: "brainrot-vs-classic", category: "memes", optionA: "Brainrot", optionB: "Classic Memes" },
+  { title: "Batman vs Superman", slug: "batman-vs-superman", category: "general", optionA: "Batman", optionB: "Superman" },
+  { title: "Manual vs Automatic", slug: "manual-vs-automatic", category: "general", optionA: "Manual", optionB: "Automatic" },
+  { title: "Breakfast vs Brunch", slug: "breakfast-vs-brunch", category: "food", optionA: "Breakfast", optionB: "Brunch" },
 ];
 
 function slugify(text) {
@@ -130,14 +130,44 @@ async function resolveCreatorId() {
 async function seedBattle(creatorId, seed) {
   const slug = seed.slug ?? slugify(seed.title);
 
-  const { data: existing } = await admin
+  const { data: existingBySlug } = await admin
     .from("battles")
-    .select("id")
+    .select("id, slug")
     .eq("slug", slug)
     .maybeSingle();
 
-  if (existing) {
+  if (existingBySlug) {
     console.log(`skip (exists): ${slug}`);
+    return;
+  }
+
+  const { data: existingByTitle } = await admin
+    .from("battles")
+    .select("id, slug")
+    .eq("title", seed.title)
+    .maybeSingle();
+
+  if (existingByTitle) {
+    if (existingByTitle.slug !== slug) {
+      await admin.from("battle_slug_redirects").upsert(
+        { old_slug: existingByTitle.slug, battle_id: existingByTitle.id },
+        { onConflict: "old_slug" }
+      );
+
+      const { error: updateError } = await admin
+        .from("battles")
+        .update({ slug })
+        .eq("id", existingByTitle.id);
+
+      if (updateError) {
+        console.error(`failed slug update: ${seed.title}`, updateError.message);
+        return;
+      }
+
+      console.log(`updated slug: ${existingByTitle.slug} → /b/${slug}`);
+    } else {
+      console.log(`skip (title exists): ${slug}`);
+    }
     return;
   }
 

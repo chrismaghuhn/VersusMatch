@@ -90,9 +90,7 @@ export default async function MyBattlesPage({
                       {getCategoryLabel(battle.category)}
                     </span>
                   </div>
-                  <p className="text-sm text-white/50">
-                    {battle.total_votes} Votes · /b/{battle.slug}
-                  </p>
+                  <p className="text-sm text-white/50">{battle.total_votes} votes</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {battle.status === "active" && (

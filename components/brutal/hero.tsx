@@ -2,17 +2,28 @@ import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
 import { Noise } from "@/components/brutal/noise";
 import { formatStatNumber } from "@/lib/utils";
-import type { SiteStats } from "@/lib/stats";
+import {
+  MIN_VOTES_FOR_STAT,
+  MIN_VOTES_TODAY_FOR_STAT,
+  type SiteStats,
+} from "@/lib/stats";
 
 type BrutalHeroProps = {
   stats: SiteStats;
 };
 
 export function BrutalHero({ stats }: BrutalHeroProps) {
+  const votesCastReady = stats.totalVotes >= MIN_VOTES_FOR_STAT;
+  const votesTodayReady = stats.votesLast24h >= MIN_VOTES_TODAY_FOR_STAT;
+
   const statItems = [
     [formatStatNumber(stats.activeBattles), "BATTLES LIVE", "#CCFF00"],
-    [formatStatNumber(stats.totalVotes), "VOTES CAST", "#FF2D87"],
-    [formatStatNumber(stats.votesLast24h), "VOTES TODAY", "#00E1FF"],
+    votesCastReady
+      ? [formatStatNumber(stats.totalVotes), "VOTES CAST", "#FF2D87"]
+      : ["—", "JUST LAUNCHED", "#FF2D87"],
+    votesTodayReady
+      ? [formatStatNumber(stats.votesLast24h), "VOTES TODAY", "#00E1FF"]
+      : [`#${stats.totalVotes + 1}`, "BE VOTE", "#00E1FF"],
   ] as const;
 
   return (

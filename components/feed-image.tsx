@@ -12,12 +12,18 @@ export function FeedImage({ src, alt, priority = false, className }: FeedImagePr
   if (!src) {
     return (
       <div
+        aria-hidden
         className={cn(
-          "flex h-full items-center justify-center bg-[#141414] p-2 text-center text-sm font-black text-white/60",
+          "flex h-full items-center justify-center bg-[#141414] bg-gradient-to-br from-white/[0.06] to-transparent",
           className
         )}
       >
-        {alt}
+        <span
+          className="text-white/25"
+          style={{ fontWeight: 900, fontSize: 28, letterSpacing: "-0.04em" }}
+        >
+          ?
+        </span>
       </div>
     );
   }

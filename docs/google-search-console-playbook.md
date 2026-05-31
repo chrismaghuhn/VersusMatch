@@ -34,11 +34,11 @@ Submit these five search-friendly battles first (update slugs if seed script cha
 
 | Battle | URL |
 |--------|-----|
-| Pizza vs Burger | `https://memefight.lol/b/pizza-vs-burger-seed01` |
-| Minecraft vs Fortnite | `https://memefight.lol/b/minecraft-vs-fortnite-seed04` |
-| iPhone vs Android | `https://memefight.lol/b/iphone-vs-android-seo01` |
-| Marvel vs DC | `https://memefight.lol/b/marvel-vs-dc-seo01` |
-| Coffee vs Tea | `https://memefight.lol/b/coffee-vs-tea-seed02` |
+| Pizza vs Burger | `https://memefight.lol/b/pizza-vs-burger` |
+| Minecraft vs Fortnite | `https://memefight.lol/b/minecraft-vs-fortnite` |
+| iPhone vs Android | `https://memefight.lol/b/iphone-vs-android` |
+| Marvel vs DC | `https://memefight.lol/b/marvel-vs-dc` |
+| Coffee vs Tea | `https://memefight.lol/b/coffee-vs-tea` |
 
 Also submit:
 

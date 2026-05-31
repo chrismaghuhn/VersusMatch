@@ -50,6 +50,7 @@ export function BattleCard({ battle, priority = false }: BattleCardProps) {
   const aPct = formatPercent(resultA?.vote_count ?? 0, battle.total_votes);
   const bPct = formatPercent(resultB?.vote_count ?? 0, battle.total_votes);
   const isHot = battle.total_votes >= 10;
+  const isUnvoted = battle.total_votes === 0;
 
   return (
     <Link
@@ -74,12 +75,21 @@ export function BattleCard({ battle, priority = false }: BattleCardProps) {
           )}
         </div>
         <div className="flex items-center gap-3 text-white/40" style={{ fontSize: 10 }}>
-          <span className="flex items-center gap-1">
-            <UsersIcon />
-            {battle.total_votes >= 1000
-              ? `${(battle.total_votes / 1000).toFixed(1)}k`
-              : battle.total_votes}
-          </span>
+          {isUnvoted ? (
+            <span
+              className="border border-[#CCFF00]/50 px-1.5 py-0.5 text-[#CCFF00]"
+              style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.12em" }}
+            >
+              OPEN
+            </span>
+          ) : (
+            <span className="flex items-center gap-1">
+              <UsersIcon />
+              {battle.total_votes >= 1000
+                ? `${(battle.total_votes / 1000).toFixed(1)}k`
+                : battle.total_votes}
+            </span>
+          )}
         </div>
       </div>
 
@@ -89,16 +99,18 @@ export function BattleCard({ battle, priority = false }: BattleCardProps) {
           label={optionA?.label ?? "A"}
           pct={aPct}
           color={OPTION_COLORS[0]}
-          leading={aPct >= bPct}
+          leading={!isUnvoted && aPct >= bPct}
           priority={priority}
+          isUnvoted={isUnvoted}
         />
         <CardSide
           img={imageB}
           label={optionB?.label ?? "B"}
           pct={bPct}
           color={OPTION_COLORS[1]}
-          leading={bPct > aPct}
+          leading={!isUnvoted && bPct > aPct}
           priority={priority}
+          isUnvoted={isUnvoted}
         />
         <div className="absolute left-1/2 top-1/2 z-10 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-black">
           <span className="text-white" style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.05em" }}>
@@ -139,6 +151,7 @@ function CardSide({
   color,
   leading,
   priority,
+  isUnvoted,
 }: {
   img: string | null;
   label: string;
@@ -146,6 +159,7 @@ function CardSide({
   color: string;
   leading: boolean;
   priority: boolean;
+  isUnvoted: boolean;
 }) {
   return (
     <div className="relative aspect-square overflow-hidden">
@@ -157,33 +171,49 @@ function CardSide({
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 p-3">
-        <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline justify-between gap-2">
           <span
             className="truncate text-white"
             style={{ fontWeight: 800, fontSize: 14, letterSpacing: "-0.01em" }}
           >
             {label}
           </span>
-          <span
-            style={{
-              color: leading ? color : "rgba(255,255,255,0.45)",
-              fontWeight: 900,
-              fontSize: 18,
-              letterSpacing: "-0.03em",
-            }}
-          >
-            {pct}%
-          </span>
+          {isUnvoted ? (
+            <span
+              className="shrink-0"
+              style={{
+                color,
+                fontWeight: 800,
+                fontSize: 10,
+                letterSpacing: "0.1em",
+              }}
+            >
+              BE FIRST →
+            </span>
+          ) : (
+            <span
+              style={{
+                color: leading ? color : "rgba(255,255,255,0.45)",
+                fontWeight: 900,
+                fontSize: 18,
+                letterSpacing: "-0.03em",
+              }}
+            >
+              {pct}%
+            </span>
+          )}
         </div>
-        <div className="mt-1.5 h-1 w-full bg-white/15">
-          <div
-            className="h-full transition-all"
-            style={{
-              width: `${pct}%`,
-              background: leading ? color : "rgba(255,255,255,0.5)",
-            }}
-          />
-        </div>
+        {!isUnvoted && (
+          <div className="mt-1.5 h-1 w-full bg-white/15">
+            <div
+              className="h-full transition-all"
+              style={{
+                width: `${pct}%`,
+                background: leading ? color : "rgba(255,255,255,0.5)",
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

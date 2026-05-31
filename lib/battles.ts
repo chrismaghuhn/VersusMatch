@@ -23,6 +23,29 @@ export type FeedOptions = {
   sort?: FeedSort;
 };
 
+export async function resolveBattleSlugRedirect(
+  supabase: SupabaseClient<Database>,
+  oldSlug: string
+): Promise<string | null> {
+  const { data: redirect, error: redirectError } = await supabase
+    .from("battle_slug_redirects")
+    .select("battle_id")
+    .eq("old_slug", oldSlug)
+    .maybeSingle();
+
+  if (redirectError || !redirect) return null;
+
+  const { data: battle, error: battleError } = await supabase
+    .from("battles")
+    .select("slug")
+    .eq("id", redirect.battle_id)
+    .maybeSingle();
+
+  if (battleError || !battle?.slug) return null;
+
+  return battle.slug;
+}
+
 export async function getBattleBySlug(
   supabase: SupabaseClient<Database>,
   slug: string

@@ -46,11 +46,11 @@ const staticUrls = [
 ];
 
 const priorityBattles = [
-  "pizza-vs-burger-seed01",
-  "minecraft-vs-fortnite-seed04",
-  "iphone-vs-android-seo01",
-  "marvel-vs-dc-seo01",
-  "coffee-vs-tea-seed02",
+  "pizza-vs-burger",
+  "minecraft-vs-fortnite",
+  "iphone-vs-android",
+  "marvel-vs-dc",
+  "coffee-vs-tea",
 ];
 
 console.log("# Static + category URLs\n");

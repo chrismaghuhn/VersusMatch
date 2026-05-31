@@ -110,6 +110,29 @@ export type Database = {
           },
         ];
       };
+      battle_slug_redirects: {
+        Row: {
+          battle_id: string;
+          old_slug: string;
+        };
+        Insert: {
+          battle_id: string;
+          old_slug: string;
+        };
+        Update: {
+          battle_id?: string;
+          old_slug?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "battle_slug_redirects_battle_id_fkey";
+            columns: ["battle_id"];
+            isOneToOne: false;
+            referencedRelation: "battles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       battles: {
         Row: {
           category: BattleCategory;

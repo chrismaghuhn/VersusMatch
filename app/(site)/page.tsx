@@ -39,6 +39,7 @@ export default async function HomePage() {
   ]);
 
   const stats = statsResult ?? emptyStats;
+  const homeBattles = [...battles].sort((a, b) => b.total_votes - a.total_votes);
 
   return (
     <div>
@@ -106,7 +107,7 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {battles.map((battle, index) => (
+              {homeBattles.map((battle, index) => (
                 <BattleCard key={battle.id} battle={battle} priority={index < 4} />
               ))}
               <CreateBattleCard />

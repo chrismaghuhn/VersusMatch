@@ -1,6 +1,9 @@
 import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export const MIN_VOTES_FOR_STAT = 50;
+export const MIN_VOTES_TODAY_FOR_STAT = 10;
+
 export type SiteStats = {
   activeBattles: number;
   totalVotes: number;

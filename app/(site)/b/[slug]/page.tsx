@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { preload } from "react-dom";
 import { BattleJsonLd } from "@/components/battle-json-ld";
 import { BattleVoteSection } from "@/components/battle-vote-section";
 import { RelatedBattles } from "@/components/related-battles";
-import { getCachedBattleBySlug, getCachedBattleResults } from "@/lib/battles-cache";
+import {
+  getCachedBattleBySlug,
+  getCachedBattleResults,
+  getCachedBattleSlugRedirect,
+} from "@/lib/battles-cache";
 import { getAppUrl, getPublicImageUrl } from "@/lib/utils";
 
 export const revalidate = 60;
@@ -16,7 +20,14 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const battle = await getCachedBattleBySlug(slug);
+  let battle = await getCachedBattleBySlug(slug);
+
+  if (!battle) {
+    const redirectSlug = await getCachedBattleSlugRedirect(slug);
+    if (redirectSlug) {
+      battle = await getCachedBattleBySlug(redirectSlug);
+    }
+  }
 
   if (!battle) {
     return {
@@ -57,6 +68,10 @@ export default async function BattlePage({ params, searchParams }: PageProps) {
   const battle = await getCachedBattleBySlug(slug);
 
   if (!battle) {
+    const redirectSlug = await getCachedBattleSlugRedirect(slug);
+    if (redirectSlug) {
+      permanentRedirect(`/b/${redirectSlug}`);
+    }
     notFound();
   }
 
