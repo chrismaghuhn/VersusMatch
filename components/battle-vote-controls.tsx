@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   CheckIcon,
@@ -30,23 +30,19 @@ const BattleReportButton = dynamic(
   { ssr: false, loading: () => null }
 );
 
-type BattleVoteRootProps = {
+const GRID_ID = "battle-vote-grid";
+
+type BattleVoteControlsProps = {
   battle: BattleWithOptions;
   initialResults: BattleResult[];
   shareUrl: string;
-  sideA: ReactNode;
-  vsSlider: ReactNode;
-  sideB: ReactNode;
 };
 
-export function BattleVoteRoot({
+export function BattleVoteControls({
   battle,
   initialResults,
   shareUrl,
-  sideA,
-  vsSlider,
-  sideB,
-}: BattleVoteRootProps) {
+}: BattleVoteControlsProps) {
   const [results, setResults] = useState(initialResults);
   const [hasVoted, setHasVoted] = useState(false);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -64,9 +60,6 @@ export function BattleVoteRoot({
   const totalVotes = results.reduce((sum, row) => sum + row.vote_count, 0);
   const resultA = results.find((row) => row.option_id === options[0]?.id);
   const aPct = formatPercent(resultA?.vote_count ?? 0, totalVotes);
-  const resultsLive =
-    hasVoted ||
-    totalVotes !== initialResults.reduce((sum, row) => sum + row.vote_count, 0);
 
   const refreshResults = useCallback(async () => {
     try {
@@ -80,6 +73,52 @@ export function BattleVoteRoot({
       // Polling failure — keep last known results
     }
   }, [battle.id]);
+
+  const handleVote = useCallback(
+    async (optionId: string) => {
+      if (hasVoted || isSubmitting) return;
+
+      if (turnstileRequired && !turnstileToken) {
+        setError("Please complete the captcha.");
+        return;
+      }
+
+      setIsSubmitting(true);
+      setError(null);
+
+      const voterToken = getOrCreateVoterToken();
+      const response = await castVote(
+        battle.id,
+        optionId,
+        voterToken,
+        turnstileToken || undefined
+      );
+
+      if (!response.success) {
+        if (response.alreadyVoted) {
+          setHasVoted(true);
+          await refreshResults();
+        } else {
+          setError(response.error ?? "Vote failed");
+        }
+        setIsSubmitting(false);
+        return;
+      }
+
+      setSelectedOptionId(optionId);
+      setHasVoted(true);
+      await refreshResults();
+      setIsSubmitting(false);
+    },
+    [
+      battle.id,
+      hasVoted,
+      isSubmitting,
+      refreshResults,
+      turnstileRequired,
+      turnstileToken,
+    ]
+  );
 
   useEffect(() => {
     let intervalId: number | undefined;
@@ -112,51 +151,32 @@ export function BattleVoteRoot({
     };
   }, [refreshResults]);
 
-  async function handleVote(optionId: string) {
-    if (hasVoted || isSubmitting) return;
+  useEffect(() => {
+    const grid = document.getElementById(GRID_ID);
+    if (!grid) return;
 
-    if (turnstileRequired && !turnstileToken) {
-      setError("Please complete the captcha.");
+    if (hasVoted) {
+      grid.hidden = true;
       return;
     }
 
-    setIsSubmitting(true);
-    setError(null);
-
-    const voterToken = getOrCreateVoterToken();
-    const response = await castVote(
-      battle.id,
-      optionId,
-      voterToken,
-      turnstileToken || undefined
-    );
-
-    if (!response.success) {
-      if (response.alreadyVoted) {
-        setHasVoted(true);
-        await refreshResults();
-      } else {
-        setError(response.error ?? "Vote failed");
+    function onGridClick(event: MouseEvent) {
+      const side = (event.target as HTMLElement).closest("[data-vote-side]");
+      const optionId = side?.getAttribute("data-vote-side");
+      if (optionId) {
+        void handleVote(optionId);
       }
-      setIsSubmitting(false);
-      return;
     }
 
-    setSelectedOptionId(optionId);
-    setHasVoted(true);
-    await refreshResults();
-    setIsSubmitting(false);
-  }
+    grid.hidden = false;
+    grid.classList.add("cursor-pointer");
+    grid.addEventListener("click", onGridClick);
 
-  function handleGridClick(event: React.MouseEvent<HTMLDivElement>) {
-    if (hasVoted || isSubmitting) return;
-
-    const side = (event.target as HTMLElement).closest("[data-vote-side]");
-    const optionId = side?.getAttribute("data-vote-side");
-    if (optionId) {
-      void handleVote(optionId);
-    }
-  }
+    return () => {
+      grid.classList.remove("cursor-pointer");
+      grid.removeEventListener("click", onGridClick);
+    };
+  }, [hasVoted, handleVote]);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(shareUrl);
@@ -207,31 +227,22 @@ export function BattleVoteRoot({
 
   return (
     <>
-      {!hasVoted && turnstileRequired && (
-        <div className="mb-6 mx-auto max-w-sm">
-          <TurnstileWidget onToken={setTurnstileToken} />
+      {hasVoted && (
+        <div
+          className="relative grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto_1fr] md:items-stretch"
+          aria-live="polite"
+        >
+          {options[0] && renderInteractiveSide(options[0], 0)}
+          <VsSlider aPct={aPct} totalVotes={totalVotes} />
+          {options[1] && renderInteractiveSide(options[1], 1)}
         </div>
       )}
 
-      <div
-        className={`relative grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto_1fr] md:items-stretch${!hasVoted ? " cursor-pointer" : ""}`}
-        onClick={hasVoted ? undefined : handleGridClick}
-        aria-busy={isSubmitting}
-      >
-        {hasVoted ? (
-          <>
-            {options[0] && renderInteractiveSide(options[0], 0)}
-            <VsSlider aPct={aPct} totalVotes={totalVotes} />
-            {options[1] && renderInteractiveSide(options[1], 1)}
-          </>
-        ) : (
-          <>
-            {sideA}
-            {resultsLive ? <VsSlider aPct={aPct} totalVotes={totalVotes} /> : vsSlider}
-            {sideB}
-          </>
-        )}
-      </div>
+      {!hasVoted && turnstileRequired && (
+        <div className="mb-6 mx-auto max-w-sm mt-6">
+          <TurnstileWidget onToken={setTurnstileToken} />
+        </div>
+      )}
 
       {error && (
         <p className="mt-6 border border-[#FF2D87]/40 bg-[#FF2D87]/10 px-4 py-3 text-center text-sm text-[#FF2D87]">
@@ -242,6 +253,7 @@ export function BattleVoteRoot({
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
         <p className="text-white/40" style={{ fontSize: 12 }}>
           Live results · updates every 8s
+          {hasVoted ? " · Thanks for voting!" : null}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={handleCopy} className="gap-2">

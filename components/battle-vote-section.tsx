@@ -1,7 +1,7 @@
 import { Noise } from "@/components/brutal/noise";
 import { Stat, VsSlider } from "@/components/battle-vote-ui";
 import { BattleSideDisplay } from "@/components/battle-side-display";
-import { BattleVoteRoot } from "@/components/battle-vote-root";
+import { BattleVoteControls } from "@/components/battle-vote-controls";
 import type { BattleResult, BattleWithOptions } from "@/lib/database.types";
 import { formatPercent } from "@/lib/utils";
 
@@ -51,19 +51,21 @@ export function BattleVoteSection({ battle, initialResults, shareUrl }: BattleVo
           </div>
         </div>
 
-        <BattleVoteRoot
+        <div
+          id="battle-vote-grid"
+          className="relative grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto_1fr] md:items-stretch"
+        >
+          {options[0] ? (
+            <BattleSideDisplay option={options[0]} index={0} priority />
+          ) : null}
+          <VsSlider aPct={aPct} totalVotes={totalVotes} />
+          {options[1] ? <BattleSideDisplay option={options[1]} index={1} /> : null}
+        </div>
+
+        <BattleVoteControls
           battle={battle}
           initialResults={initialResults}
           shareUrl={shareUrl}
-          sideA={
-            options[0] ? (
-              <BattleSideDisplay option={options[0]} index={0} priority />
-            ) : null
-          }
-          vsSlider={<VsSlider aPct={aPct} totalVotes={totalVotes} />}
-          sideB={
-            options[1] ? <BattleSideDisplay option={options[1]} index={1} /> : null
-          }
         />
       </div>
     </section>
