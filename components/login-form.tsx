@@ -29,6 +29,15 @@ function formatAuthError(message: string): string {
     return "We couldn't send the login email right now. Try again in a minute, or contact support if it keeps failing.";
   }
 
+  if (
+    lower.includes("expired") ||
+    lower.includes("invalid") ||
+    lower.includes("already used") ||
+    lower.includes("one-time token")
+  ) {
+    return "That login link expired or was already used. Request a new magic link and open only the latest email.";
+  }
+
   return message;
 }
 

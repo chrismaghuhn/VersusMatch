@@ -10,6 +10,18 @@ export function isMagicLinkEmailConfigured(): boolean {
 
 type SendMagicLinkResult = { ok: true } | { ok: false; error: string };
 
+function buildCallbackLoginUrl(redirectTo: string, tokenHash: string): string {
+  const redirectUrl = new URL(redirectTo);
+  const next = redirectUrl.searchParams.get("next") ?? "/create";
+  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/create";
+
+  const loginUrl = new URL("/auth/callback", redirectUrl.origin);
+  loginUrl.searchParams.set("token_hash", tokenHash);
+  loginUrl.searchParams.set("type", "magiclink");
+  loginUrl.searchParams.set("next", safeNext);
+  return loginUrl.toString();
+}
+
 async function sendViaResend(
   email: string,
   redirectTo: string
@@ -25,17 +37,18 @@ async function sendViaResend(
   const { data, error } = await supabase.auth.admin.generateLink({
     type: "magiclink",
     email,
-    options: { redirectTo },
   });
 
   if (error) {
     return { ok: false, error: error.message };
   }
 
-  const actionLink = data.properties?.action_link;
-  if (!actionLink) {
+  const tokenHash = data.properties?.hashed_token;
+  if (!tokenHash) {
     return { ok: false, error: "Failed to generate login link" };
   }
+
+  const loginUrl = buildCallbackLoginUrl(redirectTo, tokenHash);
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -49,8 +62,8 @@ async function sendViaResend(
       subject: "Your MemeFight login link",
       html: [
         `<p>Click below to log in to MemeFight. This link expires soon.</p>`,
-        `<p><a href="${escapeHtml(actionLink)}" style="font-weight:bold">Log in to MemeFight</a></p>`,
-        `<p style="color:#666;font-size:13px">Open the link in the same browser where you requested it. If you did not request this, you can ignore this email.</p>`,
+        `<p><a href="${loginUrl}">Log in to MemeFight</a></p>`,
+        `<p style="color:#666;font-size:13px">Open the link in the same browser where you requested it. If you requested multiple links, use only the <strong>latest</strong> email — older links stop working.</p>`,
       ].join(""),
     }),
   });
@@ -92,12 +105,4 @@ export async function sendMagicLinkEmail(
   }
 
   return sendViaSupabaseOtp(email, redirectTo);
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
 }
