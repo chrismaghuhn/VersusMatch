@@ -3,21 +3,22 @@ import { BattleCard, CreateBattleCard } from "@/components/battle-card";
 import { BrutalCreateCta } from "@/components/brutal/create-cta";
 import { BrutalHero } from "@/components/brutal/hero";
 import { getActiveBattlesFeed } from "@/lib/battles";
-import { getSiteStats, type SiteStats } from "@/lib/stats";
-import { createClient } from "@/lib/supabase/server";
+import { getCachedSiteStats, type SiteStats } from "@/lib/stats";
+import { createPublicClient } from "@/lib/supabase/public";
+
+export const revalidate = 60;
 
 const emptyStats: SiteStats = { activeBattles: 0, totalVotes: 0, votesLast24h: 0 };
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  const battles = await getActiveBattlesFeed(supabase, { limit: 6 });
+  const supabase = createPublicClient();
 
-  let stats = emptyStats;
-  try {
-    stats = await getSiteStats();
-  } catch {
-    stats = emptyStats;
-  }
+  const [battles, statsResult] = await Promise.all([
+    getActiveBattlesFeed(supabase, { limit: 6 }),
+    getCachedSiteStats().catch(() => emptyStats),
+  ]);
+
+  const stats = statsResult ?? emptyStats;
 
   return (
     <div>
@@ -42,7 +43,7 @@ export default async function HomePage() {
                   lineHeight: 0.9,
                 }}
               >
-                Aktuelle
+                Latest
                 <br />
                 <span className="relative inline-block">
                   fights<span className="text-[#FF2D87]">.</span>
@@ -54,28 +55,28 @@ export default async function HomePage() {
               className="text-[#CCFF00] transition hover:text-white"
               style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.15em" }}
             >
-              ALLE ANSEHEN →
+              VIEW ALL →
             </Link>
           </div>
 
           {battles.length === 0 ? (
             <div className="border border-dashed border-white/20 px-6 py-16 text-center">
-              <p className="font-black text-white">Noch keine Battles live</p>
+              <p className="font-black text-white">No battles live yet</p>
               <p className="mt-2 text-sm text-white/50">
-                Erstelle das erste Battle und teile den Link.
+                Create the first battle and share the link.
               </p>
               <Link
                 href="/create"
                 className="mt-6 inline-block bg-[#CCFF00] px-6 py-3 text-black transition hover:bg-white"
                 style={{ fontWeight: 800, fontSize: 12, letterSpacing: "0.08em" }}
               >
-                ERSTES BATTLE ERSTELLEN
+                CREATE FIRST BATTLE
               </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {battles.map((battle) => (
-                <BattleCard key={battle.id} battle={battle} />
+              {battles.map((battle, index) => (
+                <BattleCard key={battle.id} battle={battle} priority={index < 4} />
               ))}
               <CreateBattleCard />
             </div>

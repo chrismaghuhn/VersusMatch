@@ -19,7 +19,7 @@ export function SiteFooter() {
               </span>
             </div>
             <p className="mt-5 max-w-sm text-white/50" style={{ fontSize: 14, lineHeight: 1.5 }}>
-              Shareable A-vs-B Battles. Zwei Optionen, ein Gewinner, null Chill.
+              Shareable A-vs-B battles. Two options, one winner, zero chill.
             </p>
           </div>
 
@@ -27,7 +27,7 @@ export function SiteFooter() {
             {
               h: "PRODUCT",
               links: [
-                { label: "Battle erstellen", href: "/create" },
+                { label: "Create battle", href: "/create" },
                 { label: "Live Feed", href: "/feed" },
               ],
             },
@@ -35,7 +35,7 @@ export function SiteFooter() {
               h: "ACCOUNT",
               links: [
                 { label: "Login", href: "/auth/login" },
-                { label: "Meine Battles", href: "/my-battles" },
+                { label: "My battles", href: "/my-battles" },
               ],
             },
           ].map((column) => (

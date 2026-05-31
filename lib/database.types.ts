@@ -22,6 +22,27 @@ export type BattleResult = {
   vote_count: number;
 };
 
+export type FeedBattleRow = {
+  id: string;
+  slug: string;
+  title: string;
+  creator_id: string;
+  status: "active" | "closed";
+  category: BattleCategory;
+  created_at: string;
+  expires_at: string | null;
+  total_votes: number;
+  battle_options: {
+    id: string;
+    battle_id: string;
+    label: string;
+    image_path: string | null;
+    position: number;
+    created_at: string;
+  }[];
+  results: BattleResult[];
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -194,6 +215,14 @@ export type Database = {
           p_creator_id: string;
         };
         Returns: number;
+      };
+      get_feed_with_results: {
+        Args: {
+          p_limit?: number;
+          p_category?: string;
+          p_sort?: string;
+        };
+        Returns: FeedBattleRow[];
       };
     };
     Enums: Record<string, never>;

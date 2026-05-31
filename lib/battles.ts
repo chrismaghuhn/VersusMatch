@@ -6,7 +6,7 @@ import type {
   FeedBattle,
 } from "@/lib/database.types";
 import type { BattleCategory } from "@/lib/categories";
-import { countActiveBattlesRpc, getBattleResultsRpc } from "@/lib/supabase/rpc";
+import { countActiveBattlesRpc, getBattleResultsRpc, getFeedWithResultsRpc } from "@/lib/supabase/rpc";
 import type { BattleOption } from "@/lib/database.types";
 
 function normalizeOptions(
@@ -70,46 +70,19 @@ export async function getActiveBattlesFeed(
 ): Promise<FeedBattle[]> {
   const { limit = 12, category = "all", sort = "new" } = options;
 
-  let query = supabase
-    .from("battles")
-    .select("*, battle_options(*)")
-    .eq("status", "active");
+  const { data, error } = await getFeedWithResultsRpc(supabase, {
+    p_limit: limit,
+    p_category: category,
+    p_sort: sort,
+  });
 
-  if (category !== "all") {
-    query = query.eq("category", category);
-  }
+  if (error || !data) return [];
 
-  query = query.order("created_at", { ascending: false }).limit(sort === "votes" ? 50 : limit);
-
-  const { data: battles, error } = await query;
-
-  if (error || !battles) return [];
-
-  const feed: FeedBattle[] = await Promise.all(
-    battles.map(async (row) => {
-      const battle = row as BattleWithOptions & {
-        battle_options?: BattleOption | BattleOption[];
-      };
-      const results = await getBattleResults(supabase, battle.id);
-      const totalVotes = results.reduce((sum, result) => sum + result.vote_count, 0);
-      const battleOptions = normalizeOptions(battle.battle_options).sort(
-        (a, b) => a.position - b.position
-      );
-
-      return {
-        ...battle,
-        battle_options: battleOptions,
-        total_votes: totalVotes,
-        results,
-      };
-    })
-  );
-
-  if (sort === "votes") {
-    feed.sort((a, b) => b.total_votes - a.total_votes);
-  }
-
-  return feed.slice(0, limit);
+  return data.map((row) => ({
+    ...row,
+    battle_options: normalizeOptions(row.battle_options).sort((a, b) => a.position - b.position),
+    results: [...(row.results ?? [])].sort((a, b) => a.position - b.position),
+  }));
 }
 
 export async function getCreatorBattles(

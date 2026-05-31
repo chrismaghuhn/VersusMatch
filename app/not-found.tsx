@@ -11,10 +11,10 @@ export default function NotFound() {
         404
       </h1>
       <p className="mt-3 text-white/50">
-        Dieses Battle existiert nicht oder ist nicht mehr aktiv.
+        This battle does not exist or is no longer active.
       </p>
       <Link href="/feed" className="mt-6">
-        <Button>Zum Feed</Button>
+        <Button>Go to Feed</Button>
       </Link>
     </div>
   );

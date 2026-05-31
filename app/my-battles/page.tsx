@@ -32,36 +32,36 @@ export default async function MyBattlesPage({
             className="text-white"
             style={{ fontWeight: 900, fontSize: 36, letterSpacing: "-0.04em" }}
           >
-            Meine Battles
+            My Battles
           </h1>
-          <p className="mt-2 text-white/50">Verwalte, schließe oder lösche deine Battles.</p>
+          <p className="mt-2 text-white/50">Manage, close, or delete your battles.</p>
         </div>
         <Link href="/create">
-          <Button>Neues Battle</Button>
+          <Button>New Battle</Button>
         </Link>
       </div>
 
       {params.closed === "1" && (
         <p className="mb-4 border border-[#CCFF00]/30 bg-[#CCFF00]/5 px-4 py-3 text-sm text-white">
-          Battle geschlossen — Voting beendet.
+          Battle closed — voting ended.
         </p>
       )}
       {params.deleted === "1" && (
         <p className="mb-4 border border-white/10 bg-white/5 px-4 py-3 text-sm text-white">
-          Battle gelöscht.
+          Battle deleted.
         </p>
       )}
       {params.error && (
         <p className="mb-4 border border-[#FF2D87]/40 bg-[#FF2D87]/10 px-4 py-3 text-sm text-[#FF2D87]">
-          Aktion fehlgeschlagen.
+          Action failed.
         </p>
       )}
 
       {battles.length === 0 ? (
         <div className="border border-dashed border-white/20 px-6 py-16 text-center">
-          <p className="text-lg font-black text-white">Noch keine Battles</p>
+          <p className="text-lg font-black text-white">No battles yet</p>
           <Link href="/create" className="mt-6 inline-block">
-            <Button>Erstes Battle erstellen</Button>
+            <Button>Create your first battle</Button>
           </Link>
         </div>
       ) : (
@@ -84,7 +84,7 @@ export default async function MyBattlesPage({
                         color: battle.status === "active" ? "#000" : "rgba(255,255,255,0.6)",
                       }}
                     >
-                      {battle.status === "active" ? "Aktiv" : "Geschlossen"}
+                      {battle.status === "active" ? "Active" : "Closed"}
                     </span>
                     <span className="border border-white/15 px-2 py-0.5 text-xs text-white/60">
                       {getCategoryLabel(battle.category)}
@@ -99,14 +99,14 @@ export default async function MyBattlesPage({
                     <form action={closeBattle}>
                       <input type="hidden" name="battleId" value={battle.id} />
                       <Button type="submit" variant="outline" size="sm">
-                        Schließen
+                        Close
                       </Button>
                     </form>
                   )}
                   <form action={deleteBattle}>
                     <input type="hidden" name="battleId" value={battle.id} />
                     <Button type="submit" variant="destructive" size="sm">
-                      Löschen
+                      Delete
                     </Button>
                   </form>
                 </div>

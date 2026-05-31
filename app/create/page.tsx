@@ -9,14 +9,14 @@ import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/server";
 
 const errorMessages: Record<string, string> = {
-  missing_fields: "Bitte Titel und beide Optionen ausfüllen.",
-  battle_limit: "Du hast bereits 5 aktive Battles. Schließe erst eines, bevor du ein neues erstellst.",
-  imageA_upload_failed: "Bild für Option A konnte nicht hochgeladen werden. Bitte erneut versuchen.",
-  imageB_upload_failed: "Bild für Option B konnte nicht hochgeladen werden. Bitte erneut versuchen.",
-  imageA_invalid_type: "Option A: nur JPEG, PNG oder WebP (max. 2MB).",
-  imageB_invalid_type: "Option B: nur JPEG, PNG oder WebP (max. 2MB).",
-  imageA_too_large: "Bild A ist größer als 2MB.",
-  imageB_too_large: "Bild B ist größer als 2MB.",
+  missing_fields: "Please fill in the title and both options.",
+  battle_limit: "You already have 5 active battles. Close one before creating a new one.",
+  imageA_upload_failed: "Failed to upload image for Option A. Please try again.",
+  imageB_upload_failed: "Failed to upload image for Option B. Please try again.",
+  imageA_invalid_type: "Option A: JPEG, PNG, or WebP only (max. 2MB).",
+  imageB_invalid_type: "Option B: JPEG, PNG, or WebP only (max. 2MB).",
+  imageA_too_large: "Image A is larger than 2MB.",
+  imageB_too_large: "Image B is larger than 2MB.",
 };
 
 export default async function CreatePage({
@@ -42,9 +42,9 @@ export default async function CreatePage({
     <div className="mx-auto max-w-2xl px-4 py-10 sm:py-16">
       <Card className="border-white/10 bg-[#0a0a0a]">
         <CardHeader>
-          <CardTitle className="text-white">Battle erstellen</CardTitle>
+          <CardTitle className="text-white">Create Battle</CardTitle>
           <CardDescription>
-            Titel plus zwei Optionen — Text oder Bild. Danach bekommst du einen shareable Link.
+            Title plus two options — text or image. Then you get a shareable link.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -56,12 +56,12 @@ export default async function CreatePage({
           <form action={createBattle} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="title" className="text-xs font-bold uppercase tracking-widest text-white/60">
-                Battle-Titel
+                Battle Title
               </label>
               <Input
                 id="title"
                 name="title"
-                placeholder="z.B. Pizza vs Burger"
+                placeholder="e.g. Pizza vs Burger"
                 required
                 maxLength={120}
               />
@@ -69,7 +69,7 @@ export default async function CreatePage({
 
             <div className="space-y-2">
               <label htmlFor="category" className="text-xs font-bold uppercase tracking-widest text-white/60">
-                Kategorie
+                Category
               </label>
               <select
                 id="category"
@@ -90,11 +90,11 @@ export default async function CreatePage({
 
             <div className="flex flex-wrap gap-3">
               <Button type="submit" size="lg">
-                Battle veröffentlichen
+                Publish Battle
               </Button>
               <Link href="/feed">
                 <Button type="button" variant="outline" size="lg">
-                  Feed ansehen
+                  View Feed
                 </Button>
               </Link>
             </div>

@@ -35,11 +35,11 @@ export async function notifyNewReport(input: NotifyNewReportInput): Promise<void
       to: [to],
       subject: `MemeFight Report: ${input.battleTitle}`,
       html: [
-        `<p><strong>Neuer Battle-Report</strong></p>`,
+        `<p><strong>New battle report</strong></p>`,
         `<p><strong>Battle:</strong> ${escapeHtml(input.battleTitle)}</p>`,
-        `<p><strong>Grund:</strong> ${escapeHtml(input.reason)}</p>`,
-        `<p><a href="${battleUrl}">Battle ansehen</a></p>`,
-        `<p><a href="${adminUrl}">Moderation öffnen</a></p>`,
+        `<p><strong>Reason:</strong> ${escapeHtml(input.reason)}</p>`,
+        `<p><a href="${battleUrl}">View battle</a></p>`,
+        `<p><a href="${adminUrl}">Open moderation</a></p>`,
       ].join(""),
     }),
   });

@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type SiteStats = {
@@ -22,3 +23,7 @@ export async function getSiteStats(): Promise<SiteStats> {
     votesLast24h: recentResult.count ?? 0,
   };
 }
+
+export const getCachedSiteStats = unstable_cache(getSiteStats, ["site-stats"], {
+  revalidate: 60,
+});

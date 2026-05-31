@@ -41,7 +41,7 @@ export function ResultsBar({ results, highlightOptionId }: ResultsBarProps) {
           </div>
         );
       })}
-      <p className="text-center text-xs text-white/40">{total} Stimmen insgesamt</p>
+      <p className="text-center text-xs text-white/40">{total} votes total</p>
     </div>
   );
 }

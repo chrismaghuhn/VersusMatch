@@ -86,8 +86,8 @@ export function BrutalHero({ stats }: BrutalHeroProps) {
         <div className="mt-10 flex max-w-2xl items-start gap-6">
           <div className="mt-3 h-px w-16 bg-[#CCFF00]" />
           <p className="text-white/70" style={{ fontSize: 18, lineHeight: 1.45 }}>
-            Shareable A-vs-B Battles auf memefight.lol.
-            <span className="text-white"> Zwei Optionen. Ein Gewinner. Live-Ergebnisse.</span>
+            Shareable A-vs-B battles on memefight.lol.
+            <span className="text-white"> Two options. One winner. Live results.</span>
           </p>
         </div>
 

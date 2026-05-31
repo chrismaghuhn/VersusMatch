@@ -1,19 +1,46 @@
-"use client";
-
 import Link from "next/link";
-import { Clock, Flame, Users } from "lucide-react";
-import { BattleImage } from "@/components/battle-image";
+import { FeedImage } from "@/components/feed-image";
 import type { FeedBattle } from "@/lib/database.types";
 import { getCategoryLabel } from "@/lib/categories";
 import { formatPercent, getPublicImageUrl } from "@/lib/utils";
 
 type BattleCardProps = {
   battle: FeedBattle;
+  priority?: boolean;
 };
 
 const OPTION_COLORS = ["#CCFF00", "#FF2D87"] as const;
 
-export function BattleCard({ battle }: BattleCardProps) {
+function UsersIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+      <path
+        d="M6 6a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM1 10.5c0-2.2 2.2-3.5 5-3.5s5 1.3 5 3.5"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
+    </svg>
+  );
+}
+
+function FlameIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden>
+      <path d="M5 0C3.5 2 2 3 2 5a3 3 0 006 0c0-1.5-.8-2.5-2-4.5-.3.8-.5 1.3-1 1.8C4.2 1.5 5 0 5 0z" />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+      <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M6 3.5V6l2 1.2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="square" />
+    </svg>
+  );
+}
+
+export function BattleCard({ battle, priority = false }: BattleCardProps) {
   const optionA = battle.battle_options[0];
   const optionB = battle.battle_options[1];
   const imageA = getPublicImageUrl(optionA?.image_path);
@@ -42,13 +69,13 @@ export function BattleCard({ battle }: BattleCardProps) {
               className="flex items-center gap-1 bg-[#FF2D87] px-1.5 py-0.5 text-white"
               style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.1em" }}
             >
-              <Flame className="h-2.5 w-2.5 fill-white" /> HOT
+              <FlameIcon /> HOT
             </span>
           )}
         </div>
         <div className="flex items-center gap-3 text-white/40" style={{ fontSize: 10 }}>
           <span className="flex items-center gap-1">
-            <Users className="h-3 w-3" />
+            <UsersIcon />
             {battle.total_votes >= 1000
               ? `${(battle.total_votes / 1000).toFixed(1)}k`
               : battle.total_votes}
@@ -63,6 +90,7 @@ export function BattleCard({ battle }: BattleCardProps) {
           pct={aPct}
           color={OPTION_COLORS[0]}
           leading={aPct >= bPct}
+          priority={priority}
         />
         <CardSide
           img={imageB}
@@ -70,6 +98,7 @@ export function BattleCard({ battle }: BattleCardProps) {
           pct={bPct}
           color={OPTION_COLORS[1]}
           leading={bPct > aPct}
+          priority={priority}
         />
         <div className="absolute left-1/2 top-1/2 z-10 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-black">
           <span className="text-white" style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.05em" }}>
@@ -88,7 +117,7 @@ export function BattleCard({ battle }: BattleCardProps) {
         </p>
         <div className="mt-3 flex items-center justify-between">
           <span className="flex items-center gap-1 text-white/40" style={{ fontSize: 11 }}>
-            <Clock className="h-3 w-3" />
+            <ClockIcon />
             Live
           </span>
           <span
@@ -109,21 +138,22 @@ function CardSide({
   pct,
   color,
   leading,
+  priority,
 }: {
   img: string | null;
   label: string;
   pct: number;
   color: string;
   leading: boolean;
+  priority: boolean;
 }) {
   return (
     <div className="relative aspect-square overflow-hidden">
-      <BattleImage
+      <FeedImage
         src={img}
         alt={label}
-        sizes="(max-width: 768px) 50vw, 20vw"
+        priority={priority}
         className="transition duration-500 group-hover:scale-105"
-        placeholderClassName="px-2 text-sm text-white/60"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 p-3">
@@ -190,7 +220,7 @@ export function CreateBattleCard() {
         className="relative mt-3 max-w-[220px] text-center text-white/50"
         style={{ fontSize: 13, lineHeight: 1.4 }}
       >
-        Zwei Optionen. Link teilen. Chaos beobachten.
+        Two options. Share the link. Watch the chaos.
       </p>
       <div
         className="relative mt-6 inline-flex items-center gap-1.5 text-[#CCFF00]"

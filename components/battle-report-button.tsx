@@ -35,7 +35,7 @@ export function BattleReportButton({ battleId }: BattleReportButtonProps) {
 
   if (status === "done") {
     return (
-      <p className="mt-6 text-center text-sm text-white/50">Danke — Meldung erhalten.</p>
+      <p className="mt-6 text-center text-sm text-white/50">Thanks — report received.</p>
     );
   }
 
@@ -44,28 +44,28 @@ export function BattleReportButton({ battleId }: BattleReportButtonProps) {
       {!open ? (
         <Button type="button" variant="ghost" size="sm" className="gap-2" onClick={() => setOpen(true)}>
           <Flag className="h-4 w-4" />
-          Melden
+          Report
         </Button>
       ) : (
         <div className="mx-auto max-w-md space-y-3 border border-white/10 bg-black p-4 text-left">
-          <p className="text-sm font-bold text-white">Battle melden</p>
+          <p className="text-sm font-bold text-white">Report battle</p>
           <textarea
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            placeholder="Warum ist dieser Inhalt problematisch?"
+            placeholder="Why is this content problematic?"
             className="min-h-24 w-full border border-white/15 bg-[#0a0a0a] px-3 py-2 text-sm text-white placeholder:text-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CCFF00]"
             maxLength={500}
           />
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>
-              Abbrechen
+              Cancel
             </Button>
             <Button type="button" size="sm" disabled={status === "loading"} onClick={handleSubmit}>
-              Senden
+              Send
             </Button>
           </div>
           {status === "error" && (
-            <p className="text-sm text-[#FF2D87]">Meldung fehlgeschlagen. Bitte erneut versuchen.</p>
+            <p className="text-sm text-[#FF2D87]">Report failed. Please try again.</p>
           )}
         </div>
       )}

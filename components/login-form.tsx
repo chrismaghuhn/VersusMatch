@@ -11,8 +11,8 @@ import { createClient } from "@/lib/supabase/client";
 const COOLDOWN_SECONDS = 60;
 
 const errorMessages: Record<string, string> = {
-  auth_callback_failed: "Login fehlgeschlagen. Bitte fordere einen neuen Magic Link an.",
-  missing_email: "Bitte gib deine E-Mail-Adresse ein.",
+  auth_callback_failed: "Login failed. Please request a new magic link.",
+  missing_email: "Please enter your email address.",
 };
 
 function formatAuthError(message: string): string {
@@ -21,7 +21,7 @@ function formatAuthError(message: string): string {
   if (lower.includes("rate limit") || lower.includes("only request this after")) {
     const secondsMatch = message.match(/after (\d+) seconds?/i);
     const wait = secondsMatch?.[1] ?? String(COOLDOWN_SECONDS);
-    return `Zu viele Anfragen. Warte ${wait} Sekunden und prüfe dein Postfach — der letzte Link ist vermutlich noch gültig.`;
+    return `Too many requests. Wait ${wait} seconds and check your inbox — your last link is probably still valid.`;
   }
 
   return message;
@@ -97,15 +97,15 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle className="text-white">Login</CardTitle>
         <CardDescription>
-          Magic Link per E-Mail — nur nötig zum Erstellen von Battles. Link im selben Browser
-          öffnen, in dem du ihn angefordert hast.
+          Magic link via email — only needed to create battles. Open the link in the same browser
+          where you requested it.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {sent && (
           <p className="border border-[#CCFF00]/30 bg-[#CCFF00]/5 px-4 py-3 text-sm text-white">
-            Check dein Postfach — der Login-Link ist unterwegs. Öffne ihn im selben Browser.
-            Du kannst {cooldown > 0 ? `in ${cooldown}s` : "später"} einen neuen Link anfordern.
+            Check your inbox — the login link is on its way. Open it in the same browser.
+            You can request a new link {cooldown > 0 ? `in ${cooldown}s` : "later"}.
           </p>
         )}
         {error && (
@@ -117,22 +117,22 @@ export function LoginForm() {
           <Input
             name="email"
             type="email"
-            placeholder="deine@email.de"
+            placeholder="you@email.com"
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
           <Button type="submit" className="w-full" disabled={submitDisabled}>
             {isLoading
-              ? "Wird gesendet…"
+              ? "Sending…"
               : cooldown > 0
-                ? `Erneut senden in ${cooldown}s`
-                : "Magic Link senden"}
+                ? `Resend in ${cooldown}s`
+                : "Send magic link"}
           </Button>
         </form>
         <p className="text-center text-sm text-white/50">
           <Link href="/" className="underline underline-offset-4 hover:text-[#CCFF00]">
-            Zurück zur Startseite
+            Back to home
           </Link>
         </p>
       </CardContent>

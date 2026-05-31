@@ -10,7 +10,7 @@ import { isVoteRequestAllowed } from "@/lib/vote-request-guards";
 export async function POST(request: Request) {
   try {
     if (!isVoteRequestAllowed(request)) {
-      return NextResponse.json({ error: "Ungültige Anfrage" }, { status: 403 });
+      return NextResponse.json({ error: "Invalid request" }, { status: 403 });
     }
 
     const ip =
@@ -28,23 +28,23 @@ export async function POST(request: Request) {
     try {
       body = (await request.json()) as typeof body;
     } catch {
-      return NextResponse.json({ error: "Ungültige Anfrage" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
     const { battleId, optionId, voterToken, turnstileToken } = body;
 
     if (!battleId || !optionId || !voterToken) {
-      return NextResponse.json({ error: "Ungültige Anfrage" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
     if (await isVoteRateLimited(ip, battleId)) {
-      return NextResponse.json({ error: "Zu viele Votes. Bitte kurz warten." }, { status: 429 });
+      return NextResponse.json({ error: "Too many votes. Please wait a moment." }, { status: 429 });
     }
 
     if (isTurnstileRequired()) {
       const valid = await verifyTurnstileToken(turnstileToken ?? "", ip);
       if (!valid) {
-        return NextResponse.json({ error: "Captcha ungültig" }, { status: 403 });
+        return NextResponse.json({ error: "Invalid captcha" }, { status: 403 });
       }
     }
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
     if (!uuidRegex.test(battleId) || !uuidRegex.test(optionId) || !uuidRegex.test(voterToken)) {
-      return NextResponse.json({ error: "Ungültige IDs" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid IDs" }, { status: 400 });
     }
 
     const ipHash = hashVoteIp(ip);
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
     if (error) {
       captureServerError("vote", error, { battleId });
-      return NextResponse.json({ error: "Vote fehlgeschlagen" }, { status: 500 });
+      return NextResponse.json({ error: "Vote failed" }, { status: 500 });
     }
 
     const result = data as {
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     if (!result.success) {
       return NextResponse.json(
         {
-          error: result.error ?? "Vote fehlgeschlagen",
+          error: result.error ?? "Vote failed",
           alreadyVoted: result.already_voted ?? result.error === "already_voted",
         },
         { status: result.already_voted ? 409 : 400 }
@@ -89,6 +89,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     captureServerError("vote-unhandled", error);
-    return NextResponse.json({ error: "Vote fehlgeschlagen" }, { status: 500 });
+    return NextResponse.json({ error: "Vote failed" }, { status: 500 });
   }
 }

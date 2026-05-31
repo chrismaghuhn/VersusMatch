@@ -29,7 +29,7 @@ export function OptionUpload({ label, name, textName, position }: OptionUploadPr
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      alert("Bild darf maximal 2MB groß sein.");
+      alert("Image must be at most 2MB.");
       event.target.value = "";
       return;
     }
@@ -39,7 +39,7 @@ export function OptionUpload({ label, name, textName, position }: OptionUploadPr
     const allowedType = new Set(["image/jpeg", "image/png", "image/webp", ""]);
 
     if (!allowedExt.has(ext) && !allowedType.has(file.type)) {
-      alert("Nur JPEG, PNG oder WebP erlaubt.");
+      alert("Only JPEG, PNG, or WebP allowed.");
       event.target.value = "";
       return;
     }
@@ -70,7 +70,7 @@ export function OptionUpload({ label, name, textName, position }: OptionUploadPr
             onClick={() => clearFile(document.getElementById(name) as HTMLInputElement | null)}
           >
             <X className="h-4 w-4" />
-            Entfernen
+            Remove
           </Button>
         )}
       </div>
@@ -88,7 +88,7 @@ export function OptionUpload({ label, name, textName, position }: OptionUploadPr
         ) : (
           <>
             <Upload className="h-5 w-5 text-white/40" />
-            <span className="text-sm text-white/40">Optional: Bild hochladen (max. 2MB)</span>
+            <span className="text-sm text-white/40">Optional: upload image (max. 2MB)</span>
           </>
         )}
         <input

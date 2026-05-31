@@ -4,7 +4,9 @@ import { FeedFilters } from "@/components/feed-filters";
 import { Button } from "@/components/ui/button";
 import { getActiveBattlesFeed, type FeedSort } from "@/lib/battles";
 import type { BattleCategory } from "@/lib/categories";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
+
+export const revalidate = 60;
 
 export default async function FeedPage({
   searchParams,
@@ -15,7 +17,7 @@ export default async function FeedPage({
   const category = (params.category ?? "all") as BattleCategory | "all";
   const sort = (params.sort === "votes" ? "votes" : "new") as FeedSort;
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const battles = await getActiveBattlesFeed(supabase, {
     limit: 24,
     category,
@@ -50,7 +52,7 @@ export default async function FeedPage({
             </h1>
           </div>
           <Link href="/create">
-            <Button>Battle erstellen</Button>
+            <Button>Create battle</Button>
           </Link>
         </div>
 
@@ -60,18 +62,16 @@ export default async function FeedPage({
 
         {battles.length === 0 ? (
           <div className="border border-dashed border-white/20 px-6 py-16 text-center">
-            <p className="text-lg font-black text-white">Keine Battles in dieser Kategorie</p>
-            <p className="mt-2 text-white/50">
-              Probiere einen anderen Filter oder erstelle ein Battle.
-            </p>
+            <p className="text-lg font-black text-white">No battles in this category</p>
+            <p className="mt-2 text-white/50">Try another filter or create a battle.</p>
             <Link href="/create" className="mt-6 inline-block">
-              <Button>Jetzt erstellen</Button>
+              <Button>Create now</Button>
             </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {battles.map((battle) => (
-              <BattleCard key={battle.id} battle={battle} />
+            {battles.map((battle, index) => (
+              <BattleCard key={battle.id} battle={battle} priority={index < 4} />
             ))}
             <CreateBattleCard />
           </div>

@@ -1,17 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Share2, Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BattleReportButton } from "@/components/battle-report-button";
 import { BattleImage } from "@/components/battle-image";
-import { isTurnstileEnabled, TurnstileWidget } from "@/components/turnstile-widget";
 import { Noise } from "@/components/brutal/noise";
 import { createClient } from "@/lib/supabase/client";
 import { getBattleResultsRpc } from "@/lib/supabase/rpc";
+import { isTurnstileEnabled } from "@/lib/turnstile-config";
 import type { BattleOption, BattleResult, BattleWithOptions } from "@/lib/database.types";
 import { castVote, getOrCreateVoterToken } from "@/lib/votes";
 import { formatPercent, getPublicImageUrl } from "@/lib/utils";
+
+const TurnstileWidget = dynamic(
+  () => import("@/components/turnstile-widget").then((mod) => ({ default: mod.TurnstileWidget })),
+  { ssr: false }
+);
 
 const OPTION_COLORS = ["#CCFF00", "#FF2D87"] as const;
 const PINK = "#FF2D87";
@@ -57,14 +63,20 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
   }, [battle.id]);
 
   useEffect(() => {
+    let intervalId: number | undefined;
+
     function pollIfVisible() {
       if (document.visibilityState === "visible") {
         void refreshResults();
       }
     }
 
-    pollIfVisible();
-    const intervalId = window.setInterval(pollIfVisible, 8000);
+    function startPolling() {
+      pollIfVisible();
+      intervalId = window.setInterval(pollIfVisible, 8000);
+    }
+
+    const delayId = window.setTimeout(startPolling, 2000);
 
     function handleVisibilityChange() {
       if (document.visibilityState === "visible") {
@@ -75,7 +87,8 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.clearInterval(intervalId);
+      window.clearTimeout(delayId);
+      if (intervalId) window.clearInterval(intervalId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [refreshResults]);
@@ -84,7 +97,7 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
     if (hasVoted || isSubmitting) return;
 
     if (turnstileRequired && !turnstileToken) {
-      setError("Bitte Captcha bestätigen.");
+      setError("Please complete the captcha.");
       return;
     }
 
@@ -104,7 +117,7 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
         setHasVoted(true);
         await refreshResults();
       } else {
-        setError(response.error ?? "Vote fehlgeschlagen");
+        setError(response.error ?? "Vote failed");
       }
       setIsSubmitting(false);
       return;
@@ -191,11 +204,11 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
               {battle.title}
             </h1>
             <p className="mt-3 text-white/50" style={{ fontSize: 14 }}>
-              {hasVoted ? "Danke für deinen Vote!" : "Wähle deine Option — tap to commit."}
+              {hasVoted ? "Thanks for voting!" : "Pick your side — tap to commit."}
             </p>
           </div>
           <div className="col-span-12 grid grid-cols-2 gap-4 md:col-span-4 md:grid-cols-1">
-            <Stat label="VOTES" value={totalVotes.toLocaleString("de-DE")} />
+            <Stat label="VOTES" value={totalVotes.toLocaleString("en-US")} />
             <Stat label="OPTIONS" value="2" />
           </div>
         </div>
@@ -220,12 +233,12 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
           <p className="text-white/40" style={{ fontSize: 12 }}>
-            Live-Ergebnisse · aktualisiert alle 8s
+            Live results · updates every 8s
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={handleCopy} className="gap-2">
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? "Kopiert!" : "Link kopieren"}
+              {copied ? "Copied!" : "Copy link"}
             </Button>
             <Button onClick={handleShare} className="gap-2">
               <Share2 className="h-3.5 w-3.5" />
@@ -431,7 +444,7 @@ function BattleSide({
                 <span style={{ fontSize: 26, color }}>%</span>
               </span>
               <span className="text-white/40" style={{ fontSize: 13 }}>
-                {votes.toLocaleString("de-DE")} votes
+                {votes.toLocaleString("en-US")} votes
               </span>
             </div>
             <div className="mt-3 h-2 w-full overflow-hidden bg-white/10">

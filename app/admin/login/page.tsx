@@ -17,8 +17,8 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
       <div className="mx-auto max-w-md px-4 py-16">
         <h1 className="text-2xl font-black text-white">Admin Login</h1>
         <p className="mt-4 text-white/50">
-          Setze <code className="text-sm text-[#CCFF00]">ADMIN_SECRET</code> in den Env-Vars, um
-          die Moderation zu aktivieren.
+          Set <code className="text-sm text-[#CCFF00]">ADMIN_SECRET</code> in your env vars to
+          enable moderation.
         </p>
       </div>
     );
@@ -31,7 +31,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <h1 className="text-2xl font-black text-white">Admin Login</h1>
-      <p className="mt-2 text-white/50">Moderation für MemeFight Battle-Reports.</p>
+      <p className="mt-2 text-white/50">Moderation for MemeFight battle reports.</p>
 
       <form action={loginAdmin} className="mt-6 space-y-4">
         <input type="hidden" name="next" value={nextPath} />
@@ -44,16 +44,16 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
           required
         />
         <Button type="submit" className="w-full">
-          Anmelden
+          Sign in
         </Button>
       </form>
 
       {params.error === "unauthorized" && (
-        <p className="mt-4 text-sm text-[#FF2D87]">Ungültiger Admin-Key.</p>
+        <p className="mt-4 text-sm text-[#FF2D87]">Invalid admin key.</p>
       )}
 
       <Link href="/" className="mt-6 inline-block text-sm text-white/50 hover:text-[#CCFF00]">
-        Zur Startseite
+        Back to home
       </Link>
     </div>
   );

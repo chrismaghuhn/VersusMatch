@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { BattleResult, Database } from "@/lib/database.types";
+import type { BattleResult, Database, FeedBattleRow } from "@/lib/database.types";
 
 type CastVoteArgs = Database["public"]["Functions"]["cast_vote"]["Args"];
 type CastVoteResult = Database["public"]["Functions"]["cast_vote"]["Returns"];
@@ -29,6 +29,25 @@ export async function countActiveBattlesRpc(supabase: RpcSupabase, creatorId: st
   return (supabase.rpc as SupabaseClient<Database>["rpc"])("count_active_battles", {
     p_creator_id: creatorId,
   } as never);
+}
+
+export async function getFeedWithResultsRpc(
+  supabase: RpcSupabase,
+  args: { p_limit?: number; p_category?: string; p_sort?: string }
+): Promise<{ data: FeedBattleRow[] | null; error: Error | null }> {
+  const { data, error } = await (supabase.rpc as SupabaseClient<Database>["rpc"])(
+    "get_feed_with_results",
+    {
+      p_limit: args.p_limit ?? 12,
+      p_category: args.p_category ?? "all",
+      p_sort: args.p_sort ?? "new",
+    } as never
+  );
+
+  return {
+    data: (data as FeedBattleRow[] | null) ?? null,
+    error: error ? new Error(error.message) : null,
+  };
 }
 
 export type { CastVoteArgs, CastVoteResult };

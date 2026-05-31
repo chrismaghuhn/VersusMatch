@@ -48,14 +48,14 @@ export function FeedFilters({ currentCategory, currentSort }: FeedFiltersProps) 
           className={`px-3 py-2 transition ${filterClass(currentSort === "new")}`}
           style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.15em" }}
         >
-          NEUESTE
+          NEWEST
         </Link>
         <Link
           href={href(currentCategory, "votes")}
           className={`px-3 py-2 transition ${filterClass(currentSort === "votes")}`}
           style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.15em" }}
         >
-          MEISTE VOTES
+          MOST VOTES
         </Link>
       </div>
     </div>

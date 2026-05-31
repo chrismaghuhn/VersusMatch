@@ -40,7 +40,7 @@ export async function castVote(
       }),
     });
   } catch {
-    return { success: false, error: "Netzwerkfehler — bitte erneut versuchen." };
+    return { success: false, error: "Network error — please try again." };
   }
 
   const data = await parseJsonResponse<{
@@ -53,15 +53,15 @@ export async function castVote(
     return {
       success: false,
       error: response.ok
-        ? "Ungültige Server-Antwort."
-        : `Vote fehlgeschlagen (${response.status}).`,
+        ? "Invalid server response."
+        : `Vote failed (${response.status}).`,
     };
   }
 
   if (!response.ok) {
     return {
       success: false,
-      error: data.error ?? "Vote fehlgeschlagen",
+      error: data.error ?? "Vote failed",
       alreadyVoted: data.alreadyVoted,
     };
   }

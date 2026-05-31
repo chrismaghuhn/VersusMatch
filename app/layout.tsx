@@ -7,7 +7,7 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "600", "800", "900"],
+  weight: ["600", "900"],
 });
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     default: "MemeFight — A vs B Battles",
     template: "%s | MemeFight",
   },
-  description: "Erstelle shareable A-vs-B Battles auf memefight.lol und sammle Votes live.",
+  description: "Create shareable A-vs-B battles on memefight.lol and collect live votes.",
   icons: {
     icon: "/favicon.svg",
   },
@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="de">
+    <html lang="en">
       <body className={`${inter.variable} min-h-screen bg-black font-sans text-white`}>
         <SiteHeader />
         <main>{children}</main>

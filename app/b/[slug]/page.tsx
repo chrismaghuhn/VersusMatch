@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BattleVote } from "@/components/battle-vote";
-import { getBattleBySlug, getBattleResults } from "@/lib/battles";
-import { createClient } from "@/lib/supabase/server";
+import { getCachedBattleBySlug, getCachedBattleResults } from "@/lib/battles-cache";
 import { getAppUrl, getPublicImageUrl } from "@/lib/utils";
+
+export const revalidate = 60;
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -11,12 +12,11 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
-  const battle = await getBattleBySlug(supabase, slug);
+  const battle = await getCachedBattleBySlug(slug);
 
   if (!battle) {
     return {
-      title: "Battle nicht gefunden",
+      title: "Battle not found",
     };
   }
 
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const imageA = getPublicImageUrl(battle.battle_options[0]?.image_path);
   const imageB = getPublicImageUrl(battle.battle_options[1]?.image_path);
   const ogImage = imageA ?? imageB ?? undefined;
-  const description = `${optionA} vs ${optionB} — Stimme ab auf MemeFight!`;
+  const description = `${optionA} vs ${optionB} — vote on MemeFight!`;
   const url = getAppUrl(`/b/${battle.slug}`);
 
   return {
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url,
       siteName: "MemeFight",
       type: "website",
-      locale: "de_DE",
+      locale: "en_US",
       images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: battle.title }] : [],
     },
     twitter: {
@@ -51,17 +51,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BattlePage({ params }: PageProps) {
   const { slug } = await params;
-  const supabase = await createClient();
-  const battle = await getBattleBySlug(supabase, slug);
+  const battle = await getCachedBattleBySlug(slug);
 
   if (!battle) {
     notFound();
   }
 
-  const results = await getBattleResults(supabase, battle.id);
+  const results = await getCachedBattleResults(battle.id);
   const shareUrl = getAppUrl(`/b/${battle.slug}`);
 
-  return (
-    <BattleVote battle={battle} initialResults={results} shareUrl={shareUrl} />
-  );
+  return <BattleVote battle={battle} initialResults={results} shareUrl={shareUrl} />;
 }

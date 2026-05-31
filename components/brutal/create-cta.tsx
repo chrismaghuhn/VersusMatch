@@ -7,25 +7,25 @@ const steps = [
     n: "01",
     icon: Plus,
     title: "Pick your beef",
-    desc: "Titel deines Battles — Memes, Food, Gaming, alles geht.",
+    desc: "Your battle title — memes, food, gaming, anything goes.",
   },
   {
     n: "02",
     icon: Upload,
     title: "Drop two options",
-    desc: "Text oder Bild. Side A. Side B. Fertig.",
+    desc: "Text or image. Side A. Side B. Done.",
   },
   {
     n: "03",
     icon: Share2,
     title: "Send the link",
-    desc: "In den Group Chat — kein Login zum Voten nötig.",
+    desc: "Drop it in the group chat — no login needed to vote.",
   },
   {
     n: "04",
     icon: BarChart3,
     title: "Watch chaos",
-    desc: "Live-Ergebnisse in Echtzeit.",
+    desc: "Live results in real time.",
   },
 ];
 
@@ -74,7 +74,7 @@ export function BrutalCreateCta({ totalVotes = 0 }: BrutalCreateCtaProps) {
               </span>
             </h2>
             <p className="mt-10 max-w-md text-black/70" style={{ fontSize: 18, lineHeight: 1.5 }}>
-              Battle erstellen, Link teilen, live voten lassen. Login nur zum Erstellen.
+              Create a battle, share the link, let people vote live. Login only to create.
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-3">
               <Link
@@ -95,7 +95,7 @@ export function BrutalCreateCta({ totalVotes = 0 }: BrutalCreateCtaProps) {
                     {formatStatNumber(totalVotes)} votes and counting
                   </div>
                   <div className="text-black/60" style={{ fontSize: 12 }}>
-                    MemeFight.lol — für Group Chats gebaut.
+                    MemeFight.lol — built for group chats.
                   </div>
                 </div>
               </div>
