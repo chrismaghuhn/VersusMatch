@@ -2,7 +2,7 @@
 
 import { v4 as uuidv4 } from "uuid";
 
-const VOTER_TOKEN_KEY = "versusapp_voter_token";
+const VOTER_TOKEN_KEY = "memefight_voter_token";
 
 export function getOrCreateVoterToken(): string {
   if (typeof window === "undefined") {
@@ -22,7 +22,8 @@ export function getOrCreateVoterToken(): string {
 export async function castVote(
   battleId: string,
   optionId: string,
-  voterToken: string
+  voterToken: string,
+  turnstileToken?: string
 ): Promise<{ success: boolean; error?: string; alreadyVoted?: boolean }> {
   const response = await fetch("/api/vote", {
     method: "POST",
@@ -31,6 +32,7 @@ export async function castVote(
       battleId,
       optionId,
       voterToken,
+      turnstileToken,
     }),
   });
 

@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ResultsBar } from "@/components/results-bar";
+import { BattleReportButton } from "@/components/battle-report-button";
+import { isTurnstileEnabled, TurnstileWidget } from "@/components/turnstile-widget";
 import { createClient } from "@/lib/supabase/client";
 import { getBattleResultsRpc } from "@/lib/supabase/rpc";
 import type { BattleResult, BattleWithOptions } from "@/lib/database.types";
@@ -24,6 +26,8 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRequired = isTurnstileEnabled();
 
   const options = useMemo(
     () => [...battle.battle_options].sort((a, b) => a.position - b.position),
@@ -66,11 +70,21 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
   async function handleVote(optionId: string) {
     if (hasVoted || isSubmitting) return;
 
+    if (turnstileRequired && !turnstileToken) {
+      setError("Bitte Captcha bestätigen.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     const voterToken = getOrCreateVoterToken();
-    const response = await castVote(battle.id, optionId, voterToken);
+    const response = await castVote(
+      battle.id,
+      optionId,
+      voterToken,
+      turnstileToken || undefined
+    );
 
     if (!response.success) {
       if (response.alreadyVoted) {
@@ -118,51 +132,58 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
       </div>
 
       {!hasVoted ? (
-        <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-stretch">
-          {options.map((option, index) => {
-            const imageUrl = getPublicImageUrl(option.image_path);
+        <>
+          {turnstileRequired && (
+            <div className="mx-auto max-w-sm">
+              <TurnstileWidget onToken={setTurnstileToken} />
+            </div>
+          )}
+          <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-stretch">
+            {options.map((option, index) => {
+              const imageUrl = getPublicImageUrl(option.image_path);
 
-            return (
-              <div key={option.id} className="contents">
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() => handleVote(option.id)}
-                  className="group relative overflow-hidden rounded-2xl border-2 border-border bg-card text-left shadow-sm transition hover:border-primary hover:shadow-md disabled:opacity-60"
-                >
-                  <div className="relative aspect-square bg-secondary sm:aspect-[4/5]">
-                    {imageUrl ? (
-                      <Image
-                        src={imageUrl}
-                        alt={option.label}
-                        fill
-                        className="object-cover transition-transform group-hover:scale-[1.03]"
-                        sizes="(max-width: 768px) 100vw, 40vw"
-                        priority={index === 0}
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center p-6 text-center text-2xl font-semibold">
+              return (
+                <div key={option.id} className="contents">
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={() => handleVote(option.id)}
+                    className="group relative overflow-hidden rounded-2xl border-2 border-border bg-card text-left shadow-sm transition hover:border-primary hover:shadow-md disabled:opacity-60"
+                  >
+                    <div className="relative aspect-square bg-secondary sm:aspect-[4/5]">
+                      {imageUrl ? (
+                        <Image
+                          src={imageUrl}
+                          alt={option.label}
+                          fill
+                          className="object-cover transition-transform group-hover:scale-[1.03]"
+                          sizes="(max-width: 768px) 100vw, 40vw"
+                          priority={index === 0}
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center p-6 text-center text-2xl font-semibold">
+                          {option.label}
+                        </div>
+                      )}
+                    </div>
+                    {imageUrl && (
+                      <div className="border-t border-border p-4 text-center text-lg font-semibold">
                         {option.label}
                       </div>
                     )}
-                  </div>
-                  {imageUrl && (
-                    <div className="border-t border-border p-4 text-center text-lg font-semibold">
-                      {option.label}
+                  </button>
+                  {index === 0 && (
+                    <div className="flex items-center justify-center">
+                      <span className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
+                        VS
+                      </span>
                     </div>
                   )}
-                </button>
-                {index === 0 && (
-                  <div className="flex items-center justify-center">
-                    <span className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
-                      VS
-                    </span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       ) : (
         <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card p-6 shadow-sm">
           <ResultsBar results={results} highlightOptionId={selectedOptionId} />
@@ -185,6 +206,8 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
           Teilen
         </Button>
       </div>
+
+      <BattleReportButton battleId={battle.id} />
     </div>
   );
 }

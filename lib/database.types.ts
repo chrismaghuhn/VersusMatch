@@ -6,6 +6,14 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export type BattleCategory =
+  | "general"
+  | "memes"
+  | "design"
+  | "food"
+  | "gaming"
+  | "music";
+
 export type BattleResult = {
   option_id: string;
   position: number;
@@ -24,6 +32,7 @@ export type Database = {
           title: string;
           creator_id: string;
           status: "active" | "closed";
+          category: BattleCategory;
           created_at: string;
           expires_at: string | null;
         };
@@ -33,6 +42,7 @@ export type Database = {
           title: string;
           creator_id: string;
           status?: "active" | "closed";
+          category?: BattleCategory;
           created_at?: string;
           expires_at?: string | null;
         };
@@ -42,18 +52,11 @@ export type Database = {
           title?: string;
           creator_id?: string;
           status?: "active" | "closed";
+          category?: BattleCategory;
           created_at?: string;
           expires_at?: string | null;
         };
-        Relationships: [
-          {
-            foreignKeyName: "battle_options_battle_id_fkey";
-            columns: ["id"];
-            isOneToOne: false;
-            referencedRelation: "battle_options";
-            referencedColumns: ["battle_id"];
-          },
-        ];
+        Relationships: [];
       };
       battle_options: {
         Row: {
@@ -96,6 +99,7 @@ export type Database = {
           battle_id: string;
           option_id: string;
           voter_token: string;
+          ip_hash: string | null;
           created_at: string;
         };
         Insert: {
@@ -103,6 +107,7 @@ export type Database = {
           battle_id: string;
           option_id: string;
           voter_token: string;
+          ip_hash?: string | null;
           created_at?: string;
         };
         Update: {
@@ -110,6 +115,7 @@ export type Database = {
           battle_id?: string;
           option_id?: string;
           voter_token?: string;
+          ip_hash?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -129,6 +135,35 @@ export type Database = {
           },
         ];
       };
+      battle_reports: {
+        Row: {
+          id: string;
+          battle_id: string;
+          reason: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          battle_id: string;
+          reason: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          battle_id?: string;
+          reason?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "battle_reports_battle_id_fkey";
+            columns: ["battle_id"];
+            isOneToOne: false;
+            referencedRelation: "battles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -137,6 +172,7 @@ export type Database = {
           p_battle_id: string;
           p_option_id: string;
           p_voter_token: string;
+          p_ip_hash?: string | null;
         };
         Returns: {
           success: boolean;

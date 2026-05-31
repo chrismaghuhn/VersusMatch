@@ -1,12 +1,26 @@
 import Link from "next/link";
 import { BattleCard } from "@/components/battle-card";
+import { FeedFilters } from "@/components/feed-filters";
 import { Button } from "@/components/ui/button";
-import { getActiveBattlesFeed } from "@/lib/battles";
+import { getActiveBattlesFeed, type FeedSort } from "@/lib/battles";
+import type { BattleCategory } from "@/lib/categories";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function FeedPage() {
+export default async function FeedPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; sort?: string }>;
+}) {
+  const params = await searchParams;
+  const category = (params.category ?? "all") as BattleCategory | "all";
+  const sort = (params.sort === "votes" ? "votes" : "new") as FeedSort;
+
   const supabase = await createClient();
-  const battles = await getActiveBattlesFeed(supabase, 24);
+  const battles = await getActiveBattlesFeed(supabase, {
+    limit: 24,
+    category,
+    sort,
+  });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -22,10 +36,14 @@ export default async function FeedPage() {
         </Link>
       </div>
 
+      <div className="mb-8">
+        <FeedFilters currentCategory={category} currentSort={sort} />
+      </div>
+
       {battles.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border px-6 py-16 text-center">
-          <p className="text-lg font-medium">Noch keine Battles</p>
-          <p className="mt-2 text-muted-foreground">Sei der Erste und starte ein Battle.</p>
+          <p className="text-lg font-medium">Keine Battles in dieser Kategorie</p>
+          <p className="mt-2 text-muted-foreground">Probiere einen anderen Filter oder erstelle ein Battle.</p>
           <Link href="/create" className="mt-6 inline-block">
             <Button>Jetzt erstellen</Button>
           </Link>

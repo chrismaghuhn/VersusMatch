@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { BATTLE_CATEGORIES, type BattleCategory } from "@/lib/categories";
 import { countActiveBattlesForCreator } from "@/lib/battles";
 import { generateBattleSlug } from "@/lib/utils";
 
@@ -53,6 +54,10 @@ export async function createBattle(formData: FormData) {
   const optionBText = String(formData.get("optionB") ?? "").trim();
   const imageA = formData.get("imageA");
   const imageB = formData.get("imageB");
+  const categoryInput = String(formData.get("category") ?? "general");
+  const category = BATTLE_CATEGORIES.some((item) => item.value === categoryInput)
+    ? (categoryInput as BattleCategory)
+    : "general";
 
   if (!title || !optionAText || !optionBText) {
     redirect("/create?error=missing_fields");
@@ -85,6 +90,7 @@ export async function createBattle(formData: FormData) {
         slug,
         creator_id: user.id,
         status: "active",
+        category,
       })
       .select("id, slug")
       .single();

@@ -15,10 +15,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "VersusApp — A vs B Battles",
-    template: "%s | VersusApp",
+    default: "MemeFight — A vs B Battles",
+    template: "%s | MemeFight",
   },
-  description: "Erstelle shareable A-vs-B Battles und sammle Votes in Echtzeit.",
+  description: "Erstelle shareable A-vs-B Battles auf memefight.lol und sammle Votes live.",
   icons: {
     icon: "/favicon.svg",
   },

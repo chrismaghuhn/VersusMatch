@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createBattle } from "@/app/create/actions";
+import { BATTLE_CATEGORIES } from "@/lib/categories";
 import { OptionUpload } from "@/components/option-upload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +59,24 @@ export default async function CreatePage({
                 required
                 maxLength={120}
               />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="category" className="text-sm font-medium">
+                Kategorie
+              </label>
+              <select
+                id="category"
+                name="category"
+                defaultValue="general"
+                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
+                {BATTLE_CATEGORIES.map((category) => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <OptionUpload label="Option A" name="imageA" textName="optionA" position="A" />

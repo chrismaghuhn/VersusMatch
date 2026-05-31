@@ -11,10 +11,11 @@ try {
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: https://${supabaseHost}`,
-  `connect-src 'self' https://${supabaseHost} wss://${supabaseHost}`,
+  `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://challenges.cloudflare.com`,
+  "frame-src https://challenges.cloudflare.com",
   "font-src 'self' data:",
   "frame-ancestors 'none'",
   "base-uri 'self'",

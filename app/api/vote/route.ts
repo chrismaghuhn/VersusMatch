@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { castVoteRpc } from "@/lib/supabase/rpc";
 import { isVoteRateLimited } from "@/lib/rate-limit";
+import { isTurnstileRequired, verifyTurnstileToken } from "@/lib/turnstile";
+import { hashVoteIp } from "@/lib/vote-ip-hash";
+import { captureServerError } from "@/lib/observability";
 import { isVoteRequestAllowed } from "@/lib/vote-request-guards";
 
 export async function POST(request: Request) {
@@ -14,20 +17,28 @@ export async function POST(request: Request) {
     request.headers.get("x-real-ip") ??
     "unknown";
 
-  if (await isVoteRateLimited(ip)) {
-    return NextResponse.json({ error: "Zu viele Votes. Bitte kurz warten." }, { status: 429 });
-  }
-
   const body = (await request.json()) as {
     battleId?: string;
     optionId?: string;
     voterToken?: string;
+    turnstileToken?: string;
   };
 
-  const { battleId, optionId, voterToken } = body;
+  const { battleId, optionId, voterToken, turnstileToken } = body;
 
   if (!battleId || !optionId || !voterToken) {
     return NextResponse.json({ error: "Ungültige Anfrage" }, { status: 400 });
+  }
+
+  if (await isVoteRateLimited(ip, battleId)) {
+    return NextResponse.json({ error: "Zu viele Votes. Bitte kurz warten." }, { status: 429 });
+  }
+
+  if (isTurnstileRequired()) {
+    const valid = await verifyTurnstileToken(turnstileToken ?? "", ip);
+    if (!valid) {
+      return NextResponse.json({ error: "Captcha ungültig" }, { status: 403 });
+    }
   }
 
   const uuidRegex =
@@ -37,15 +48,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Ungültige IDs" }, { status: 400 });
   }
 
+  const ipHash = hashVoteIp(ip);
+
   const supabase = createAdminClient();
   const { data, error } = await castVoteRpc(supabase, {
     p_battle_id: battleId,
     p_option_id: optionId,
     p_voter_token: voterToken,
+    p_ip_hash: ipHash,
   });
 
   if (error) {
-    console.error("[vote]", error);
+    captureServerError("vote", error, { battleId });
     return NextResponse.json({ error: "Vote fehlgeschlagen" }, { status: 500 });
   }
 

@@ -17,7 +17,7 @@ export async function SiteHeader() {
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Swords className="h-5 w-5" />
           </span>
-          VersusApp
+          MemeFight
         </Link>
 
         <nav className="flex items-center gap-2 sm:gap-4">
@@ -27,6 +27,14 @@ export async function SiteHeader() {
           >
             Feed
           </Link>
+          {user && (
+            <Link
+              href="/my-battles"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Meine Battles
+            </Link>
+          )}
           <Link href="/create">
             <Button size="sm">Battle erstellen</Button>
           </Link>

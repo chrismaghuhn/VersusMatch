@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const imageA = getPublicImageUrl(battle.battle_options[0]?.image_path);
   const imageB = getPublicImageUrl(battle.battle_options[1]?.image_path);
   const ogImage = imageA ?? imageB ?? undefined;
-  const description = `${optionA} vs ${optionB} — Stimme ab auf VersusApp!`;
+  const description = `${optionA} vs ${optionB} — Stimme ab auf MemeFight!`;
   const url = getAppUrl(`/b/${battle.slug}`);
 
   return {
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: battle.title,
       description,
       url,
-      siteName: "VersusApp",
+      siteName: "MemeFight",
       type: "website",
       locale: "de_DE",
       images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: battle.title }] : [],

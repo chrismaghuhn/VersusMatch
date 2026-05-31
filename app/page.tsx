@@ -7,7 +7,7 @@ import { ArrowRight, Sparkles, Swords, Zap } from "lucide-react";
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const battles = await getActiveBattlesFeed(supabase, 6);
+  const battles = await getActiveBattlesFeed(supabase, { limit: 6 });
 
   return (
     <div>
@@ -22,8 +22,8 @@ export default async function HomePage() {
               Erstelle Battles. Teile den Link. Sieh live, wer gewinnt.
             </h1>
             <p className="max-w-xl text-lg text-muted-foreground">
-              VersusApp ist das schnellste Tool für shareable Umfragen — Memes, Design, Food,
-              Gaming. Voten ohne Account, Ergebnisse in Echtzeit.
+              MemeFight ist das schnellste Tool für shareable Umfragen — Memes, Design, Food,
+              Gaming. Voten ohne Account, Ergebnisse live.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/create">

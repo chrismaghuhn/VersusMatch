@@ -1,6 +1,6 @@
-# VersusApp
+# MemeFight
 
-Web-Tool für shareable A-vs-B Battle-Umfragen. Creator erstellen Battles, Voter stimmen ohne Account ab, Ergebnisse aktualisieren sich per Polling.
+Web-Tool für shareable A-vs-B Battle-Umfragen auf [memefight.lol](https://memefight.lol).
 
 ## Stack
 
@@ -60,10 +60,12 @@ App läuft unter [http://localhost:3000](http://localhost:3000).
 
 ## Deploy (Vercel)
 
-1. Repo zu GitHub pushen
-2. In Vercel importieren
-3. Env-Variablen setzen (`NEXT_PUBLIC_APP_URL`, `SUPABASE_SERVICE_ROLE_KEY` mit `sb_secret_...`, Upstash/`KV_REST_API_*`)
-4. In Supabase Auth die Production-URL + `/auth/callback` als Redirect eintragen
+Siehe [DEPLOY.md](DEPLOY.md) für Git-Verbindung, Env-Vars und Turnstile/Sentry.
+
+1. Repo zu GitHub pushen (`chrismaghuhn/VersusMatch`)
+2. Vercel mit **VersusMatch** verbinden (nicht MediaFetch)
+3. Env-Variablen setzen
+4. Supabase Auth: Production-URL + `/auth/callback`
 
 ## Features (V1)
 
