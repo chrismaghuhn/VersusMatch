@@ -131,9 +131,17 @@ export async function createBattle(formData: FormData) {
   const uploadedPaths: string[] = [];
   const imagePathA = await uploadImage(imageA, 0);
   if (imagePathA) uploadedPaths.push(imagePathA);
+  if (imageA instanceof File && imageA.size > 0 && !imagePathA) {
+    await cleanupFailedBattle(supabase, battle.id, uploadedPaths);
+    redirect("/create?error=imageA_upload_failed");
+  }
 
   const imagePathB = await uploadImage(imageB, 1);
   if (imagePathB) uploadedPaths.push(imagePathB);
+  if (imageB instanceof File && imageB.size > 0 && !imagePathB) {
+    await cleanupFailedBattle(supabase, battle.id, uploadedPaths);
+    redirect("/create?error=imageB_upload_failed");
+  }
 
   const { error: optionsError } = await supabase.from("battle_options").insert([
     {

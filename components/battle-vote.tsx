@@ -1,20 +1,21 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Share2 } from "lucide-react";
+import { Share2, Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BattleReportButton } from "@/components/battle-report-button";
+import { BattleImage } from "@/components/battle-image";
 import { isTurnstileEnabled, TurnstileWidget } from "@/components/turnstile-widget";
 import { Noise } from "@/components/brutal/noise";
 import { createClient } from "@/lib/supabase/client";
 import { getBattleResultsRpc } from "@/lib/supabase/rpc";
-import type { BattleResult, BattleWithOptions } from "@/lib/database.types";
+import type { BattleOption, BattleResult, BattleWithOptions } from "@/lib/database.types";
 import { castVote, getOrCreateVoterToken } from "@/lib/votes";
 import { formatPercent, getPublicImageUrl } from "@/lib/utils";
-import { Check, Copy } from "lucide-react";
 
 const OPTION_COLORS = ["#CCFF00", "#FF2D87"] as const;
+const PINK = "#FF2D87";
+const GREEN = "#CCFF00";
 
 type BattleVoteProps = {
   battle: BattleWithOptions;
@@ -39,12 +40,19 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
 
   const totalVotes = results.reduce((sum, row) => sum + row.vote_count, 0);
 
-  const refreshResults = useCallback(async () => {
-    const supabase = createClient();
-    const { data } = await getBattleResultsRpc(supabase, battle.id);
+  const resultA = results.find((row) => row.option_id === options[0]?.id);
+  const aPct = formatPercent(resultA?.vote_count ?? 0, totalVotes);
 
-    if (data) {
-      setResults([...data].sort((a, b) => a.position - b.position));
+  const refreshResults = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      const { data } = await getBattleResultsRpc(supabase, battle.id);
+
+      if (data) {
+        setResults([...data].sort((a, b) => a.position - b.position));
+      }
+    } catch {
+      // Polling failure — keep last known results
     }
   }, [battle.id]);
 
@@ -127,6 +135,37 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
     await handleCopy();
   }
 
+  function renderSide(option: BattleOption, index: number) {
+    const result = results.find((row) => row.option_id === option.id);
+    const pct = formatPercent(result?.vote_count ?? 0, totalVotes);
+    const color = OPTION_COLORS[index] ?? OPTION_COLORS[0];
+    const otherOptionId = options.find((item) => item.id !== option.id)?.id;
+    const otherPicked = hasVoted && selectedOptionId === otherOptionId;
+    const picked = hasVoted && selectedOptionId === option.id;
+    const leading =
+      hasVoted &&
+      (result?.vote_count ?? 0) >
+        (results.find((row) => row.option_id !== option.id)?.vote_count ?? 0);
+
+    return (
+      <BattleSide
+        key={option.id}
+        title={option.label}
+        img={getPublicImageUrl(option.image_path)}
+        color={color}
+        votes={result?.vote_count ?? 0}
+        pct={pct}
+        picked={picked}
+        otherPicked={otherPicked}
+        voted={hasVoted}
+        disabled={isSubmitting}
+        onClick={() => handleVote(option.id)}
+        leading={leading}
+        priority={index === 0}
+      />
+    );
+  }
+
   return (
     <section className="relative overflow-hidden border-b border-white/10 bg-[#0a0a0a]">
       <Noise opacity={0.06} />
@@ -167,38 +206,10 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
           </div>
         )}
 
-        <div className="relative grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto_1fr]">
-          {options.map((option, index) => {
-            const result = results.find((row) => row.option_id === option.id);
-            const pct = formatPercent(result?.vote_count ?? 0, totalVotes);
-            const color = OPTION_COLORS[index] ?? OPTION_COLORS[0];
-            const otherOptionId = options.find((item) => item.id !== option.id)?.id;
-            const otherPicked = hasVoted && selectedOptionId === otherOptionId;
-            const picked = hasVoted && selectedOptionId === option.id;
-            const leading =
-              hasVoted &&
-              (result?.vote_count ?? 0) >
-                (results.find((row) => row.option_id !== option.id)?.vote_count ?? 0);
-
-            return (
-              <div key={option.id} className="contents">
-                {index === 1 && <VsDivider />}
-                <BattleSide
-                  title={option.label}
-                  img={getPublicImageUrl(option.image_path)}
-                  color={color}
-                  votes={result?.vote_count ?? 0}
-                  pct={pct}
-                  picked={picked}
-                  otherPicked={otherPicked}
-                  voted={hasVoted}
-                  disabled={isSubmitting}
-                  onClick={() => handleVote(option.id)}
-                  leading={leading}
-                />
-              </div>
-            );
-          })}
+        <div className="relative grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto_1fr] md:items-stretch">
+          {options[0] && renderSide(options[0], 0)}
+          <VsSlider aPct={aPct} totalVotes={totalVotes} />
+          {options[1] && renderSide(options[1], 1)}
         </div>
 
         {error && (
@@ -250,20 +261,74 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function VsDivider() {
+function VsSlider({
+  aPct,
+  totalVotes,
+}: {
+  aPct: number;
+  totalVotes: number;
+}) {
+  // Grün (Option A) = unten/links — VS wandert Richtung führende Seite
+  const splitPercent = totalVotes === 0 ? 50 : aPct;
+  const pinkPercent = 100 - splitPercent;
+
   return (
-    <div className="relative flex items-center justify-center py-4 md:order-none md:py-0">
-      <div className="absolute inset-y-0 left-1/2 hidden w-px bg-gradient-to-b from-transparent via-white/20 to-transparent md:block" />
-      <div className="absolute inset-x-0 top-1/2 h-px bg-white/10 md:hidden" />
-      <div className="relative order-first flex h-20 w-20 items-center justify-center bg-black md:order-none">
-        <span className="text-white" style={{ fontWeight: 900, fontSize: 18, letterSpacing: "0.08em" }}>
-          VS
-        </span>
-        <div className="absolute -inset-px border border-[#CCFF00]/40" />
-        <div className="absolute -inset-3 border border-white/10" />
-        <div className="absolute -right-2 -top-2 h-3 w-3 rotate-45 bg-[#FF2D87]" />
-        <div className="absolute -bottom-2 -left-2 h-3 w-3 rotate-45 bg-[#CCFF00]" />
+    <>
+      {/* Desktop: vertical slider between columns */}
+      <div className="relative hidden min-h-[320px] w-16 self-stretch md:block">
+        <div className="absolute inset-y-4 left-1/2 w-0.5 -translate-x-1/2 overflow-hidden rounded-full">
+          <div
+            className="absolute inset-x-0 top-0 transition-[height] duration-700 ease-out"
+            style={{ height: `${pinkPercent}%`, background: `${PINK}80` }}
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out"
+            style={{ height: `${splitPercent}%`, background: `${GREEN}80` }}
+          />
+        </div>
+        <VsBadge
+          className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 transition-[top] duration-700 ease-out"
+          style={{ top: `${splitPercent}%` }}
+        />
       </div>
+
+      {/* Mobile: horizontal slider between stacked cards */}
+      <div className="relative h-16 w-full md:hidden">
+        <div className="absolute inset-x-4 top-1/2 h-0.5 -translate-y-1/2 overflow-hidden rounded-full">
+          <div
+            className="absolute inset-y-0 left-0 transition-[width] duration-700 ease-out"
+            style={{ width: `${splitPercent}%`, background: `${GREEN}80` }}
+          />
+          <div
+            className="absolute inset-y-0 right-0 transition-[width] duration-700 ease-out"
+            style={{ width: `${pinkPercent}%`, background: `${PINK}80` }}
+          />
+        </div>
+        <VsBadge
+          className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 transition-[left] duration-700 ease-out"
+          style={{ left: `${splitPercent}%` }}
+        />
+      </div>
+    </>
+  );
+}
+
+function VsBadge({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div className={`relative flex h-20 w-20 items-center justify-center bg-black ${className ?? ""}`} style={style}>
+      <span className="text-white" style={{ fontWeight: 900, fontSize: 18, letterSpacing: "0.08em" }}>
+        VS
+      </span>
+      <div className="absolute -inset-px border border-[#CCFF00]/40" />
+      <div className="absolute -inset-3 border border-white/10" />
+      <div className="absolute -right-2 -top-2 h-3 w-3 rotate-45 bg-[#FF2D87]" />
+      <div className="absolute -bottom-2 -left-2 h-3 w-3 rotate-45 bg-[#CCFF00]" />
     </div>
   );
 }
@@ -280,6 +345,7 @@ function BattleSide({
   disabled,
   onClick,
   leading,
+  priority,
 }: {
   title: string;
   img: string | null;
@@ -292,6 +358,7 @@ function BattleSide({
   disabled: boolean;
   onClick: () => void;
   leading: boolean;
+  priority?: boolean;
 }) {
   return (
     <button
@@ -302,20 +369,13 @@ function BattleSide({
       style={{ opacity: otherPicked ? 0.45 : 1 }}
     >
       <div className="relative aspect-[16/11] w-full overflow-hidden">
-        {img ? (
-          <Image
-            src={img}
-            alt={title}
-            fill
-            className="object-cover transition duration-700 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, 40vw"
-            priority
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-[#141414] p-6 text-center text-2xl font-black text-white">
-            {title}
-          </div>
-        )}
+        <BattleImage
+          src={img}
+          alt={title}
+          priority={priority}
+          className="transition duration-700 group-hover:scale-105"
+          sizes="(max-width: 768px) 100vw, 40vw"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         <div className="absolute left-5 top-5 flex items-center gap-2">
           <div className="px-2 py-1" style={{ background: color }}>

@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Clock, Flame, Users } from "lucide-react";
+import { BattleImage } from "@/components/battle-image";
 import type { FeedBattle } from "@/lib/database.types";
 import { getCategoryLabel } from "@/lib/categories";
 import { formatPercent, getPublicImageUrl } from "@/lib/utils";
@@ -118,19 +118,13 @@ function CardSide({
 }) {
   return (
     <div className="relative aspect-square overflow-hidden">
-      {img ? (
-        <Image
-          src={img}
-          alt={label}
-          fill
-          className="object-cover transition duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 50vw, 20vw"
-        />
-      ) : (
-        <div className="flex h-full items-center justify-center bg-[#141414] px-2 text-center text-sm text-white/60">
-          {label}
-        </div>
-      )}
+      <BattleImage
+        src={img}
+        alt={label}
+        sizes="(max-width: 768px) 50vw, 20vw"
+        className="transition duration-500 group-hover:scale-105"
+        placeholderClassName="px-2 text-sm text-white/60"
+      />
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 p-3">
         <div className="flex items-baseline justify-between">

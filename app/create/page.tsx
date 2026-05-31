@@ -11,6 +11,8 @@ import { createClient } from "@/lib/supabase/server";
 const errorMessages: Record<string, string> = {
   missing_fields: "Bitte Titel und beide Optionen ausfüllen.",
   battle_limit: "Du hast bereits 5 aktive Battles. Schließe erst eines, bevor du ein neues erstellst.",
+  imageA_upload_failed: "Bild für Option A konnte nicht hochgeladen werden. Bitte erneut versuchen.",
+  imageB_upload_failed: "Bild für Option B konnte nicht hochgeladen werden. Bitte erneut versuchen.",
 };
 
 export default async function CreatePage({
