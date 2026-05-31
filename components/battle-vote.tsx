@@ -51,7 +51,7 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
     }
 
     pollIfVisible();
-    const intervalId = window.setInterval(pollIfVisible, 4000);
+    const intervalId = window.setInterval(pollIfVisible, 8000);
 
     function handleVisibilityChange() {
       if (document.visibilityState === "visible") {

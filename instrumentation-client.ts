@@ -8,10 +8,10 @@ Sentry.init({
   enabled: isEnabled,
   sendDefaultPii: true,
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: 0.1,
   enableLogs: true,
-  integrations: [Sentry.replayIntegration()],
+  integrations: [],
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

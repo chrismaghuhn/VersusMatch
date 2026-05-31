@@ -85,24 +85,24 @@ export async function getActiveBattlesFeed(
 
   if (error || !battles) return [];
 
-  const feed: FeedBattle[] = [];
+  const feed: FeedBattle[] = await Promise.all(
+    battles.map(async (row) => {
+      const battle = row as BattleWithOptions & {
+        battle_options?: BattleOption | BattleOption[];
+      };
+      const results = await getBattleResults(supabase, battle.id);
+      const totalVotes = results.reduce((sum, result) => sum + result.vote_count, 0);
+      const battleOptions = normalizeOptions(battle.battle_options).sort(
+        (a, b) => a.position - b.position
+      );
 
-  for (const row of battles) {
-    const battle = row as BattleWithOptions & {
-      battle_options?: BattleOption | BattleOption[];
-    };
-    const results = await getBattleResults(supabase, battle.id);
-    const totalVotes = results.reduce((sum, result) => sum + result.vote_count, 0);
-    const battleOptions = normalizeOptions(battle.battle_options).sort(
-      (a, b) => a.position - b.position
-    );
-
-    feed.push({
-      ...battle,
-      battle_options: battleOptions,
-      total_votes: totalVotes,
-    });
-  }
+      return {
+        ...battle,
+        battle_options: battleOptions,
+        total_votes: totalVotes,
+      };
+    })
+  );
 
   if (sort === "votes") {
     feed.sort((a, b) => b.total_votes - a.total_votes);
@@ -123,23 +123,23 @@ export async function getCreatorBattles(
 
   if (error || !battles) return [];
 
-  const result: FeedBattle[] = [];
+  const result: FeedBattle[] = await Promise.all(
+    battles.map(async (row) => {
+      const battle = row as BattleWithOptions & {
+        battle_options?: BattleOption | BattleOption[];
+      };
+      const battleResults = await getBattleResults(supabase, battle.id);
+      const totalVotes = battleResults.reduce((sum, item) => sum + item.vote_count, 0);
 
-  for (const row of battles) {
-    const battle = row as BattleWithOptions & {
-      battle_options?: BattleOption | BattleOption[];
-    };
-    const battleResults = await getBattleResults(supabase, battle.id);
-    const totalVotes = battleResults.reduce((sum, item) => sum + item.vote_count, 0);
-
-    result.push({
-      ...battle,
-      battle_options: normalizeOptions(battle.battle_options).sort(
-        (a, b) => a.position - b.position
-      ),
-      total_votes: totalVotes,
-    });
-  }
+      return {
+        ...battle,
+        battle_options: normalizeOptions(battle.battle_options).sort(
+          (a, b) => a.position - b.position
+        ),
+        total_votes: totalVotes,
+      };
+    })
+  );
 
   return result;
 }
