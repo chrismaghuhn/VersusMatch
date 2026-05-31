@@ -9,11 +9,11 @@ type FeedFiltersProps = {
 
 export function FeedFilters({ currentCategory, currentSort }: FeedFiltersProps) {
   function href(category: BattleCategory | "all", sort: FeedSort) {
-    const params = new URLSearchParams();
-    if (category !== "all") params.set("category", category);
-    if (sort !== "new") params.set("sort", sort);
-    const query = params.toString();
-    return query ? `/feed?${query}` : "/feed";
+    const sortQuery = sort !== "new" ? `?sort=${sort}` : "";
+    if (category === "all") {
+      return sortQuery ? `/feed${sortQuery}` : "/feed";
+    }
+    return `/feed/${category}${sortQuery}`;
   }
 
   const filterClass = (active: boolean) =>

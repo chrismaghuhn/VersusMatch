@@ -53,14 +53,30 @@ const admin = createClient(url, serviceKey, {
 });
 
 const SEED_BATTLES = [
-  { title: "Pizza vs Burger", category: "food", optionA: "Pizza", optionB: "Burger" },
-  { title: "Coffee vs Tea", category: "food", optionA: "Coffee", optionB: "Tea" },
-  { title: "PC vs Console", category: "gaming", optionA: "PC Master Race", optionB: "Console" },
-  { title: "Minecraft vs Fortnite", category: "gaming", optionA: "Minecraft", optionB: "Fortnite" },
-  { title: "Dark Mode vs Light Mode", category: "design", optionA: "Dark Mode", optionB: "Light Mode" },
-  { title: "Tabs vs Spaces", category: "memes", optionA: "Tabs", optionB: "Spaces" },
-  { title: "Summer vs Winter", category: "general", optionA: "Summer", optionB: "Winter" },
-  { title: "Cats vs Dogs", category: "memes", optionA: "Cats", optionB: "Dogs" },
+  { title: "Pizza vs Burger", slug: "pizza-vs-burger-seed01", category: "food", optionA: "Pizza", optionB: "Burger" },
+  { title: "Coffee vs Tea", slug: "coffee-vs-tea-seed01", category: "food", optionA: "Coffee", optionB: "Tea" },
+  { title: "PC vs Console", slug: "pc-vs-console-seed01", category: "gaming", optionA: "PC Master Race", optionB: "Console" },
+  { title: "Minecraft vs Fortnite", slug: "minecraft-vs-fortnite-seed01", category: "gaming", optionA: "Minecraft", optionB: "Fortnite" },
+  { title: "Dark Mode vs Light Mode", slug: "dark-mode-vs-light-mode-seed01", category: "design", optionA: "Dark Mode", optionB: "Light Mode" },
+  { title: "Tabs vs Spaces", slug: "tabs-vs-spaces-seed01", category: "memes", optionA: "Tabs", optionB: "Spaces" },
+  { title: "Summer vs Winter", slug: "summer-vs-winter-seed01", category: "general", optionA: "Summer", optionB: "Winter" },
+  { title: "Cats vs Dogs", slug: "cats-vs-dogs-seed01", category: "memes", optionA: "Cats", optionB: "Dogs" },
+  { title: "iPhone vs Android", slug: "iphone-vs-android-seo01", category: "general", optionA: "iPhone", optionB: "Android" },
+  { title: "Marvel vs DC", slug: "marvel-vs-dc-seo01", category: "general", optionA: "Marvel", optionB: "DC" },
+  { title: "PlayStation vs Xbox", slug: "playstation-vs-xbox-seo01", category: "gaming", optionA: "PlayStation", optionB: "Xbox" },
+  { title: "Coke vs Pepsi", slug: "coke-vs-pepsi-seo01", category: "food", optionA: "Coke", optionB: "Pepsi" },
+  { title: "Star Wars vs Star Trek", slug: "star-wars-vs-star-trek-seo01", category: "general", optionA: "Star Wars", optionB: "Star Trek" },
+  { title: "Anime vs Cartoons", slug: "anime-vs-cartoons-seo01", category: "memes", optionA: "Anime", optionB: "Cartoons" },
+  { title: "TikTok vs Instagram", slug: "tiktok-vs-instagram-seo01", category: "general", optionA: "TikTok", optionB: "Instagram" },
+  { title: "Messi vs Ronaldo", slug: "messi-vs-ronaldo-seo01", category: "general", optionA: "Messi", optionB: "Ronaldo" },
+  { title: "Taylor Swift vs Beyoncé", slug: "taylor-swift-vs-beyonce-seo01", category: "music", optionA: "Taylor Swift", optionB: "Beyoncé" },
+  { title: "Rock vs Pop", slug: "rock-vs-pop-seo01", category: "music", optionA: "Rock", optionB: "Pop" },
+  { title: "Netflix vs YouTube", slug: "netflix-vs-youtube-seo01", category: "general", optionA: "Netflix", optionB: "YouTube" },
+  { title: "Pineapple on Pizza", slug: "pineapple-on-pizza-seo01", category: "food", optionA: "Yes, delicious", optionB: "No, crime" },
+  { title: "Remote Work vs Office", slug: "remote-work-vs-office-seo01", category: "general", optionA: "Remote Work", optionB: "Office" },
+  { title: "AI vs Human Art", slug: "ai-vs-human-art-seo01", category: "design", optionA: "AI Art", optionB: "Human Art" },
+  { title: "Vinyl vs Streaming", slug: "vinyl-vs-streaming-seo01", category: "music", optionA: "Vinyl", optionB: "Streaming" },
+  { title: "Call of Duty vs Battlefield", slug: "cod-vs-battlefield-seo01", category: "gaming", optionA: "Call of Duty", optionB: "Battlefield" },
 ];
 
 function slugify(text) {
@@ -92,7 +108,7 @@ async function resolveCreatorId() {
 }
 
 async function seedBattle(creatorId, seed) {
-  const slug = slugify(seed.title);
+  const slug = seed.slug ?? slugify(seed.title);
 
   const { data: existing } = await admin
     .from("battles")

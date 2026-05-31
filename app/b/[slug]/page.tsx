@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { preload } from "react-dom";
 import { BattleJsonLd } from "@/components/battle-json-ld";
 import { BattleVoteSection } from "@/components/battle-vote-section";
+import { RelatedBattles } from "@/components/related-battles";
 import { getCachedBattleBySlug, getCachedBattleResults } from "@/lib/battles-cache";
 import { getAppUrl, getPublicImageUrl } from "@/lib/utils";
 
@@ -83,6 +84,7 @@ export default async function BattlePage({ params, searchParams }: PageProps) {
         shareUrl={shareUrl}
         showCreateBanner={showCreateBanner}
       />
+      <RelatedBattles currentBattleId={battle.id} category={battle.category} />
     </>
   );
 }

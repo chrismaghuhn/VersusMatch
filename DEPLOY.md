@@ -100,7 +100,10 @@ Target: Performance ≥ 80. Final prod scores (2026-06-01): `/` **95**, `/b/[slu
 - Branded OG: `https://memefight.lol/b/<slug>/opengraph-image`
 - Sitemap: `https://memefight.lol/sitemap.xml`
 - Robots: `https://memefight.lol/robots.txt`
+- Category landing pages: `/feed/gaming`, `/feed/food`, etc.
 - Seed battles locally: `npm run seed:battles` (needs `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`)
+- GSC checklist: [`docs/google-search-console-playbook.md`](docs/google-search-console-playbook.md)
+- List URLs for indexing: `npm run seo:list-urls`
 - Verify share preview: [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)
 
 ## Smoke-Test nach Deploy
@@ -133,3 +136,4 @@ Target: Performance ≥ 80. Final prod scores (2026-06-01): `/` **95**, `/b/[slu
 - Vercel → **Logs**: `[observability:vote]`, 429-Spikes
 - Sentry → ungelöste Issues
 - Supabase → **Advisors** (Security)
+- **Google Search Console** → indexierte Seiten, `/b/` Leistung, Sitemap-Status — siehe [`docs/google-search-console-playbook.md`](docs/google-search-console-playbook.md)

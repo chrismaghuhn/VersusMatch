@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "seed:battles": "node scripts/seed-battles.mjs"
+    "seed:battles": "node scripts/seed-battles.mjs",
+    "seo:list-urls": "node scripts/list-index-urls.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

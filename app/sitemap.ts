@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getActiveBattleSlugsForSitemap } from "@/lib/battles";
+import { BATTLE_CATEGORIES } from "@/lib/categories";
 import { createPublicClient } from "@/lib/supabase/public";
 import { getAppUrl } from "@/lib/utils";
 
@@ -20,6 +21,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "hourly",
       priority: 0.9,
     },
+    ...BATTLE_CATEGORIES.map((category) => ({
+      url: getAppUrl(`/feed/${category.value}`),
+      lastModified: new Date(),
+      changeFrequency: "hourly" as const,
+      priority: 0.85,
+    })),
   ];
 
   try {

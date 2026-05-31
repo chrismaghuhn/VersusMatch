@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { Swords } from "lucide-react";
+import { BATTLE_CATEGORIES } from "@/lib/categories";
 
 export function SiteFooter() {
   return (
     <footer className="relative bg-black">
       <div className="mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-20">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-6">
-          <div className="col-span-2 md:col-span-3">
+          <div className="col-span-2 md:col-span-2">
             <div className="flex items-center gap-2.5">
               <div className="flex h-10 w-10 items-center justify-center bg-[#CCFF00] text-black">
                 <Swords className="h-5 w-5" strokeWidth={2.5} />
@@ -28,8 +29,15 @@ export function SiteFooter() {
               h: "PRODUCT",
               links: [
                 { label: "Create battle", href: "/create" },
-                { label: "Live Feed", href: "/feed" },
+                { label: "Browse all battles", href: "/feed" },
               ],
+            },
+            {
+              h: "CATEGORIES",
+              links: BATTLE_CATEGORIES.map((category) => ({
+                label: category.label,
+                href: `/feed/${category.value}`,
+              })),
             },
             {
               h: "ACCOUNT",
