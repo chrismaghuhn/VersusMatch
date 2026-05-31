@@ -60,8 +60,10 @@ Make MemeFight production-ready after the brutalist redesign by deploying pendin
 
 | Page | Performance | Top-3 audits (impact) |
 |------|-------------|------------------------|
-| `/` | _pending post-deploy_ | _pending_ |
-| `/b/[slug]` | _pending post-deploy_ | _pending_ |
+| `/` | **94** | 1. Reduce unused JavaScript (~102 KiB) · 2. Network dependency tree · 3. Legacy JavaScript (~13 KiB) |
+| `/b/eqweqwqwe-38ux` | **91** | 1. Reduce unused JavaScript (~99 KiB) · 2. LCP breakdown · 3. LCP request discovery |
+
+_Measured 2026-06-01: Lighthouse CLI, mobile + simulated Slow 4G, headless Chrome._
 
 ## Architecture Notes (performance)
 
