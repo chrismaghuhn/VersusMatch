@@ -63,8 +63,8 @@ export function renderBattleOgImage({ battle, results }: BattleOgInput) {
           >
             LIVE BATTLE
           </div>
-          <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 16 }}>
-            {totalVotes.toLocaleString("en-US")} votes
+          <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 16, display: "flex" }}>
+            {`${totalVotes.toLocaleString("en-US")} votes`}
           </div>
         </div>
 
@@ -179,7 +179,7 @@ function OgSide({
       <div style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontSize: 24, fontWeight: 800, display: "flex" }}>{truncate(label, 20)}</div>
         <div style={{ fontSize: 40, fontWeight: 900, color, display: "flex" }}>
-          {pct}%
+          {`${pct}%`}
         </div>
       </div>
     </div>
