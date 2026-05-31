@@ -1,6 +1,5 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 
 export default function GlobalError({
@@ -11,19 +10,21 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    void import("@sentry/nextjs").then((Sentry) => {
+      Sentry.captureException(error);
+    });
   }, [error]);
 
   return (
-    <html lang="de">
-      <body className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
-        <h1 className="text-2xl font-bold">Etwas ist schiefgelaufen</h1>
+    <html lang="en">
+      <body className="flex min-h-screen flex-col items-center justify-center gap-4 bg-black p-8 text-white">
+        <h1 className="text-2xl font-bold">Something went wrong</h1>
         <button
           type="button"
           onClick={() => reset()}
-          className="rounded-lg bg-black px-4 py-2 text-white"
+          className="bg-[#CCFF00] px-4 py-2 font-bold text-black"
         >
-          Erneut versuchen
+          Try again
         </button>
       </body>
     </html>
