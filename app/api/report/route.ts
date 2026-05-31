@@ -29,16 +29,12 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createClient();
-  const { data: report, error } = await supabase
-    .from("battle_reports")
-    .insert({
-      battle_id: battleId,
-      reason: trimmedReason,
-    })
-    .select("id")
-    .single();
+  const { error } = await supabase.from("battle_reports").insert({
+    battle_id: battleId,
+    reason: trimmedReason,
+  });
 
-  if (error || !report) {
+  if (error) {
     captureServerError("report", error, { battleId });
     return NextResponse.json({ error: "Meldung fehlgeschlagen" }, { status: 500 });
   }
@@ -53,7 +49,6 @@ export async function POST(request: Request) {
 
     if (battle?.slug) {
       await notifyNewReport({
-        reportId: report.id,
         battleId,
         reason: trimmedReason,
         battleTitle: battle.title,
@@ -61,7 +56,7 @@ export async function POST(request: Request) {
       });
     }
   } catch (notifyError) {
-    captureServerError("report-notify", notifyError, { battleId, reportId: report.id });
+    captureServerError("report-notify", notifyError, { battleId });
   }
 
   return NextResponse.json({ success: true });

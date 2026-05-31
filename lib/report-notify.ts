@@ -2,7 +2,6 @@ import { captureServerError } from "@/lib/observability";
 import { getAppUrl } from "@/lib/utils";
 
 type NotifyNewReportInput = {
-  reportId: string;
   battleId: string;
   reason: string;
   battleTitle: string;
@@ -41,7 +40,6 @@ export async function notifyNewReport(input: NotifyNewReportInput): Promise<void
         `<p><strong>Grund:</strong> ${escapeHtml(input.reason)}</p>`,
         `<p><a href="${battleUrl}">Battle ansehen</a></p>`,
         `<p><a href="${adminUrl}">Moderation öffnen</a></p>`,
-        `<p style="color:#666;font-size:12px">Report-ID: ${input.reportId}</p>`,
       ].join(""),
     }),
   });
