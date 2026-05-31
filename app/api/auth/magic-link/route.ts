@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { sendMagicLinkEmail } from "@/lib/auth/send-magic-link";
 
 export async function POST(request: Request) {
   let body: { email?: string; next?: string };
@@ -21,15 +21,11 @@ export async function POST(request: Request) {
   const origin = new URL(request.url).origin;
   const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(safeNext)}`;
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: redirectTo },
-  });
+  const result = await sendMagicLinkEmail(email, redirectTo);
 
-  if (error) {
-    const status = error.message.toLowerCase().includes("rate limit") ? 429 : 400;
-    return NextResponse.json({ error: error.message }, { status });
+  if (!result.ok) {
+    const status = result.error.toLowerCase().includes("rate limit") ? 429 : 400;
+    return NextResponse.json({ error: result.error }, { status });
   }
 
   return NextResponse.json({ success: true });

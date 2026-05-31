@@ -25,6 +25,10 @@ function formatAuthError(message: string): string {
     return `Too many requests. Wait ${wait} seconds and check your inbox — your last link is probably still valid.`;
   }
 
+  if (lower.includes("error sending magic link") || lower.includes("failed to send login email")) {
+    return "We couldn't send the login email right now. Try again in a minute, or contact support if it keeps failing.";
+  }
+
   return message;
 }
 

@@ -45,15 +45,20 @@ npx vercel deploy --prod --scope chris-projects-078da2b3
    - `TURNSTILE_SECRET_KEY` = Secret Key
 4. Redeploy — CAPTCHA erscheint auf der Vote-Seite
 
-## Resend (Report-Benachrichtigung)
+## Resend (Report-Benachrichtigung + Magic Link Login)
 
 1. [Resend](https://resend.com) → API Key erstellen
-2. Absender-Domain verifizieren (oder Resend-Testdomain für Tests)
+2. Absender-Domain **memefight.lol** verifizieren (DNS bei Cloudflare/Registrar)
 3. Vercel setzen:
    - `RESEND_API_KEY`
-   - `RESEND_FROM_EMAIL` (z. B. `reports@memefight.lol`)
+   - `RESEND_FROM_EMAIL` (z. B. `MemeFight <auth@memefight.lol>` — muss verifizierte Domain sein, **kein @gmail.com**)
    - `REPORT_NOTIFY_EMAIL` (dein Postfach)
-4. Test-Report auf einem Battle senden → E-Mail prüfen
+4. Magic Link Login nutzt Resend automatisch, wenn `RESEND_*` gesetzt ist (umgeht kaputtes Supabase-SMTP)
+
+**Supabase SMTP (optional):** Falls du Supabase-eigene Mails nutzen willst statt Resend — Dashboard → Authentication → SMTP. Absender muss zur verifizierten Domain passen (nicht gmail.com mit Resend-Key).
+
+5. Test: `/auth/login` → Magic Link anfordern → E-Mail prüfen
+6. Test-Report auf einem Battle senden → Report-E-Mail prüfen
 
 ## Moderation
 
