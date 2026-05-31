@@ -60,6 +60,10 @@ npx vercel deploy --prod --scope chris-projects-078da2b3
 5. Test: `/auth/login` → Magic Link anfordern → E-Mail prüfen
 6. Test-Report auf einem Battle senden → Report-E-Mail prüfen
 
+## Supabase Auth (Dashboard)
+
+1. **Leaked password protection:** Authentication → Providers → Email → enable **Prevent use of leaked passwords** (HaveIBeenPwned check). Relevant if users set passwords; magic link still works without it.
+
 ## Moderation
 
 1. `ADMIN_SECRET` auf Vercel setzen (langer Zufallsstring)

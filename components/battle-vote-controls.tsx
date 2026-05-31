@@ -21,12 +21,8 @@ import {
   buildBattleShareText,
   buildVoteShareText,
   buildVoteShareTextStyle2,
-  telegramShareUrl,
-  twitterShareUrl,
-  whatsAppShareUrl,
 } from "@/lib/share-links";
 import { hasShareCardStyle2 } from "@/lib/rewards/tiers";
-import { EmbedCodeCopyButton } from "@/components/embed-code-copy-button";
 import {
   PostVoteRewardsBanner,
   type VoteGrantResult,
@@ -256,7 +252,7 @@ export function BattleVoteControls({
     if (navigator.share) {
       await navigator.share({
         title: battle.title,
-        text: hasVoted ? voteShareText : `${options[0]?.label} vs ${options[1]?.label}`,
+        text: shareText,
         url: shareUrl,
       });
       return;
@@ -397,46 +393,22 @@ export function BattleVoteControls({
         </p>
       )}
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
-        <p className="text-white/40" style={{ fontSize: 12 }}>
+      <div className="mt-6 flex flex-col gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-center text-white/40 sm:text-left" style={{ fontSize: 12 }}>
           Live results · updates every 8s
           {hasVoted ? " · Thanks for voting!" : null}
         </p>
         {!embed ? (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center justify-center gap-2 sm:flex-1 sm:justify-center">
             <Button variant="outline" onClick={handleCopy} className="gap-2">
               {copied ? <CheckIcon /> : <CopyIcon />}
               {copied ? "Copied!" : "Copy link"}
             </Button>
-            <EmbedCodeCopyButton slug={battle.slug} />
-            <Button onClick={handleShare} className="gap-2">
+            <Button onClick={handleShare} className="min-w-[132px] gap-2">
               <ShareIcon />
               <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em" }}>
                 SHARE
               </span>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href={whatsAppShareUrl(shareText)} target="_blank" rel="noopener noreferrer">
-                WhatsApp
-              </a>
-            </Button>
-            <Button variant="outline" asChild>
-              <a
-                href={twitterShareUrl(shareText, shareUrl)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                X
-              </a>
-            </Button>
-            <Button variant="outline" asChild>
-              <a
-                href={telegramShareUrl(shareText, shareUrl)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Telegram
-              </a>
             </Button>
           </div>
         ) : null}

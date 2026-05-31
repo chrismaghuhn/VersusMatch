@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { captureServerError } from "@/lib/observability";
 import { notifyNewReport } from "@/lib/report-notify";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as {
@@ -28,8 +27,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Reason must be 3–500 characters" }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("battle_reports").insert({
+  const admin = createAdminClient();
+  const { error } = await admin.from("battle_reports").insert({
     battle_id: battleId,
     reason: trimmedReason,
   });
@@ -40,7 +39,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const admin = createAdminClient();
     const { data: battle } = await admin
       .from("battles")
       .select("title, slug")

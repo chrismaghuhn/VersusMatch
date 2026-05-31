@@ -92,7 +92,7 @@ export async function createBattle(formData: FormData) {
     redirect(`/create?error=${imageBError}`);
   }
 
-  const activeCount = await countActiveBattlesForCreator(supabase, user.id);
+  const activeCount = await countActiveBattlesForCreator(createAdminClient(), user.id);
   if (activeCount >= MAX_ACTIVE_BATTLES) {
     redirect("/create?error=battle_limit");
   }
