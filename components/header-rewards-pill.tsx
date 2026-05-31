@@ -1,15 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { parseJsonResponse } from "@/lib/parse-json-response";
-
-type RewardsMe = {
-  streak: number;
-  tier: number;
-};
+import type { RewardsMe } from "@/lib/rewards/types";
 
 export function HeaderRewardsPill() {
-  const [rewards, setRewards] = useState<RewardsMe | null>(null);
+  const [rewards, setRewards] = useState<Pick<RewardsMe, "streak" | "tier"> | null>(null);
 
   useEffect(() => {
     fetch("/api/rewards/me")
@@ -18,7 +15,9 @@ export function HeaderRewardsPill() {
         return parseJsonResponse<RewardsMe>(res);
       })
       .then((data) => {
-        if (data && "streak" in data) setRewards(data);
+        if (data && "streak" in data) {
+          setRewards({ streak: data.streak, tier: data.tier });
+        }
       })
       .catch(() => setRewards(null));
   }, []);
@@ -26,9 +25,10 @@ export function HeaderRewardsPill() {
   if (!rewards) return null;
 
   return (
-    <div
-      className="hidden items-center gap-2 border border-white/10 bg-white/5 px-2.5 py-1.5 sm:flex"
-      title="Fight streak & Battle Pass tier"
+    <Link
+      href="/rewards"
+      className="hidden items-center gap-2 border border-white/10 bg-white/[0.03] px-2.5 py-1.5 transition hover:border-[#CCFF00]/40 hover:bg-[#CCFF00]/5 sm:flex"
+      title="Fight streak & Battle Pass — 100% free"
     >
       {rewards.streak > 0 ? (
         <span className="text-white/80" style={{ fontSize: 11, fontWeight: 700 }}>
@@ -41,6 +41,6 @@ export function HeaderRewardsPill() {
       >
         TIER {rewards.tier}
       </span>
-    </div>
+    </Link>
   );
 }

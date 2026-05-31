@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { DramaKind } from "@/lib/rewards/drama";
 import { RewardsProgressBar } from "@/components/rewards-progress-bar";
 import { parseJsonResponse } from "@/lib/parse-json-response";
+import type { RewardsMe } from "@/lib/rewards/types";
 
 export type VoteGrantResult = {
   xpAwarded: number;
@@ -25,11 +26,7 @@ const dramaAccent: Record<DramaKind, string> = {
   winning: "#CCFF00",
 };
 
-type RewardsMe = {
-  xp: number;
-  tier: number;
-  nextTierXp: number | null;
-};
+type ProgressSlice = Pick<RewardsMe, "xp" | "tier" | "nextTierXp">;
 
 export function PostVoteRewardsBanner({
   drama,
@@ -37,7 +34,7 @@ export function PostVoteRewardsBanner({
   returnTo,
   grantResult,
 }: PostVoteRewardsBannerProps) {
-  const [progress, setProgress] = useState<RewardsMe | null>(null);
+  const [progress, setProgress] = useState<ProgressSlice | null>(null);
   const accent = dramaAccent[drama.kind];
 
   useEffect(() => {
@@ -55,12 +52,16 @@ export function PostVoteRewardsBanner({
 
   return (
     <div
-      className="mt-6 border px-5 py-4"
+      className="relative mt-6 overflow-hidden border px-5 py-4"
       style={{
         borderColor: `${accent}4D`,
         background: `${accent}0D`,
       }}
     >
+      <div
+        className="absolute left-0 top-0 h-1 w-full"
+        style={{ background: accent, opacity: 0.85 }}
+      />
       <p
         style={{
           color: accent,

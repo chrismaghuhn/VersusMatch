@@ -40,8 +40,11 @@ export function RewardsProgressBar({
       </div>
       <div className={`w-full overflow-hidden bg-white/10 ${compact ? "h-1.5" : "h-2"}`}>
         <div
-          className="h-full bg-[#CCFF00] transition-all duration-700"
-          style={{ width: `${progressPct}%` }}
+          className="h-full transition-all duration-700"
+          style={{
+            width: `${progressPct}%`,
+            background: "linear-gradient(90deg, #CCFF00, #FF2D87)",
+          }}
         />
       </div>
     </div>
