@@ -1,6 +1,5 @@
 "use client";
 
-import { v4 as uuidv4 } from "uuid";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 
 const VOTER_TOKEN_KEY = "memefight_voter_token";
@@ -15,7 +14,7 @@ export function getOrCreateVoterToken(): string {
     return existing;
   }
 
-  const token = uuidv4();
+  const token = crypto.randomUUID();
   localStorage.setItem(VOTER_TOKEN_KEY, token);
   return token;
 }

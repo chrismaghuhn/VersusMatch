@@ -2,29 +2,32 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { User } from "@supabase/supabase-js";
-import { LogOut } from "lucide-react";
 import { logout } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+
+type MeUser = { id: string; email: string | null };
+
+function LogOutIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M10 11l3-3-3-3M13 8H6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="square"
+      />
+    </svg>
+  );
+}
 
 export function HeaderNavAuth() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<MeUser | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    fetch("/api/me")
+      .then((res) => res.json())
+      .then((data: { user: MeUser | null }) => setUser(data.user))
+      .catch(() => setUser(null));
   }, []);
 
   if (!user) return null;
@@ -41,38 +44,28 @@ export function HeaderNavAuth() {
 }
 
 export function HeaderAuth() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<MeUser | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const supabase = createClient();
-
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-      setReady(true);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setReady(true);
-    });
-
-    return () => subscription.unsubscribe();
+    fetch("/api/me")
+      .then((res) => res.json())
+      .then((data: { user: MeUser | null }) => {
+        setUser(data.user);
+        setReady(true);
+      })
+      .catch(() => setReady(true));
   }, []);
 
   if (!ready) {
-    return (
-      <div className="h-9 w-16 animate-pulse rounded bg-white/10" aria-hidden />
-    );
+    return <div className="h-9 w-16 animate-pulse rounded bg-white/10" aria-hidden />;
   }
 
   if (user) {
     return (
       <form action={logout}>
         <Button type="submit" variant="ghost" size="sm" className="gap-1">
-          <LogOut className="h-4 w-4" />
+          <LogOutIcon />
           <span className="hidden sm:inline">Logout</span>
         </Button>
       </form>

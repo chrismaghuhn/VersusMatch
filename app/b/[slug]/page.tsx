@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { preload } from "react-dom";
 import { BattleVote } from "@/components/battle-vote";
 import { getCachedBattleBySlug, getCachedBattleResults } from "@/lib/battles-cache";
 import { getAppUrl, getPublicImageUrl } from "@/lib/utils";
@@ -59,6 +60,14 @@ export default async function BattlePage({ params }: PageProps) {
 
   const results = await getCachedBattleResults(battle.id);
   const shareUrl = getAppUrl(`/b/${battle.slug}`);
+
+  const lcpImage =
+    getPublicImageUrl(battle.battle_options[0]?.image_path) ??
+    getPublicImageUrl(battle.battle_options[1]?.image_path);
+
+  if (lcpImage) {
+    preload(lcpImage, { as: "image", fetchPriority: "high" });
+  }
 
   return <BattleVote battle={battle} initialResults={results} shareUrl={shareUrl} />;
 }

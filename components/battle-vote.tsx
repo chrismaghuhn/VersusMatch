@@ -1,22 +1,27 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Share2, Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BattleReportButton } from "@/components/battle-report-button";
-import { BattleImage } from "@/components/battle-image";
 import { Noise } from "@/components/brutal/noise";
-import { createClient } from "@/lib/supabase/client";
-import { getBattleResultsRpc } from "@/lib/supabase/rpc";
 import { isTurnstileEnabled } from "@/lib/turnstile-config";
 import type { BattleOption, BattleResult, BattleWithOptions } from "@/lib/database.types";
 import { castVote, getOrCreateVoterToken } from "@/lib/votes";
 import { formatPercent, getPublicImageUrl } from "@/lib/utils";
+import { parseJsonResponse } from "@/lib/parse-json-response";
 
 const TurnstileWidget = dynamic(
   () => import("@/components/turnstile-widget").then((mod) => ({ default: mod.TurnstileWidget })),
   { ssr: false }
+);
+
+const BattleReportButton = dynamic(
+  () =>
+    import("@/components/battle-report-button").then((mod) => ({
+      default: mod.BattleReportButton,
+    })),
+  { ssr: false, loading: () => null }
 );
 
 const OPTION_COLORS = ["#CCFF00", "#FF2D87"] as const;
@@ -51,10 +56,10 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
 
   const refreshResults = useCallback(async () => {
     try {
-      const supabase = createClient();
-      const { data } = await getBattleResultsRpc(supabase, battle.id);
+      const response = await fetch(`/api/battle/${battle.id}/results`);
+      const data = await parseJsonResponse<BattleResult[]>(response);
 
-      if (data) {
+      if (response.ok && Array.isArray(data)) {
         setResults([...data].sort((a, b) => a.position - b.position));
       }
     } catch {
@@ -237,11 +242,11 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={handleCopy} className="gap-2">
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? <CheckIcon /> : <CopyIcon />}
               {copied ? "Copied!" : "Copy link"}
             </Button>
             <Button onClick={handleShare} className="gap-2">
-              <Share2 className="h-3.5 w-3.5" />
+              <ShareIcon />
               <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em" }}>
                 SHARE THIS FIGHT
               </span>
@@ -382,13 +387,21 @@ function BattleSide({
       style={{ opacity: otherPicked ? 0.45 : 1 }}
     >
       <div className="relative aspect-[16/11] w-full overflow-hidden">
-        <BattleImage
-          src={img}
-          alt={title}
-          priority={priority}
-          className="transition duration-700 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, 40vw"
-        />
+        {img ? (
+          <Image
+            src={img}
+            alt={title}
+            fill
+            priority={priority}
+            fetchPriority={priority ? "high" : "auto"}
+            className="object-cover transition duration-700 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 40vw"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-[#141414] p-6 text-center text-2xl font-black text-white">
+            {title}
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         <div className="absolute left-5 top-5 flex items-center gap-2">
           <div className="px-2 py-1" style={{ background: color }}>
@@ -474,5 +487,35 @@ function BattleSide({
         )}
       </div>
     </button>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="5" y="5" width="9" height="9" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M3 11V3a1 1 0 011-1h8" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path d="M3 8l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="square" />
+    </svg>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path
+        d="M10 2l2 2-2 2M12 4H5a3 3 0 00-3 3v1M4 12l-2-2 2-2M2 10h7a3 3 0 003-3V6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="square"
+      />
+    </svg>
   );
 }
