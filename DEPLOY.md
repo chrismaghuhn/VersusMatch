@@ -95,6 +95,14 @@ After deploy, run Lighthouse mobile (Slow 4G simulation) on:
 
 Target: Performance ≥ 80. Final prod scores (2026-06-01): `/` **95**, `/b/[slug]` **97** (mobile, Slow 4G). Home/Feed use ISR (`revalidate=60`); vote counts on feed may lag up to 60s (battle page polls live).
 
+## Growth / SEO
+
+- Branded OG: `https://memefight.lol/b/<slug>/opengraph-image`
+- Sitemap: `https://memefight.lol/sitemap.xml`
+- Robots: `https://memefight.lol/robots.txt`
+- Seed battles locally: `npm run seed:battles` (needs `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`)
+- Verify share preview: [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)
+
 ## Smoke-Test nach Deploy
 
 ### Kernflows (P0)

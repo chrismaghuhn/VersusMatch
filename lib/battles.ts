@@ -128,3 +128,18 @@ export async function countActiveBattlesForCreator(
   if (error) return 0;
   return data ?? 0;
 }
+
+export async function getActiveBattleSlugsForSitemap(
+  supabase: SupabaseClient<Database>,
+  limit = 500
+): Promise<{ slug: string; created_at: string }[]> {
+  const { data, error } = await supabase
+    .from("battles")
+    .select("slug, created_at")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data;
+}

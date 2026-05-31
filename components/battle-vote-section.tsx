@@ -1,4 +1,5 @@
 import { Noise } from "@/components/brutal/noise";
+import { CreateShareBanner } from "@/components/create-share-banner";
 import { Stat, VsSlider } from "@/components/battle-vote-ui";
 import { BattleSideDisplay } from "@/components/battle-side-display";
 import { BattleVoteControls } from "@/components/battle-vote-controls";
@@ -9,9 +10,15 @@ type BattleVoteSectionProps = {
   battle: BattleWithOptions;
   initialResults: BattleResult[];
   shareUrl: string;
+  showCreateBanner?: boolean;
 };
 
-export function BattleVoteSection({ battle, initialResults, shareUrl }: BattleVoteSectionProps) {
+export function BattleVoteSection({
+  battle,
+  initialResults,
+  shareUrl,
+  showCreateBanner = false,
+}: BattleVoteSectionProps) {
   const options = [...battle.battle_options].sort((a, b) => a.position - b.position);
   const totalVotes = initialResults.reduce((sum, row) => sum + row.vote_count, 0);
   const resultA = initialResults.find((row) => row.option_id === options[0]?.id);
@@ -21,6 +28,15 @@ export function BattleVoteSection({ battle, initialResults, shareUrl }: BattleVo
     <section className="relative overflow-hidden border-b border-white/10 bg-[#0a0a0a]">
       <Noise opacity={0.06} />
       <div className="relative z-10 mx-auto max-w-[1440px] px-4 py-12 sm:px-6 sm:py-20">
+        {showCreateBanner && options[0] && options[1] ? (
+          <CreateShareBanner
+            title={battle.title}
+            optionA={options[0].label}
+            optionB={options[1].label}
+            shareUrl={shareUrl}
+          />
+        ) : null}
+
         <div className="mb-10 grid grid-cols-12 items-end gap-6">
           <div className="col-span-12 md:col-span-8">
             <div className="mb-4 flex items-center gap-3">

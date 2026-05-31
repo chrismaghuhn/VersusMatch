@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { siteMetadata } from "@/lib/site-metadata";
 import "./globals.css";
 
 const inter = Inter({
@@ -10,16 +11,7 @@ const inter = Inter({
   weight: ["600", "900"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "MemeFight — A vs B Battles",
-    template: "%s | MemeFight",
-  },
-  description: "Create shareable A-vs-B battles on memefight.lol and collect live votes.",
-  icons: {
-    icon: "/favicon.svg",
-  },
-};
+export const metadata: Metadata = siteMetadata;
 
 export default function RootLayout({
   children,

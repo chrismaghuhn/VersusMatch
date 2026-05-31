@@ -1,12 +1,27 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { BattleCard, CreateBattleCard } from "@/components/battle-card";
 import { FeedFilters } from "@/components/feed-filters";
 import { Button } from "@/components/ui/button";
 import { getActiveBattlesFeed, type FeedSort } from "@/lib/battles";
 import type { BattleCategory } from "@/lib/categories";
+import { getAppUrl } from "@/lib/utils";
 import { createPublicClient } from "@/lib/supabase/public";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Live Feed",
+  description: "Browse trending A-vs-B battles on MemeFight and vote live.",
+  alternates: {
+    canonical: getAppUrl("/feed"),
+  },
+  openGraph: {
+    title: "MemeFight Live Feed",
+    description: "Trending fights — pick a side and vote.",
+    url: getAppUrl("/feed"),
+  },
+};
 
 export default async function FeedPage({
   searchParams,

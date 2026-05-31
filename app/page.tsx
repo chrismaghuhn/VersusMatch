@@ -4,9 +4,26 @@ import { BrutalCreateCta } from "@/components/brutal/create-cta";
 import { BrutalHero } from "@/components/brutal/hero";
 import { getActiveBattlesFeed } from "@/lib/battles";
 import { getCachedSiteStats, type SiteStats } from "@/lib/stats";
+import { getAppUrl } from "@/lib/utils";
 import { createPublicClient } from "@/lib/supabase/public";
+import type { Metadata } from "next";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "MemeFight — A vs B Battles",
+  description:
+    "Create shareable A-vs-B battles, share the link, and watch live votes roll in. No signup needed to vote.",
+  alternates: {
+    canonical: getAppUrl("/"),
+  },
+  openGraph: {
+    title: "MemeFight — Pick a side. Start a fight.",
+    description:
+      "Shareable A-vs-B battles on memefight.lol. Two options. One winner. Live results.",
+    url: getAppUrl("/"),
+  },
+};
 
 const emptyStats: SiteStats = { activeBattles: 0, totalVotes: 0, votesLast24h: 0 };
 

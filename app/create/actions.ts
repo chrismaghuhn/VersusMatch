@@ -198,5 +198,5 @@ export async function createBattle(formData: FormData) {
     redirect(`/create?error=create_failed`);
   }
 
-  redirect(`/b/${battle.slug}`);
+  redirect(`/b/${battle.slug}?created=1`);
 }

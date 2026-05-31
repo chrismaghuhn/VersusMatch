@@ -16,6 +16,13 @@ import type { BattleOption, BattleResult, BattleWithOptions } from "@/lib/databa
 import { castVote, getOrCreateVoterToken } from "@/lib/votes";
 import { formatPercent, getPublicImageUrl } from "@/lib/utils";
 import { parseJsonResponse } from "@/lib/parse-json-response";
+import {
+  buildBattleShareText,
+  buildVoteShareText,
+  telegramShareUrl,
+  twitterShareUrl,
+  whatsAppShareUrl,
+} from "@/lib/share-links";
 
 const TurnstileWidget = dynamic(
   () => import("@/components/turnstile-widget").then((mod) => ({ default: mod.TurnstileWidget })),
@@ -49,6 +56,7 @@ export function BattleVoteControls({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [sharePromptDismissed, setSharePromptDismissed] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
   const turnstileRequired = isTurnstileEnabled();
 
@@ -60,6 +68,16 @@ export function BattleVoteControls({
   const totalVotes = results.reduce((sum, row) => sum + row.vote_count, 0);
   const resultA = results.find((row) => row.option_id === options[0]?.id);
   const aPct = formatPercent(resultA?.vote_count ?? 0, totalVotes);
+  const votedSideLabel =
+    options.find((option) => option.id === selectedOptionId)?.label ?? "my pick";
+  const voteShareText = buildVoteShareText(battle.title, votedSideLabel, shareUrl);
+  const genericShareText = buildBattleShareText(
+    battle.title,
+    options[0]?.label ?? "Option A",
+    options[1]?.label ?? "Option B",
+    shareUrl
+  );
+  const shareText = hasVoted ? voteShareText : genericShareText;
 
   const refreshResults = useCallback(async () => {
     try {
@@ -244,6 +262,31 @@ export function BattleVoteControls({
         </div>
       )}
 
+      {hasVoted && !sharePromptDismissed && (
+        <div className="mt-6 border border-[#CCFF00]/30 bg-[#CCFF00]/5 px-5 py-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                className="text-[#CCFF00]"
+                style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em" }}
+              >
+                SHARE YOUR PICK
+              </p>
+              <p className="mt-1 text-white" style={{ fontSize: 14 }}>
+                You voted for <strong>{votedSideLabel}</strong> — rally your group chat.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSharePromptDismissed(true)}
+              className="text-sm text-white/40 underline underline-offset-4 hover:text-white"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {error && (
         <p className="mt-6 border border-[#FF2D87]/40 bg-[#FF2D87]/10 px-4 py-3 text-center text-sm text-[#FF2D87]">
           {error}
@@ -263,8 +306,31 @@ export function BattleVoteControls({
           <Button onClick={handleShare} className="gap-2">
             <ShareIcon />
             <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em" }}>
-              SHARE THIS FIGHT
+              SHARE
             </span>
+          </Button>
+          <Button variant="outline" asChild>
+            <a href={whatsAppShareUrl(shareText)} target="_blank" rel="noopener noreferrer">
+              WhatsApp
+            </a>
+          </Button>
+          <Button variant="outline" asChild>
+            <a
+              href={twitterShareUrl(shareText, shareUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              X
+            </a>
+          </Button>
+          <Button variant="outline" asChild>
+            <a
+              href={telegramShareUrl(shareText, shareUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Telegram
+            </a>
           </Button>
         </div>
       </div>
