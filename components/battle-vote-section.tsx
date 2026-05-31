@@ -59,7 +59,7 @@ export function BattleVoteSection({ battle, initialResults, shareUrl }: BattleVo
             <BattleSideDisplay option={options[0]} index={0} priority />
           ) : null}
           <VsSlider aPct={aPct} totalVotes={totalVotes} />
-          {options[1] ? <BattleSideDisplay option={options[1]} index={1} priority /> : null}
+          {options[1] ? <BattleSideDisplay option={options[1]} index={1} eager /> : null}
         </div>
 
         <BattleVoteControls

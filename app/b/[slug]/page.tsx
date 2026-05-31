@@ -61,19 +61,19 @@ export default async function BattlePage({ params }: PageProps) {
   const results = await getCachedBattleResults(battle.id);
   const shareUrl = getAppUrl(`/b/${battle.slug}`);
 
-  const imageA = getPublicImageUrl(battle.battle_options[0]?.image_path);
-  const imageB = getPublicImageUrl(battle.battle_options[1]?.image_path);
-  const battleImages = [imageA, imageB].filter((url): url is string => Boolean(url));
+  const lcpImage =
+    getPublicImageUrl(battle.battle_options[0]?.image_path) ??
+    getPublicImageUrl(battle.battle_options[1]?.image_path);
 
-  for (const image of battleImages) {
-    preload(image, { as: "image", fetchPriority: "high" });
+  if (lcpImage) {
+    preload(lcpImage, { as: "image", fetchPriority: "high" });
   }
 
   return (
     <>
-      {battleImages.map((image) => (
-        <link key={image} rel="preload" as="image" href={image} fetchPriority="high" />
-      ))}
+      {lcpImage ? (
+        <link rel="preload" as="image" href={lcpImage} fetchPriority="high" />
+      ) : null}
       <BattleVoteSection battle={battle} initialResults={results} shareUrl={shareUrl} />
     </>
   );

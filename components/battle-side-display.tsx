@@ -7,16 +7,17 @@ type BattleSideDisplayProps = {
   option: BattleOption;
   index: number;
   priority?: boolean;
+  eager?: boolean;
 };
 
 export function BattleSideDisplay({
   option,
   index,
   priority = false,
+  eager = false,
 }: BattleSideDisplayProps) {
   const color = OPTION_COLORS[index] ?? OPTION_COLORS[0];
   const img = getPublicImageUrl(option.image_path);
-  const eager = priority;
 
   return (
     <article
@@ -29,9 +30,9 @@ export function BattleSideDisplay({
             src={img}
             alt={option.label}
             fill
-            priority={eager}
-            fetchPriority={eager ? "high" : "auto"}
-            loading={eager ? undefined : "lazy"}
+            priority={priority}
+            fetchPriority={priority ? "high" : "auto"}
+            loading={priority ? undefined : eager ? "eager" : "lazy"}
             className="object-cover transition duration-700 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, 40vw"
           />
