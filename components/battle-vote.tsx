@@ -40,27 +40,28 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
   }, [battle.id]);
 
   useEffect(() => {
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`battle-${battle.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "votes",
-          filter: `battle_id=eq.${battle.id}`,
-        },
-        () => {
-          void refreshResults();
-        }
-      )
-      .subscribe();
+    function pollIfVisible() {
+      if (document.visibilityState === "visible") {
+        void refreshResults();
+      }
+    }
+
+    pollIfVisible();
+    const intervalId = window.setInterval(pollIfVisible, 4000);
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        void refreshResults();
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      void supabase.removeChannel(channel);
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [battle.id, refreshResults]);
+  }, [refreshResults]);
 
   async function handleVote(optionId: string) {
     if (hasVoted || isSubmitting) return;
