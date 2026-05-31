@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { logout } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 
 type MeUser = { id: string; email: string | null };
@@ -63,7 +62,7 @@ export function HeaderAuth() {
 
   if (user) {
     return (
-      <form action={logout}>
+      <form action="/api/auth/logout" method="POST">
         <Button type="submit" variant="ghost" size="sm" className="gap-1">
           <LogOutIcon />
           <span className="hidden sm:inline">Logout</span>
