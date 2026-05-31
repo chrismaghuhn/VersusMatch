@@ -93,9 +93,9 @@ export function LoginForm() {
   const submitDisabled = isLoading || cooldown > 0;
 
   return (
-    <Card className="w-full">
+    <Card className="w-full border-white/10 bg-[#0a0a0a]">
       <CardHeader>
-        <CardTitle>Login</CardTitle>
+        <CardTitle className="text-white">Login</CardTitle>
         <CardDescription>
           Magic Link per E-Mail — nur nötig zum Erstellen von Battles. Link im selben Browser
           öffnen, in dem du ihn angefordert hast.
@@ -103,13 +103,15 @@ export function LoginForm() {
       </CardHeader>
       <CardContent className="space-y-4">
         {sent && (
-          <p className="rounded-lg bg-secondary px-4 py-3 text-sm">
+          <p className="border border-[#CCFF00]/30 bg-[#CCFF00]/5 px-4 py-3 text-sm text-white">
             Check dein Postfach — der Login-Link ist unterwegs. Öffne ihn im selben Browser.
             Du kannst {cooldown > 0 ? `in ${cooldown}s` : "später"} einen neuen Link anfordern.
           </p>
         )}
         {error && (
-          <p className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>
+          <p className="border border-[#FF2D87]/40 bg-[#FF2D87]/10 px-4 py-3 text-sm text-[#FF2D87]">
+            {error}
+          </p>
         )}
         <form onSubmit={handleSubmit} className="space-y-3">
           <Input
@@ -128,8 +130,8 @@ export function LoginForm() {
                 : "Magic Link senden"}
           </Button>
         </form>
-        <p className="text-center text-sm text-muted-foreground">
-          <Link href="/" className="underline underline-offset-4 hover:text-foreground">
+        <p className="text-center text-sm text-white/50">
+          <Link href="/" className="underline underline-offset-4 hover:text-[#CCFF00]">
             Zurück zur Startseite
           </Link>
         </p>

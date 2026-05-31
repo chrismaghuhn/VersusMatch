@@ -51,7 +51,7 @@ export function TurnstileWidget({ onToken }: TurnstileWidgetProps) {
       sitekey: siteKey,
       callback: handleToken,
       "expired-callback": () => onToken(""),
-      theme: "auto",
+      theme: "dark",
     });
   }, [siteKey, ready, handleToken, onToken]);
 

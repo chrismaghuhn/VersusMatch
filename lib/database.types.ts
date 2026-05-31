@@ -212,4 +212,5 @@ export type BattleWithOptions = Battle & {
 export type FeedBattle = Battle & {
   battle_options: BattleOption[];
   total_votes: number;
+  results: BattleResult[];
 };

@@ -2,16 +2,19 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ResultsBar } from "@/components/results-bar";
 import { BattleReportButton } from "@/components/battle-report-button";
 import { isTurnstileEnabled, TurnstileWidget } from "@/components/turnstile-widget";
+import { Noise } from "@/components/brutal/noise";
 import { createClient } from "@/lib/supabase/client";
 import { getBattleResultsRpc } from "@/lib/supabase/rpc";
 import type { BattleResult, BattleWithOptions } from "@/lib/database.types";
 import { castVote, getOrCreateVoterToken } from "@/lib/votes";
-import { getPublicImageUrl } from "@/lib/utils";
-import { Check, Copy, Share2 } from "lucide-react";
+import { formatPercent, getPublicImageUrl } from "@/lib/utils";
+import { Check, Copy } from "lucide-react";
+
+const OPTION_COLORS = ["#CCFF00", "#FF2D87"] as const;
 
 type BattleVoteProps = {
   battle: BattleWithOptions;
@@ -33,6 +36,8 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
     () => [...battle.battle_options].sort((a, b) => a.position - b.position),
     [battle.battle_options]
   );
+
+  const totalVotes = results.reduce((sum, row) => sum + row.vote_count, 0);
 
   const refreshResults = useCallback(async () => {
     const supabase = createClient();
@@ -123,91 +128,278 @@ export function BattleVote({ battle, initialResults, shareUrl }: BattleVoteProps
   }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{battle.title}</h1>
-        <p className="mt-2 text-muted-foreground">
-          {hasVoted ? "Danke für deinen Vote!" : "Wähle deine Option"}
-        </p>
-      </div>
+    <section className="relative overflow-hidden border-b border-white/10 bg-[#0a0a0a]">
+      <Noise opacity={0.06} />
+      <div className="relative z-10 mx-auto max-w-[1440px] px-4 py-12 sm:px-6 sm:py-20">
+        <div className="mb-10 grid grid-cols-12 items-end gap-6">
+          <div className="col-span-12 md:col-span-8">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-[#FF2D87] px-2.5 py-1 text-white">
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.18em" }}>
+                  LIVE BATTLE
+                </span>
+              </div>
+            </div>
+            <h1
+              className="text-white"
+              style={{
+                fontWeight: 900,
+                fontSize: "clamp(28px, 5vw, 56px)",
+                letterSpacing: "-0.045em",
+                lineHeight: 0.92,
+              }}
+            >
+              {battle.title}
+            </h1>
+            <p className="mt-3 text-white/50" style={{ fontSize: 14 }}>
+              {hasVoted ? "Danke für deinen Vote!" : "Wähle deine Option — tap to commit."}
+            </p>
+          </div>
+          <div className="col-span-12 grid grid-cols-2 gap-4 md:col-span-4 md:grid-cols-1">
+            <Stat label="VOTES" value={totalVotes.toLocaleString("de-DE")} />
+            <Stat label="OPTIONS" value="2" />
+          </div>
+        </div>
 
-      {!hasVoted ? (
-        <>
-          {turnstileRequired && (
-            <div className="mx-auto max-w-sm">
-              <TurnstileWidget onToken={setTurnstileToken} />
+        {!hasVoted && turnstileRequired && (
+          <div className="mb-6 mx-auto max-w-sm">
+            <TurnstileWidget onToken={setTurnstileToken} />
+          </div>
+        )}
+
+        <div className="relative grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto_1fr]">
+          {options.map((option, index) => {
+            const result = results.find((row) => row.option_id === option.id);
+            const pct = formatPercent(result?.vote_count ?? 0, totalVotes);
+            const color = OPTION_COLORS[index] ?? OPTION_COLORS[0];
+            const otherOptionId = options.find((item) => item.id !== option.id)?.id;
+            const otherPicked = hasVoted && selectedOptionId === otherOptionId;
+            const picked = hasVoted && selectedOptionId === option.id;
+            const leading =
+              hasVoted &&
+              (result?.vote_count ?? 0) >
+                (results.find((row) => row.option_id !== option.id)?.vote_count ?? 0);
+
+            return (
+              <div key={option.id} className="contents">
+                {index === 1 && <VsDivider />}
+                <BattleSide
+                  title={option.label}
+                  img={getPublicImageUrl(option.image_path)}
+                  color={color}
+                  votes={result?.vote_count ?? 0}
+                  pct={pct}
+                  picked={picked}
+                  otherPicked={otherPicked}
+                  voted={hasVoted}
+                  disabled={isSubmitting}
+                  onClick={() => handleVote(option.id)}
+                  leading={leading}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {error && (
+          <p className="mt-6 border border-[#FF2D87]/40 bg-[#FF2D87]/10 px-4 py-3 text-center text-sm text-[#FF2D87]">
+            {error}
+          </p>
+        )}
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
+          <p className="text-white/40" style={{ fontSize: 12 }}>
+            Live-Ergebnisse · aktualisiert alle 8s
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={handleCopy} className="gap-2">
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? "Kopiert!" : "Link kopieren"}
+            </Button>
+            <Button onClick={handleShare} className="gap-2">
+              <Share2 className="h-3.5 w-3.5" />
+              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em" }}>
+                SHARE THIS FIGHT
+              </span>
+            </Button>
+          </div>
+        </div>
+
+        <BattleReportButton battleId={battle.id} />
+      </div>
+    </section>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-white/10 px-3 py-2">
+      <div
+        className="text-white/40"
+        style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em" }}
+      >
+        {label}
+      </div>
+      <div
+        className="mt-0.5 text-white"
+        style={{ fontWeight: 900, fontSize: 20, letterSpacing: "-0.03em", lineHeight: 1.1 }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function VsDivider() {
+  return (
+    <div className="relative flex items-center justify-center py-4 md:order-none md:py-0">
+      <div className="absolute inset-y-0 left-1/2 hidden w-px bg-gradient-to-b from-transparent via-white/20 to-transparent md:block" />
+      <div className="absolute inset-x-0 top-1/2 h-px bg-white/10 md:hidden" />
+      <div className="relative order-first flex h-20 w-20 items-center justify-center bg-black md:order-none">
+        <span className="text-white" style={{ fontWeight: 900, fontSize: 18, letterSpacing: "0.08em" }}>
+          VS
+        </span>
+        <div className="absolute -inset-px border border-[#CCFF00]/40" />
+        <div className="absolute -inset-3 border border-white/10" />
+        <div className="absolute -right-2 -top-2 h-3 w-3 rotate-45 bg-[#FF2D87]" />
+        <div className="absolute -bottom-2 -left-2 h-3 w-3 rotate-45 bg-[#CCFF00]" />
+      </div>
+    </div>
+  );
+}
+
+function BattleSide({
+  title,
+  img,
+  color,
+  votes,
+  pct,
+  picked,
+  otherPicked,
+  voted,
+  disabled,
+  onClick,
+  leading,
+}: {
+  title: string;
+  img: string | null;
+  color: string;
+  votes: number;
+  pct: number;
+  picked: boolean;
+  otherPicked: boolean;
+  voted: boolean;
+  disabled: boolean;
+  onClick: () => void;
+  leading: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={voted || disabled}
+      className="group relative overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30 disabled:cursor-default"
+      style={{ opacity: otherPicked ? 0.45 : 1 }}
+    >
+      <div className="relative aspect-[16/11] w-full overflow-hidden">
+        {img ? (
+          <Image
+            src={img}
+            alt={title}
+            fill
+            className="object-cover transition duration-700 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 40vw"
+            priority
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-[#141414] p-6 text-center text-2xl font-black text-white">
+            {title}
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+        <div className="absolute left-5 top-5 flex items-center gap-2">
+          <div className="px-2 py-1" style={{ background: color }}>
+            <span
+              className="text-black"
+              style={{ fontWeight: 800, fontSize: 10, letterSpacing: "0.18em" }}
+            >
+              {title.toUpperCase()}
+            </span>
+          </div>
+          {leading && voted && (
+            <div
+              className="-rotate-3 border border-black bg-white px-2 py-1 text-black"
+              style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.12em" }}
+            >
+              ★ LEADING
             </div>
           )}
-          <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-stretch">
-            {options.map((option, index) => {
-              const imageUrl = getPublicImageUrl(option.image_path);
-
-              return (
-                <div key={option.id} className="contents">
-                  <button
-                    type="button"
-                    disabled={isSubmitting}
-                    onClick={() => handleVote(option.id)}
-                    className="group relative overflow-hidden rounded-2xl border-2 border-border bg-card text-left shadow-sm transition hover:border-primary hover:shadow-md disabled:opacity-60"
-                  >
-                    <div className="relative aspect-square bg-secondary sm:aspect-[4/5]">
-                      {imageUrl ? (
-                        <Image
-                          src={imageUrl}
-                          alt={option.label}
-                          fill
-                          className="object-cover transition-transform group-hover:scale-[1.03]"
-                          sizes="(max-width: 768px) 100vw, 40vw"
-                          priority={index === 0}
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center p-6 text-center text-2xl font-semibold">
-                          {option.label}
-                        </div>
-                      )}
-                    </div>
-                    {imageUrl && (
-                      <div className="border-t border-border p-4 text-center text-lg font-semibold">
-                        {option.label}
-                      </div>
-                    )}
-                  </button>
-                  {index === 0 && (
-                    <div className="flex items-center justify-center">
-                      <span className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
-                        VS
-                      </span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </>
-      ) : (
-        <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <ResultsBar results={results} highlightOptionId={selectedOptionId} />
         </div>
-      )}
-
-      {error && (
-        <p className="rounded-lg bg-destructive/10 px-4 py-3 text-center text-sm text-destructive">
-          {error}
-        </p>
-      )}
-
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <Button variant="outline" onClick={handleCopy} className="gap-2">
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-          {copied ? "Kopiert!" : "Link kopieren"}
-        </Button>
-        <Button onClick={handleShare} className="gap-2">
-          <Share2 className="h-4 w-4" />
-          Teilen
-        </Button>
+        {picked && (
+          <div
+            className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center shadow-xl"
+            style={{ background: color }}
+          >
+            <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M2 7L6 11L12 3"
+                stroke="black"
+                strokeWidth="2.5"
+                strokeLinecap="square"
+              />
+            </svg>
+          </div>
+        )}
       </div>
 
-      <BattleReportButton battleId={battle.id} />
-    </div>
+      <div className="p-6">
+        <h3
+          className="text-white"
+          style={{ fontWeight: 900, fontSize: 28, letterSpacing: "-0.035em", lineHeight: 1 }}
+        >
+          {title}
+        </h3>
+
+        {voted ? (
+          <div className="mt-5">
+            <div className="flex items-baseline justify-between">
+              <span
+                className="text-white"
+                style={{ fontWeight: 900, fontSize: 56, letterSpacing: "-0.05em", lineHeight: 1 }}
+              >
+                {pct}
+                <span style={{ fontSize: 26, color }}>%</span>
+              </span>
+              <span className="text-white/40" style={{ fontSize: 13 }}>
+                {votes.toLocaleString("de-DE")} votes
+              </span>
+            </div>
+            <div className="mt-3 h-2 w-full overflow-hidden bg-white/10">
+              <div
+                className="h-full transition-all duration-1000"
+                style={{ width: `${pct}%`, background: color }}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-5">
+            <span
+              className="text-white/50"
+              style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.15em" }}
+            >
+              TAP TO COMMIT
+            </span>
+            <span
+              className="flex h-7 w-7 items-center justify-center transition group-hover:translate-x-1"
+              style={{ background: color, color: "#000" }}
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6h8M6 2l4 4-4 4" stroke="black" strokeWidth="2" />
+              </svg>
+            </span>
+          </div>
+        )}
+      </div>
+    </button>
   );
 }

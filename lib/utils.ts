@@ -25,6 +25,16 @@ export function formatPercent(value: number, total: number): number {
   return Math.round((value / total) * 100);
 }
 
+export function formatStatNumber(value: number): string {
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  }
+  return value.toLocaleString("de-DE");
+}
+
 export function getPublicImageUrl(path: string | null | undefined): string | null {
   if (!path) return null;
   if (path.startsWith("http")) return path;

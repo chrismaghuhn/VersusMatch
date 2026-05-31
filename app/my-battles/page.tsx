@@ -25,11 +25,16 @@ export default async function MyBattlesPage({
   const battles = await getCreatorBattles(supabase, user.id);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className="mx-auto max-w-4xl px-4 py-10 sm:py-16">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Meine Battles</h1>
-          <p className="mt-2 text-muted-foreground">Verwalte, schließe oder lösche deine Battles.</p>
+          <h1
+            className="text-white"
+            style={{ fontWeight: 900, fontSize: 36, letterSpacing: "-0.04em" }}
+          >
+            Meine Battles
+          </h1>
+          <p className="mt-2 text-white/50">Verwalte, schließe oder lösche deine Battles.</p>
         </div>
         <Link href="/create">
           <Button>Neues Battle</Button>
@@ -37,20 +42,24 @@ export default async function MyBattlesPage({
       </div>
 
       {params.closed === "1" && (
-        <p className="mb-4 rounded-lg bg-secondary px-4 py-3 text-sm">Battle geschlossen — Voting beendet.</p>
+        <p className="mb-4 border border-[#CCFF00]/30 bg-[#CCFF00]/5 px-4 py-3 text-sm text-white">
+          Battle geschlossen — Voting beendet.
+        </p>
       )}
       {params.deleted === "1" && (
-        <p className="mb-4 rounded-lg bg-secondary px-4 py-3 text-sm">Battle gelöscht.</p>
+        <p className="mb-4 border border-white/10 bg-white/5 px-4 py-3 text-sm text-white">
+          Battle gelöscht.
+        </p>
       )}
       {params.error && (
-        <p className="mb-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <p className="mb-4 border border-[#FF2D87]/40 bg-[#FF2D87]/10 px-4 py-3 text-sm text-[#FF2D87]">
           Aktion fehlgeschlagen.
         </p>
       )}
 
       {battles.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border px-6 py-16 text-center">
-          <p className="text-lg font-medium">Noch keine Battles</p>
+        <div className="border border-dashed border-white/20 px-6 py-16 text-center">
+          <p className="text-lg font-black text-white">Noch keine Battles</p>
           <Link href="/create" className="mt-6 inline-block">
             <Button>Erstes Battle erstellen</Button>
           </Link>
@@ -58,21 +67,30 @@ export default async function MyBattlesPage({
       ) : (
         <div className="space-y-4">
           {battles.map((battle) => (
-            <Card key={battle.id}>
+            <Card key={battle.id} className="border-white/10 bg-[#0a0a0a]">
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link href={`/b/${battle.slug}`} className="font-semibold hover:underline">
+                    <Link
+                      href={`/b/${battle.slug}`}
+                      className="font-bold text-white hover:text-[#CCFF00]"
+                    >
                       {battle.title}
                     </Link>
-                    <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
+                    <span
+                      className="px-2 py-0.5 text-xs font-bold uppercase tracking-wider"
+                      style={{
+                        background: battle.status === "active" ? "#CCFF00" : "rgba(255,255,255,0.1)",
+                        color: battle.status === "active" ? "#000" : "rgba(255,255,255,0.6)",
+                      }}
+                    >
                       {battle.status === "active" ? "Aktiv" : "Geschlossen"}
                     </span>
-                    <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
+                    <span className="border border-white/15 px-2 py-0.5 text-xs text-white/60">
                       {getCategoryLabel(battle.category)}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-white/50">
                     {battle.total_votes} Votes · /b/{battle.slug}
                   </p>
                 </div>

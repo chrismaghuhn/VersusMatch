@@ -13,9 +13,12 @@ type OptionUploadProps = {
   position: "A" | "B";
 };
 
+const POSITION_COLORS = { A: "#CCFF00", B: "#FF2D87" } as const;
+
 export function OptionUpload({ label, name, textName, position }: OptionUploadProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const accent = POSITION_COLORS[position];
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -42,15 +45,18 @@ export function OptionUpload({ label, name, textName, position }: OptionUploadPr
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-border p-4">
+    <div className="space-y-3 border border-white/10 bg-black p-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Option {position}</h3>
+        <h3 className="font-black text-white">
+          Option {position}{" "}
+          <span style={{ color: accent }}>●</span>
+        </h3>
         {fileName && (
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-8 gap-1 text-muted-foreground"
+            className="h-8 gap-1 text-white/50"
             onClick={() => clearFile(document.getElementById(name) as HTMLInputElement | null)}
           >
             <X className="h-4 w-4" />
@@ -63,16 +69,16 @@ export function OptionUpload({ label, name, textName, position }: OptionUploadPr
 
       <label
         htmlFor={name}
-        className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-secondary/40 px-4 py-6 text-center transition hover:bg-secondary"
+        className="flex cursor-pointer flex-col items-center justify-center gap-2 border border-dashed border-white/20 bg-[#0a0a0a] px-4 py-6 text-center transition hover:border-white/40"
       >
         {preview ? (
-          <div className="relative h-32 w-full overflow-hidden rounded-lg">
+          <div className="relative h-32 w-full overflow-hidden">
             <Image src={preview} alt="Preview" fill className="object-cover" unoptimized />
           </div>
         ) : (
           <>
-            <Upload className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Optional: Bild hochladen (max. 2MB)</span>
+            <Upload className="h-5 w-5 text-white/40" />
+            <span className="text-sm text-white/40">Optional: Bild hochladen (max. 2MB)</span>
           </>
         )}
         <input

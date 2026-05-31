@@ -100,6 +100,7 @@ export async function getActiveBattlesFeed(
         ...battle,
         battle_options: battleOptions,
         total_votes: totalVotes,
+        results,
       };
     })
   );
@@ -137,6 +138,7 @@ export async function getCreatorBattles(
           (a, b) => a.position - b.position
         ),
         total_votes: totalVotes,
+        results: battleResults,
       };
     })
   );

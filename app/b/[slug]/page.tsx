@@ -62,8 +62,6 @@ export default async function BattlePage({ params }: PageProps) {
   const shareUrl = getAppUrl(`/b/${battle.slug}`);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
-      <BattleVote battle={battle} initialResults={results} shareUrl={shareUrl} />
-    </div>
+    <BattleVote battle={battle} initialResults={results} shareUrl={shareUrl} />
   );
 }

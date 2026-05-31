@@ -33,23 +33,23 @@ export default async function CreatePage({
     : null;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <Card>
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:py-16">
+      <Card className="border-white/10 bg-[#0a0a0a]">
         <CardHeader>
-          <CardTitle>Battle erstellen</CardTitle>
+          <CardTitle className="text-white">Battle erstellen</CardTitle>
           <CardDescription>
             Titel plus zwei Optionen — Text oder Bild. Danach bekommst du einen shareable Link.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {errorMessage && (
-            <p className="mb-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <p className="mb-4 border border-[#FF2D87]/40 bg-[#FF2D87]/10 px-4 py-3 text-sm text-[#FF2D87]">
               {errorMessage}
             </p>
           )}
           <form action={createBattle} className="space-y-6">
             <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-medium">
+              <label htmlFor="title" className="text-xs font-bold uppercase tracking-widest text-white/60">
                 Battle-Titel
               </label>
               <Input
@@ -62,14 +62,14 @@ export default async function CreatePage({
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="category" className="text-sm font-medium">
+              <label htmlFor="category" className="text-xs font-bold uppercase tracking-widest text-white/60">
                 Kategorie
               </label>
               <select
                 id="category"
                 name="category"
                 defaultValue="general"
-                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                className="flex h-10 w-full border border-white/15 bg-black px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CCFF00]"
               >
                 {BATTLE_CATEGORIES.map((category) => (
                   <option key={category.value} value={category.value}>

@@ -15,9 +15,10 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
   if (!process.env.ADMIN_SECRET) {
     return (
       <div className="mx-auto max-w-md px-4 py-16">
-        <h1 className="text-2xl font-bold">Admin Login</h1>
-        <p className="mt-4 text-muted-foreground">
-          Setze <code className="text-sm">ADMIN_SECRET</code> in den Env-Vars, um die Moderation zu aktivieren.
+        <h1 className="text-2xl font-black text-white">Admin Login</h1>
+        <p className="mt-4 text-white/50">
+          Setze <code className="text-sm text-[#CCFF00]">ADMIN_SECRET</code> in den Env-Vars, um
+          die Moderation zu aktivieren.
         </p>
       </div>
     );
@@ -29,8 +30,8 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
 
   return (
     <div className="mx-auto max-w-md px-4 py-16">
-      <h1 className="text-2xl font-bold">Admin Login</h1>
-      <p className="mt-2 text-muted-foreground">Moderation für MemeFight Battle-Reports.</p>
+      <h1 className="text-2xl font-black text-white">Admin Login</h1>
+      <p className="mt-2 text-white/50">Moderation für MemeFight Battle-Reports.</p>
 
       <form action={loginAdmin} className="mt-6 space-y-4">
         <input type="hidden" name="next" value={nextPath} />
@@ -38,7 +39,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
           type="password"
           name="key"
           placeholder="Admin secret"
-          className="w-full rounded-lg border border-border bg-background px-3 py-2"
+          className="w-full border border-white/15 bg-black px-3 py-2 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CCFF00]"
           autoComplete="off"
           required
         />
@@ -48,10 +49,10 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
       </form>
 
       {params.error === "unauthorized" && (
-        <p className="mt-4 text-sm text-destructive">Ungültiger Admin-Key.</p>
+        <p className="mt-4 text-sm text-[#FF2D87]">Ungültiger Admin-Key.</p>
       )}
 
-      <Link href="/" className="mt-6 inline-block text-sm text-muted-foreground hover:underline">
+      <Link href="/" className="mt-6 inline-block text-sm text-white/50 hover:text-[#CCFF00]">
         Zur Startseite
       </Link>
     </div>
