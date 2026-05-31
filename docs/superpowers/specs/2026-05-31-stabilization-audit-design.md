@@ -18,6 +18,13 @@ Make MemeFight production-ready after the brutalist redesign by deploying pendin
 - Bundle tuning: `optimizePackageImports`, Inter 600/900, AVIF/WebP, Sentry replay off
 - Full English UI copy pass
 
+## Delivered in performance phases (post-closeout)
+
+- API routes for vote polling (`/api/battle/[id]/results`), header auth (`/api/me`), magic link (`/api/auth/magic-link`) — no browser Supabase on public pages
+- Deferred Sentry client init + `bundleSizeOptimizations` (shared JS **179 kB → 104 kB**)
+- Battle vote UI split: server-rendered grid (`BattleVoteSection` + `BattleSideDisplay`); client island (`BattleVoteControls`) for voting, polling, share
+- LCP image strategy: Side A only `priority` + preload; Side B `loading="eager"` without competing preload (fixes Speed Index regression on Slow 4G)
+
 ## Success Criteria
 
 - [x] All pending fixes deployed to production
@@ -50,26 +57,27 @@ Make MemeFight production-ready after the brutalist redesign by deploying pendin
 
 ### Performance (P2)
 
-- [ ] Lighthouse mobile `/` — see **Lighthouse Results** section (filled after deploy)
-- [ ] Lighthouse mobile `/b/[slug]` — see **Lighthouse Results** section
+- [x] Lighthouse mobile `/` — **95**
+- [x] Lighthouse mobile `/b/[slug]` — **97**
 
 ## Lighthouse Results
 
-**Method:** Chrome Lighthouse CLI, mobile form factor, simulated Slow 4G throttling, headless.  
+**Method:** Chrome Lighthouse CLI, mobile form factor, simulated Slow 4G throttling, headless incognito.  
 **Battle URL:** `https://memefight.lol/b/eqweqwqwe-38ux` (battle with uploaded images)
 
-| Page | Performance | Top-3 audits (impact) |
-|------|-------------|------------------------|
-| `/` | **94** | 1. Reduce unused JavaScript (~102 KiB) · 2. Network dependency tree · 3. Legacy JavaScript (~13 KiB) |
-| `/b/eqweqwqwe-38ux` | **91** | 1. Reduce unused JavaScript (~99 KiB) · 2. LCP breakdown · 3. LCP request discovery |
+| Page | Performance | LCP | Speed Index | TBT | CLS | Top audits (impact) |
+|------|-------------|-----|-------------|-----|-----|---------------------|
+| `/` | **95** | 2.9s | 2.6s | 70ms | 0 | LCP · Speed Index · unused JS (~108 KiB shared chunk) |
+| `/b/eqweqwqwe-38ux` | **97** | 2.6s | 2.7s | 50ms | 0 | LCP · Speed Index · bfcache |
 
-_Measured 2026-06-01: Lighthouse CLI, mobile + simulated Slow 4G, headless Chrome._
+_Measured 2026-06-01 (final): Lighthouse CLI 13.x, mobile + simulated Slow 4G, headless Chrome. Battle score confirmed on two consecutive runs (97 + 96). Prior dual-`priority` preload caused Speed Index ~11s; single LCP preload restored SI to ~3s._
 
 ## Architecture Notes (performance)
 
 - **Feed:** `get_feed_with_results(limit, category, sort)` replaces N+1 `get_battle_results` calls
 - **Public pages:** `createPublicClient()` + `revalidate=60`; no session in root layout
-- **Battle page:** `React.cache()` dedupes slug fetch; client polls after 2s idle delay
+- **Battle page:** Server grid (`battle-vote-section.tsx`) + client controls island; `React.cache()` slug dedupe; poll after 2s delay; Side A LCP preload only
+- **Auth/login:** Magic link via `POST /api/auth/magic-link` — no `@supabase/ssr` browser client on `/auth/login`
 - **Migration required:** `20260601120000_feed_batch_results.sql` in Supabase before feed works
 
 ## Non-Goals (unchanged)

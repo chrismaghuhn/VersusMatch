@@ -93,7 +93,7 @@ After deploy, run Lighthouse mobile (Slow 4G simulation) on:
 1. `https://memefight.lol/`
 2. `https://memefight.lol/b/<slug-with-images>`
 
-Target: Performance ≥ 80. Home/Feed use ISR (`revalidate=60`); vote counts on feed may lag up to 60s (battle page polls live).
+Target: Performance ≥ 80. Final prod scores (2026-06-01): `/` **95**, `/b/[slug]` **97** (mobile, Slow 4G). Home/Feed use ISR (`revalidate=60`); vote counts on feed may lag up to 60s (battle page polls live).
 
 ## Smoke-Test nach Deploy
 
