@@ -34,6 +34,16 @@ export function OptionUpload({ label, name, textName, position }: OptionUploadPr
       return;
     }
 
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const allowedExt = new Set(["jpg", "jpeg", "png", "webp"]);
+    const allowedType = new Set(["image/jpeg", "image/png", "image/webp", ""]);
+
+    if (!allowedExt.has(ext) && !allowedType.has(file.type)) {
+      alert("Nur JPEG, PNG oder WebP erlaubt.");
+      event.target.value = "";
+      return;
+    }
+
     setFileName(file.name);
     setPreview(URL.createObjectURL(file));
   }

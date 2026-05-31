@@ -13,6 +13,10 @@ const errorMessages: Record<string, string> = {
   battle_limit: "Du hast bereits 5 aktive Battles. Schließe erst eines, bevor du ein neues erstellst.",
   imageA_upload_failed: "Bild für Option A konnte nicht hochgeladen werden. Bitte erneut versuchen.",
   imageB_upload_failed: "Bild für Option B konnte nicht hochgeladen werden. Bitte erneut versuchen.",
+  imageA_invalid_type: "Option A: nur JPEG, PNG oder WebP (max. 2MB).",
+  imageB_invalid_type: "Option B: nur JPEG, PNG oder WebP (max. 2MB).",
+  imageA_too_large: "Bild A ist größer als 2MB.",
+  imageB_too_large: "Bild B ist größer als 2MB.",
 };
 
 export default async function CreatePage({
