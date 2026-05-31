@@ -87,11 +87,28 @@ Reihenfolge in `supabase/migrations/` — nach Pull neue Migration im SQL Editor
 
 ## Smoke-Test nach Deploy
 
-1. **Vote:** Battle öffnen → Turnstile sichtbar (wenn Keys gesetzt) → Vote klappt
-2. **IP-Dedup:** Zweiter Vote gleiche IP → blockiert
-3. **Report:** Melden → E-Mail kommt an (wenn Resend gesetzt)
-4. **Admin:** `/admin/login` → Reports, Erledigt/Close/Delete
-5. **Sentry:** Fehler in Logs oder absichtlicher 500 → Event in Sentry
+### Kernflows (P0)
+
+1. **Home/Feed:** Stats im Hero, Battle-Cards mit Bildern und Prozenten, Filter funktionieren
+2. **Vote:** Battle öffnen → Bilder sichtbar (wenn hochgeladen) → Turnstile (wenn Keys gesetzt) → Vote ohne Console-Error
+3. **VS-Slider:** 0 Votes = Mitte; mehr Grün (A) → VS unten; mehr Pink (B) → VS oben
+4. **Create:** Login → Battle mit Bildern → Redirect → Bilder auf `/b/[slug]` sichtbar
+5. **Report:** Melden → E-Mail an `REPORT_NOTIFY_EMAIL` (wenn Resend gesetzt)
+6. **Admin:** `/admin/login` → Reports Offen/Alle → Erledigt/Schließen/Löschen
+7. **IP-Dedup:** Zweiter Vote gleiche IP → blockiert
+
+### Mobile (P1)
+
+- Battle: Karten gestapelt, VS bewegt sich horizontal
+- Header + Create-Formular bedienbar
+
+### Performance (P2)
+
+- Lighthouse mobile: `/` und `/b/[slug]` — Performance ≥ 80
+
+### Monitoring
+
+- **Sentry:** Fehler in Issues nach ~30s sichtbar
 
 ## Monitoring (wöchentlich)
 
