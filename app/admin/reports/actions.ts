@@ -2,17 +2,15 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { isAdminKeyValid } from "@/lib/admin-auth";
+import { requireAdminSession } from "@/lib/admin-session";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-function assertAdmin(formData: FormData) {
-  const key = String(formData.get("adminKey") ?? "");
-
-  if (!isAdminKeyValid(key)) {
-    redirect("/admin/reports?error=unauthorized");
+async function assertAdmin() {
+  if (!process.env.ADMIN_SECRET) {
+    redirect("/admin/login");
   }
 
-  return key;
+  await requireAdminSession();
 }
 
 async function cleanupBattleImages(battleId: string, creatorId: string) {
@@ -26,24 +24,35 @@ async function cleanupBattleImages(battleId: string, creatorId: string) {
   }
 }
 
+async function resolveOpenReportsForBattle(battleId: string) {
+  const supabase = createAdminClient();
+  await supabase
+    .from("battle_reports")
+    .update({ resolved_at: new Date().toISOString() })
+    .eq("battle_id", battleId)
+    .is("resolved_at", null);
+}
+
 export async function adminCloseBattle(formData: FormData) {
-  const adminKey = assertAdmin(formData);
+  await assertAdmin();
   const battleId = String(formData.get("battleId") ?? "");
 
   const supabase = createAdminClient();
   const { error } = await supabase.from("battles").update({ status: "closed" }).eq("id", battleId);
 
   if (error) {
-    redirect(`/admin/reports?key=${encodeURIComponent(adminKey)}&error=close_failed`);
+    redirect("/admin/reports?error=close_failed");
   }
+
+  await resolveOpenReportsForBattle(battleId);
 
   revalidatePath("/admin/reports");
   revalidatePath("/feed");
-  redirect(`/admin/reports?key=${encodeURIComponent(adminKey)}&closed=1`);
+  redirect("/admin/reports?closed=1");
 }
 
 export async function adminDeleteBattle(formData: FormData) {
-  const adminKey = assertAdmin(formData);
+  await assertAdmin();
   const battleId = String(formData.get("battleId") ?? "");
 
   const supabase = createAdminClient();
@@ -54,7 +63,7 @@ export async function adminDeleteBattle(formData: FormData) {
     .maybeSingle();
 
   if (!battle) {
-    redirect(`/admin/reports?key=${encodeURIComponent(adminKey)}&error=not_found`);
+    redirect("/admin/reports?error=not_found");
   }
 
   await cleanupBattleImages(battleId, battle.creator_id);
@@ -62,10 +71,29 @@ export async function adminDeleteBattle(formData: FormData) {
   const { error } = await supabase.from("battles").delete().eq("id", battleId);
 
   if (error) {
-    redirect(`/admin/reports?key=${encodeURIComponent(adminKey)}&error=delete_failed`);
+    redirect("/admin/reports?error=delete_failed");
   }
 
   revalidatePath("/admin/reports");
   revalidatePath("/feed");
-  redirect(`/admin/reports?key=${encodeURIComponent(adminKey)}&deleted=1`);
+  redirect("/admin/reports?deleted=1");
+}
+
+export async function adminResolveReport(formData: FormData) {
+  await assertAdmin();
+  const reportId = String(formData.get("reportId") ?? "");
+  const filter = String(formData.get("filter") ?? "open");
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("battle_reports")
+    .update({ resolved_at: new Date().toISOString() })
+    .eq("id", reportId);
+
+  if (error) {
+    redirect(`/admin/reports?filter=${filter}&error=resolve_failed`);
+  }
+
+  revalidatePath("/admin/reports");
+  redirect(`/admin/reports?filter=${filter}&resolved=1`);
 }

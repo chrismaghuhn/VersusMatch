@@ -1,18 +1,28 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { adminCloseBattle, adminDeleteBattle } from "@/app/admin/reports/actions";
+import { logoutAdmin } from "@/app/admin/login/actions";
+import {
+  adminCloseBattle,
+  adminDeleteBattle,
+  adminResolveReport,
+} from "@/app/admin/reports/actions";
 import { Button } from "@/components/ui/button";
-import { isAdminKeyValid } from "@/lib/admin-auth";
-import { getBattleReports } from "@/lib/reports";
+import { requireAdminSession } from "@/lib/admin-session";
+import { getBattleReports, type ReportFilter } from "@/lib/reports";
 import { captureServerError } from "@/lib/observability";
 
 type PageProps = {
-  searchParams: Promise<{ key?: string; error?: string; closed?: string; deleted?: string }>;
+  searchParams: Promise<{
+    filter?: string;
+    error?: string;
+    closed?: string;
+    deleted?: string;
+    resolved?: string;
+  }>;
 };
 
 export default async function AdminReportsPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const adminKey = params.key;
 
   if (!process.env.ADMIN_SECRET) {
     return (
@@ -25,34 +35,14 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
     );
   }
 
-  if (!isAdminKeyValid(adminKey)) {
-    return (
-      <div className="mx-auto max-w-md px-4 py-16">
-        <h1 className="text-2xl font-bold">Admin Reports</h1>
-        <p className="mt-2 text-muted-foreground">Zugang nur mit Admin-Key.</p>
-        <form method="get" className="mt-6 space-y-4">
-          <input
-            type="password"
-            name="key"
-            placeholder="Admin key"
-            className="w-full rounded-lg border border-border bg-background px-3 py-2"
-            autoComplete="off"
-          />
-          <Button type="submit" className="w-full">
-            Öffnen
-          </Button>
-        </form>
-        {params.error === "unauthorized" && (
-          <p className="mt-4 text-sm text-destructive">Ungültiger Admin-Key.</p>
-        )}
-      </div>
-    );
-  }
+  await requireAdminSession("/admin/reports");
+
+  const filter: ReportFilter = params.filter === "all" ? "all" : "open";
 
   let reports: Awaited<ReturnType<typeof getBattleReports>> = [];
 
   try {
-    reports = await getBattleReports();
+    reports = await getBattleReports(filter);
   } catch (error) {
     captureServerError("admin-reports", error);
     notFound();
@@ -65,20 +55,43 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
           <h1 className="text-3xl font-bold tracking-tight">Battle Reports</h1>
           <p className="mt-2 text-muted-foreground">Moderation — geschlossene Battles bleiben öffentlich sichtbar.</p>
         </div>
-        <Link href="/feed">
-          <Button variant="outline">Zum Feed</Button>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/feed">
+            <Button variant="outline">Zum Feed</Button>
+          </Link>
+          <form action={logoutAdmin}>
+            <Button variant="secondary" type="submit">
+              Abmelden
+            </Button>
+          </form>
+        </div>
+      </div>
+
+      <div className="mb-6 flex gap-2">
+        <Link href="/admin/reports?filter=open">
+          <Button variant={filter === "open" ? "default" : "outline"} size="sm">
+            Offen
+          </Button>
+        </Link>
+        <Link href="/admin/reports?filter=all">
+          <Button variant={filter === "all" ? "default" : "outline"} size="sm">
+            Alle
+          </Button>
         </Link>
       </div>
 
       {params.closed === "1" && <p className="mb-4 text-sm text-green-600">Battle geschlossen.</p>}
       {params.deleted === "1" && <p className="mb-4 text-sm text-green-600">Battle gelöscht.</p>}
-      {params.error && params.error !== "unauthorized" && (
+      {params.resolved === "1" && <p className="mb-4 text-sm text-green-600">Report erledigt.</p>}
+      {params.error && (
         <p className="mb-4 text-sm text-destructive">Aktion fehlgeschlagen: {params.error}</p>
       )}
 
       {reports.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border px-6 py-16 text-center">
-          <p className="text-lg font-medium">Keine Reports</p>
+          <p className="text-lg font-medium">
+            {filter === "open" ? "Keine offenen Reports" : "Keine Reports"}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -88,6 +101,9 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
                 <div>
                   <p className="text-sm text-muted-foreground">
                     {new Date(report.created_at).toLocaleString("de-DE")}
+                    {report.resolved_at && (
+                      <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs">Erledigt</span>
+                    )}
                   </p>
                   <h2 className="mt-1 text-lg font-semibold">
                     {report.battles?.title ?? "Unbekanntes Battle"}
@@ -105,9 +121,17 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
                       </Button>
                     </Link>
                   )}
+                  {!report.resolved_at && (
+                    <form action={adminResolveReport}>
+                      <input type="hidden" name="reportId" value={report.id} />
+                      <input type="hidden" name="filter" value={filter} />
+                      <Button type="submit" variant="secondary" size="sm">
+                        Erledigt
+                      </Button>
+                    </form>
+                  )}
                   {report.battles?.status === "active" && (
                     <form action={adminCloseBattle}>
-                      <input type="hidden" name="adminKey" value={adminKey} />
                       <input type="hidden" name="battleId" value={report.battle_id} />
                       <Button type="submit" variant="secondary" size="sm">
                         Schließen
@@ -115,7 +139,6 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
                     </form>
                   )}
                   <form action={adminDeleteBattle}>
-                    <input type="hidden" name="adminKey" value={adminKey} />
                     <input type="hidden" name="battleId" value={report.battle_id} />
                     <Button type="submit" variant="destructive" size="sm">
                       Löschen

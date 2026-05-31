@@ -15,7 +15,7 @@ const contentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: https://${supabaseHost}`,
-  `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://challenges.cloudflare.com https://*.ingest.sentry.io`,
+  `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://challenges.cloudflare.com https://*.ingest.sentry.io https://api.resend.com`,
   "frame-src https://challenges.cloudflare.com",
   "font-src 'self' data:",
   "frame-ancestors 'none'",

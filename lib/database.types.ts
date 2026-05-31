@@ -141,18 +141,21 @@ export type Database = {
           battle_id: string;
           reason: string;
           created_at: string;
+          resolved_at: string | null;
         };
         Insert: {
           id?: string;
           battle_id: string;
           reason: string;
           created_at?: string;
+          resolved_at?: string | null;
         };
         Update: {
           id?: string;
           battle_id?: string;
           reason?: string;
           created_at?: string;
+          resolved_at?: string | null;
         };
         Relationships: [
           {

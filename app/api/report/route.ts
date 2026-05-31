@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { captureServerError } from "@/lib/observability";
+import { notifyNewReport } from "@/lib/report-notify";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -27,14 +29,39 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("battle_reports").insert({
-    battle_id: battleId,
-    reason: trimmedReason,
-  });
+  const { data: report, error } = await supabase
+    .from("battle_reports")
+    .insert({
+      battle_id: battleId,
+      reason: trimmedReason,
+    })
+    .select("id")
+    .single();
 
-  if (error) {
+  if (error || !report) {
     captureServerError("report", error, { battleId });
     return NextResponse.json({ error: "Meldung fehlgeschlagen" }, { status: 500 });
+  }
+
+  try {
+    const admin = createAdminClient();
+    const { data: battle } = await admin
+      .from("battles")
+      .select("title, slug")
+      .eq("id", battleId)
+      .maybeSingle();
+
+    if (battle?.slug) {
+      await notifyNewReport({
+        reportId: report.id,
+        battleId,
+        reason: trimmedReason,
+        battleTitle: battle.title,
+        battleSlug: battle.slug,
+      });
+    }
+  } catch (notifyError) {
+    captureServerError("report-notify", notifyError, { battleId, reportId: report.id });
   }
 
   return NextResponse.json({ success: true });
