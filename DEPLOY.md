@@ -84,6 +84,16 @@ Features aktiv: Error Monitoring, Tracing, Session Replay (10 % Sessions, 100 % 
 Reihenfolge in `supabase/migrations/` — nach Pull neue Migration im SQL Editor ausführen:
 
 - `20260531220000_report_resolve.sql` — `resolved_at` auf `battle_reports`
+- `20260601120000_feed_batch_results.sql` — **`get_feed_with_results` RPC (required for Home/Feed after performance deploy)**
+
+## Performance re-test
+
+After deploy, run Lighthouse mobile (Slow 4G simulation) on:
+
+1. `https://memefight.lol/`
+2. `https://memefight.lol/b/<slug-with-images>`
+
+Target: Performance ≥ 80. Home/Feed use ISR (`revalidate=60`); vote counts on feed may lag up to 60s (battle page polls live).
 
 ## Smoke-Test nach Deploy
 
