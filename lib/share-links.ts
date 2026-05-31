@@ -2,6 +2,16 @@ export function buildVoteShareText(title: string, sideLabel: string, url: string
   return `${title} — I voted ${sideLabel}. ${url}`;
 }
 
+/** Tier 3+ battle pass unlock — dramatic share copy referencing pick and matchup. */
+export function buildVoteShareTextStyle2(
+  title: string,
+  sideLabel: string,
+  otherLabel: string,
+  url: string
+): string {
+  return `${sideLabel.toUpperCase()} ALL DAY. "${title}" — ${sideLabel} vs ${otherLabel}. I already voted. Your move → ${url}`;
+}
+
 export function buildBattleShareText(
   title: string,
   optionA: string,

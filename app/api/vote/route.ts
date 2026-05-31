@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
+import { getBattleResults } from "@/lib/battles";
+import { captureServerError } from "@/lib/observability";
+import { isVoteRateLimited } from "@/lib/rate-limit";
+import { getPostVoteDrama } from "@/lib/rewards/drama";
+import { grantRewardForVote } from "@/lib/rewards/grant";
+import { getUserSidePct } from "@/lib/rewards/user-side-pct";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { castVoteRpc } from "@/lib/supabase/rpc";
-import { isVoteRateLimited } from "@/lib/rate-limit";
+import { createClient } from "@/lib/supabase/server";
 import { isTurnstileRequired, verifyTurnstileToken } from "@/lib/turnstile";
 import { hashVoteIp } from "@/lib/vote-ip-hash";
-import { captureServerError } from "@/lib/observability";
 import { isEmbedVoteRequest, isVoteRequestAllowed } from "@/lib/vote-request-guards";
 
 export async function POST(request: Request) {
@@ -56,13 +61,18 @@ export async function POST(request: Request) {
     }
 
     const ipHash = hashVoteIp(ip);
+    const isEmbed = isEmbedVoteRequest(request);
 
     const supabase = createAdminClient();
+    const results = await getBattleResults(supabase, battleId);
+    const userSidePct = getUserSidePct(results, optionId);
+
     const { data, error } = await castVoteRpc(supabase, {
       p_battle_id: battleId,
       p_option_id: optionId,
       p_voter_token: voterToken,
       p_ip_hash: ipHash,
+      p_user_side_pct: userSidePct,
     });
 
     if (error) {
@@ -74,6 +84,7 @@ export async function POST(request: Request) {
       success?: boolean;
       error?: string;
       already_voted?: boolean;
+      vote_id?: string;
     };
 
     if (!result.success) {
@@ -86,7 +97,56 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ success: true });
+    const drama = getPostVoteDrama(userSidePct);
+    const response: {
+      success: true;
+      voteId?: string;
+      userSidePct: number;
+      drama: ReturnType<typeof getPostVoteDrama>;
+      rewards?: {
+        xpAwarded: number;
+        tier: number;
+        badgesEarned: string[];
+      };
+    } = {
+      success: true,
+      voteId: result.vote_id,
+      userSidePct,
+      drama,
+    };
+
+    if (!isEmbed && result.vote_id) {
+      const authClient = await createClient();
+      const {
+        data: { user },
+      } = await authClient.auth.getUser();
+
+      if (user) {
+        const todayUtc = new Date().toISOString().slice(0, 10);
+        const { data: featured } = await supabase
+          .from("featured_battles")
+          .select("battle_id")
+          .eq("featured_date", todayUtc)
+          .eq("battle_id", battleId)
+          .maybeSingle();
+
+        const grantResult = await grantRewardForVote(supabase, {
+          userId: user.id,
+          voteId: result.vote_id,
+          isFeaturedBattle: !!featured,
+        });
+
+        if (grantResult.success && !grantResult.alreadyGranted) {
+          response.rewards = {
+            xpAwarded: grantResult.xpAwarded,
+            tier: grantResult.tier.tier,
+            badgesEarned: grantResult.badgesEarned,
+          };
+        }
+      }
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     captureServerError("vote-unhandled", error);
     return NextResponse.json({ error: "Vote failed" }, { status: 500 });

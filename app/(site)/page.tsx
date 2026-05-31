@@ -2,7 +2,9 @@ import Link from "next/link";
 import { BattleCard, CreateBattleCard } from "@/components/battle-card";
 import { BrutalCreateCta } from "@/components/brutal/create-cta";
 import { BrutalHero } from "@/components/brutal/hero";
+import { FightOfTheDayHero } from "@/components/fight-of-the-day-hero";
 import { getActiveBattlesFeed } from "@/lib/battles";
+import { getFeaturedBattleForDate } from "@/lib/rewards/featured-battle";
 import { getCachedSiteStats, type SiteStats } from "@/lib/stats";
 import { getAppUrl } from "@/lib/utils";
 import { createPublicClient } from "@/lib/supabase/public";
@@ -30,9 +32,10 @@ const emptyStats: SiteStats = { activeBattles: 0, totalVotes: 0, votesLast24h: 0
 export default async function HomePage() {
   const supabase = createPublicClient();
 
-  const [battles, statsResult] = await Promise.all([
+  const [battles, statsResult, fightOfTheDay] = await Promise.all([
     getActiveBattlesFeed(supabase, { limit: 6 }),
     getCachedSiteStats().catch(() => emptyStats),
+    getFeaturedBattleForDate(supabase, new Date()),
   ]);
 
   const stats = statsResult ?? emptyStats;
@@ -40,6 +43,8 @@ export default async function HomePage() {
   return (
     <div>
       <BrutalHero stats={stats} />
+
+      {fightOfTheDay ? <FightOfTheDayHero battle={fightOfTheDay} /> : null}
 
       <section className="border-b border-white/10 bg-black">
         <div className="mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-24">

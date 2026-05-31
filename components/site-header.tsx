@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Swords, Zap } from "lucide-react";
 import { HeaderAuth, HeaderNavAuth } from "@/components/header-auth";
+import { HeaderRewardsPill } from "@/components/header-rewards-pill";
 import { Button } from "@/components/ui/button";
 
 export function SiteHeader() {
@@ -39,6 +40,7 @@ export function SiteHeader() {
         </div>
 
         <div className="flex items-center gap-2">
+          <HeaderRewardsPill />
           <Link href="/create" className="hidden sm:block">
             <Button className="group relative gap-1.5 px-4 py-2.5">
               <Zap className="h-3.5 w-3.5 fill-black" strokeWidth={2.5} />

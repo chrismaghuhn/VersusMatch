@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { parseJsonResponse } from "@/lib/parse-json-response";
+import { sanitizeReturnPath } from "@/lib/sanitize-return-path";
 
 const COOLDOWN_SECONDS = 60;
 
@@ -34,6 +35,8 @@ function parseCooldownSeconds(message: string): number {
 
 export function LoginForm() {
   const searchParams = useSearchParams();
+  const returnTo = sanitizeReturnPath(searchParams.get("returnTo"));
+  const isBattleReturn = returnTo.startsWith("/b/");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(searchParams.get("sent") === "1");
@@ -66,7 +69,7 @@ export function LoginForm() {
     const response = await fetch("/api/auth/magic-link", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim(), next: "/create" }),
+      body: JSON.stringify({ email: email.trim(), next: returnTo }),
     });
 
     const data = await parseJsonResponse<{ error?: string }>(response);
@@ -96,8 +99,9 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle className="text-white">Login</CardTitle>
         <CardDescription>
-          Magic link via email — only needed to create battles. Open the link in the same browser
-          where you requested it.
+          {isBattleReturn
+            ? "Magic link via email — log in to claim XP and streak rewards for your vote. Open the link in the same browser where you requested it."
+            : "Magic link via email — only needed to create battles. Open the link in the same browser where you requested it."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

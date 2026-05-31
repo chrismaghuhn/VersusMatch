@@ -50,4 +50,41 @@ export async function getFeedWithResultsRpc(
   };
 }
 
-export type { CastVoteArgs, CastVoteResult };
+type GrantRewardForVoteArgs =
+  Database["public"]["Functions"]["grant_reward_for_vote"]["Args"];
+type GrantRewardForVoteResult =
+  Database["public"]["Functions"]["grant_reward_for_vote"]["Returns"];
+
+type ClaimPendingRewardByIpArgs =
+  Database["public"]["Functions"]["claim_pending_reward_by_ip"]["Args"];
+type ClaimPendingRewardByIpResult =
+  Database["public"]["Functions"]["claim_pending_reward_by_ip"]["Returns"];
+
+export async function grantRewardForVoteRpc(
+  supabase: RpcSupabase,
+  args: GrantRewardForVoteArgs
+) {
+  return (supabase.rpc as SupabaseClient<Database>["rpc"])(
+    "grant_reward_for_vote",
+    args as never
+  );
+}
+
+export async function claimPendingRewardByIpRpc(
+  supabase: RpcSupabase,
+  args: ClaimPendingRewardByIpArgs
+) {
+  return (supabase.rpc as SupabaseClient<Database>["rpc"])(
+    "claim_pending_reward_by_ip",
+    args as never
+  );
+}
+
+export type {
+  CastVoteArgs,
+  CastVoteResult,
+  GrantRewardForVoteArgs,
+  GrantRewardForVoteResult,
+  ClaimPendingRewardByIpArgs,
+  ClaimPendingRewardByIpResult,
+};

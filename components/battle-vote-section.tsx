@@ -3,6 +3,7 @@ import { CreateShareBanner } from "@/components/create-share-banner";
 import { Stat, VsSlider } from "@/components/battle-vote-ui";
 import { BattleSideDisplay } from "@/components/battle-side-display";
 import { BattleVoteControls } from "@/components/battle-vote-controls";
+import { RewardsClaimOnMount } from "@/components/rewards-claim-on-mount";
 import type { BattleResult, BattleWithOptions } from "@/lib/database.types";
 import { formatPercent } from "@/lib/utils";
 
@@ -79,6 +80,7 @@ export function BattleVoteSection({
           {options[1] ? <BattleSideDisplay option={options[1]} index={1} eager /> : null}
         </div>
 
+        <RewardsClaimOnMount />
         <BattleVoteControls
           battle={battle}
           initialResults={initialResults}

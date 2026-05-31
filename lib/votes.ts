@@ -1,5 +1,6 @@
 "use client";
 
+import type { DramaKind } from "@/lib/rewards/drama";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 
 const VOTER_TOKEN_KEY = "memefight_voter_token";
@@ -19,12 +20,27 @@ export function getOrCreateVoterToken(): string {
   return token;
 }
 
+export type VoteRewardGrant = {
+  xpAwarded: number;
+  tier: number;
+  badgesEarned: string[];
+};
+
+export type CastVoteResult = {
+  success: boolean;
+  error?: string;
+  alreadyVoted?: boolean;
+  drama?: { kind: DramaKind; message: string };
+  userSidePct?: number;
+  rewards?: VoteRewardGrant;
+};
+
 export async function castVote(
   battleId: string,
   optionId: string,
   voterToken: string,
   turnstileToken?: string
-): Promise<{ success: boolean; error?: string; alreadyVoted?: boolean }> {
+): Promise<CastVoteResult> {
   let response: Response;
 
   try {
@@ -46,6 +62,9 @@ export async function castVote(
     success?: boolean;
     error?: string;
     alreadyVoted?: boolean;
+    drama?: { kind: DramaKind; message: string };
+    userSidePct?: number;
+    rewards?: VoteRewardGrant;
   }>(response);
 
   if (!data) {
@@ -65,5 +84,10 @@ export async function castVote(
     };
   }
 
-  return { success: true };
+  return {
+    success: true,
+    drama: data.drama,
+    userSidePct: data.userSidePct,
+    rewards: data.rewards,
+  };
 }

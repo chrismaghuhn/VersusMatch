@@ -44,6 +44,7 @@ export function SiteFooter() {
               h: "ACCOUNT",
               links: [
                 { label: "Login", href: "/auth/login" },
+                { label: "Rewards", href: "/rewards" },
                 { label: "My battles", href: "/my-battles" },
               ],
             },

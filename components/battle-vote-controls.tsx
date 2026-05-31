@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,11 +20,18 @@ import { parseJsonResponse } from "@/lib/parse-json-response";
 import {
   buildBattleShareText,
   buildVoteShareText,
+  buildVoteShareTextStyle2,
   telegramShareUrl,
   twitterShareUrl,
   whatsAppShareUrl,
 } from "@/lib/share-links";
+import { hasShareCardStyle2 } from "@/lib/rewards/tiers";
 import { EmbedCodeCopyButton } from "@/components/embed-code-copy-button";
+import {
+  PostVoteRewardsBanner,
+  type VoteGrantResult,
+} from "@/components/post-vote-rewards-banner";
+import type { DramaKind } from "@/lib/rewards/drama";
 
 const TurnstileWidget = dynamic(
   () => import("@/components/turnstile-widget").then((mod) => ({ default: mod.TurnstileWidget })),
@@ -61,6 +69,14 @@ export function BattleVoteControls({
   const [copied, setCopied] = useState(false);
   const [sharePromptDismissed, setSharePromptDismissed] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userTier, setUserTier] = useState<number | null>(null);
+  const [postVoteDrama, setPostVoteDrama] = useState<{
+    kind: DramaKind;
+    message: string;
+  } | null>(null);
+  const [voteGrantResult, setVoteGrantResult] = useState<VoteGrantResult | null>(null);
+  const pathname = usePathname();
   const turnstileRequired = isTurnstileEnabled() && !embed;
 
   const options = useMemo(
@@ -73,7 +89,13 @@ export function BattleVoteControls({
   const aPct = formatPercent(resultA?.vote_count ?? 0, totalVotes);
   const votedSideLabel =
     options.find((option) => option.id === selectedOptionId)?.label ?? "my pick";
-  const voteShareText = buildVoteShareText(battle.title, votedSideLabel, shareUrl);
+  const otherSideLabel =
+    options.find((option) => option.id !== selectedOptionId)?.label ?? "the other side";
+  const effectiveTier = voteGrantResult?.tier ?? userTier ?? 0;
+  const useStyle2Share = !embed && isLoggedIn && hasVoted && hasShareCardStyle2(effectiveTier);
+  const voteShareText = useStyle2Share
+    ? buildVoteShareTextStyle2(battle.title, votedSideLabel, otherSideLabel, shareUrl)
+    : buildVoteShareText(battle.title, votedSideLabel, shareUrl);
   const genericShareText = buildBattleShareText(
     battle.title,
     options[0]?.label ?? "Option A",
@@ -128,11 +150,16 @@ export function BattleVoteControls({
 
       setSelectedOptionId(optionId);
       setHasVoted(true);
+      if (!embed && response.drama) {
+        setPostVoteDrama(response.drama);
+        setVoteGrantResult(response.rewards ?? null);
+      }
       await refreshResults();
       setIsSubmitting(false);
     },
     [
       battle.id,
+      embed,
       hasVoted,
       isSubmitting,
       refreshResults,
@@ -140,6 +167,26 @@ export function BattleVoteControls({
       turnstileToken,
     ]
   );
+
+  useEffect(() => {
+    if (embed) return;
+
+    fetch("/api/me")
+      .then((res) => res.json())
+      .then((data: { user: { id: string } | null }) => setIsLoggedIn(!!data.user))
+      .catch(() => setIsLoggedIn(false));
+  }, [embed]);
+
+  useEffect(() => {
+    if (embed || !isLoggedIn) return;
+
+    fetch("/api/rewards/me")
+      .then((res) => parseJsonResponse<{ tier: number }>(res))
+      .then((data) => {
+        if (data && "tier" in data) setUserTier(data.tier);
+      })
+      .catch(() => setUserTier(null));
+  }, [embed, isLoggedIn, voteGrantResult?.tier]);
 
   useEffect(() => {
     let intervalId: number | undefined;
@@ -209,7 +256,7 @@ export function BattleVoteControls({
     if (navigator.share) {
       await navigator.share({
         title: battle.title,
-        text: `${options[0]?.label} vs ${options[1]?.label}`,
+        text: hasVoted ? voteShareText : `${options[0]?.label} vs ${options[1]?.label}`,
         url: shareUrl,
       });
       return;
@@ -265,29 +312,83 @@ export function BattleVoteControls({
         </div>
       )}
 
+      {hasVoted && !embed && postVoteDrama && (
+        <PostVoteRewardsBanner
+          drama={postVoteDrama}
+          isLoggedIn={isLoggedIn}
+          returnTo={pathname}
+          grantResult={voteGrantResult}
+        />
+      )}
+
       {hasVoted && !sharePromptDismissed && (
-        <div className="mt-6 border border-[#CCFF00]/30 bg-[#CCFF00]/5 px-5 py-4">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p
-                className="text-[#CCFF00]"
-                style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em" }}
+        useStyle2Share ? (
+          <div className="relative mt-6 overflow-hidden border-2 border-[#FF2D87] bg-gradient-to-br from-[#FF2D87]/20 via-black to-[#CCFF00]/10 px-6 py-5">
+            <div
+              className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rotate-12 bg-[#CCFF00]/15"
+              aria-hidden
+            />
+            <div className="relative flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p
+                  className="text-[#FF2D87]"
+                  style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.18em" }}
+                >
+                  FLEX YOUR PICK
+                </p>
+                <p
+                  className="mt-2 text-white"
+                  style={{ fontWeight: 900, fontSize: 20, letterSpacing: "-0.03em", lineHeight: 1.15 }}
+                >
+                  {battle.title}
+                </p>
+                <p className="mt-2 text-[#CCFF00]" style={{ fontSize: 16, fontWeight: 800 }}>
+                  Team {votedSideLabel}
+                  <span className="text-white/50" style={{ fontWeight: 600 }}>
+                    {" "}
+                    vs {otherSideLabel}
+                  </span>
+                </p>
+                <p
+                  className="mt-3 border-l-2 border-[#CCFF00]/60 pl-3 text-white/70 italic"
+                  style={{ fontSize: 13, lineHeight: 1.5 }}
+                >
+                  {voteShareText}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSharePromptDismissed(true)}
+                className="text-sm text-white/40 underline underline-offset-4 hover:text-white"
               >
-                SHARE YOUR PICK
-              </p>
-              <p className="mt-1 text-white" style={{ fontSize: 14 }}>
-                You voted for <strong>{votedSideLabel}</strong> — rally your group chat.
-              </p>
+                Dismiss
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setSharePromptDismissed(true)}
-              className="text-sm text-white/40 underline underline-offset-4 hover:text-white"
-            >
-              Dismiss
-            </button>
           </div>
-        </div>
+        ) : (
+          <div className="mt-6 border border-[#CCFF00]/30 bg-[#CCFF00]/5 px-5 py-4">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p
+                  className="text-[#CCFF00]"
+                  style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em" }}
+                >
+                  SHARE YOUR PICK
+                </p>
+                <p className="mt-1 text-white" style={{ fontSize: 14 }}>
+                  You voted for <strong>{votedSideLabel}</strong> — rally your group chat.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSharePromptDismissed(true)}
+                className="text-sm text-white/40 underline underline-offset-4 hover:text-white"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )
       )}
 
       {error && (
