@@ -69,5 +69,12 @@ export default async function BattlePage({ params }: PageProps) {
     preload(lcpImage, { as: "image", fetchPriority: "high" });
   }
 
-  return <BattleVote battle={battle} initialResults={results} shareUrl={shareUrl} />;
+  return (
+    <>
+      {lcpImage ? (
+        <link rel="preload" as="image" href={lcpImage} fetchPriority="high" />
+      ) : null}
+      <BattleVote battle={battle} initialResults={results} shareUrl={shareUrl} />
+    </>
+  );
 }

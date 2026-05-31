@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supabase/client";
+import { parseJsonResponse } from "@/lib/parse-json-response";
 
 const COOLDOWN_SECONDS = 60;
 
@@ -63,24 +63,23 @@ export function LoginForm() {
     setError(null);
     setSent(false);
 
-    const supabase = createClient();
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/create")}`;
-
-    const { error: signInError } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: redirectTo,
-      },
+    const response = await fetch("/api/auth/magic-link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), next: "/create" }),
     });
+
+    const data = await parseJsonResponse<{ error?: string }>(response);
 
     setIsLoading(false);
 
-    if (signInError) {
-      const friendly = formatAuthError(signInError.message);
+    if (!response.ok || data?.error) {
+      const message = data?.error ?? "Login failed";
+      const friendly = formatAuthError(message);
       setError(friendly);
 
-      if (signInError.message.toLowerCase().includes("rate limit")) {
-        setCooldown(parseCooldownSeconds(signInError.message));
+      if (message.toLowerCase().includes("rate limit")) {
+        setCooldown(parseCooldownSeconds(message));
       }
 
       return;
