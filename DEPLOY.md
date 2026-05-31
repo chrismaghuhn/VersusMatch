@@ -64,9 +64,20 @@ npx vercel deploy --prod --scope chris-projects-078da2b3
 
 ## Sentry
 
-1. Projekt auf [sentry.io](https://sentry.io) anlegen (Platform: Next.js)
-2. `SENTRY_DSN` in Vercel setzen
-3. Optional `SENTRY_ORG` + `SENTRY_PROJECT` für Source Maps beim Build
+Projekt: **versusmatch** / **javascript-nextjs** → [Project Settings](https://versusmatch.sentry.io/settings/projects/javascript-nextjs/keys/)
+
+1. **Client DSN** und **Security Header Endpoint** (DSN) kopieren
+2. Vercel setzen:
+   - `NEXT_PUBLIC_SENTRY_DSN` = Client DSN (öffentlich, für Browser)
+   - `SENTRY_DSN` = gleicher DSN (Server/Edge)
+   - `SENTRY_ORG` = `versusmatch`
+   - `SENTRY_PROJECT` = `javascript-nextjs`
+3. Optional Source Maps: [Auth Token](https://sentry.io/settings/account/api/auth-tokens/) mit `project:releases` → `SENTRY_AUTH_TOKEN`
+4. Redeploy
+
+Features aktiv: Error Monitoring, Tracing, Session Replay (10 % Sessions, 100 % bei Fehlern), Tunnel `/monitoring` (Ad-Blocker-Umgehung).
+
+**Verify:** Fehler in Sentry Issues nach ~30s sichtbar.
 
 ## Supabase Migrationen
 
