@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { loginAdmin } from "@/app/admin/login/actions";
+import { loginAdmin } from "@/app/(site)/admin/login/actions";
 import { Button } from "@/components/ui/button";
 import { isAdminSessionValid } from "@/lib/admin-session";
 

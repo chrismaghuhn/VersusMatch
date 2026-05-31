@@ -67,13 +67,22 @@ export default async function HomePage() {
                 </span>
               </h2>
             </div>
-            <Link
-              href="/feed"
-              className="text-[#CCFF00] transition hover:text-white"
-              style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.15em" }}
-            >
-              VIEW ALL →
-            </Link>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href="/trending"
+                className="text-[#CCFF00] transition hover:text-white"
+                style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.15em" }}
+              >
+                TRENDING →
+              </Link>
+              <Link
+                href="/feed"
+                className="text-white/50 transition hover:text-white"
+                style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.15em" }}
+              >
+                VIEW ALL →
+              </Link>
+            </div>
           </div>
 
           {battles.length === 0 ? (

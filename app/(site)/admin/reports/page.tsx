@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { logoutAdmin } from "@/app/admin/login/actions";
+import { logoutAdmin } from "@/app/(site)/admin/login/actions";
 import {
   adminCloseBattle,
   adminDeleteBattle,
   adminResolveReport,
-} from "@/app/admin/reports/actions";
+} from "@/app/(site)/admin/reports/actions";
 import { Button } from "@/components/ui/button";
 import { requireAdminSession } from "@/lib/admin-session";
 import { getBattleReports, type ReportFilter } from "@/lib/reports";

@@ -5,7 +5,7 @@ import { isVoteRateLimited } from "@/lib/rate-limit";
 import { isTurnstileRequired, verifyTurnstileToken } from "@/lib/turnstile";
 import { hashVoteIp } from "@/lib/vote-ip-hash";
 import { captureServerError } from "@/lib/observability";
-import { isVoteRequestAllowed } from "@/lib/vote-request-guards";
+import { isEmbedVoteRequest, isVoteRequestAllowed } from "@/lib/vote-request-guards";
 
 export async function POST(request: Request) {
   try {
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Too many votes. Please wait a moment." }, { status: 429 });
     }
 
-    if (isTurnstileRequired()) {
+    if (isTurnstileRequired() && !isEmbedVoteRequest(request)) {
       const valid = await verifyTurnstileToken(turnstileToken ?? "", ip);
       if (!valid) {
         return NextResponse.json({ error: "Invalid captcha" }, { status: 403 });

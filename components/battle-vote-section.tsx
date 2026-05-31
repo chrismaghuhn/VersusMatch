@@ -34,6 +34,7 @@ export function BattleVoteSection({
             optionA={options[0].label}
             optionB={options[1].label}
             shareUrl={shareUrl}
+            slug={battle.slug}
           />
         ) : null}
 

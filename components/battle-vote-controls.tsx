@@ -23,6 +23,7 @@ import {
   twitterShareUrl,
   whatsAppShareUrl,
 } from "@/lib/share-links";
+import { EmbedCodeCopyButton } from "@/components/embed-code-copy-button";
 
 const TurnstileWidget = dynamic(
   () => import("@/components/turnstile-widget").then((mod) => ({ default: mod.TurnstileWidget })),
@@ -43,12 +44,14 @@ type BattleVoteControlsProps = {
   battle: BattleWithOptions;
   initialResults: BattleResult[];
   shareUrl: string;
+  embed?: boolean;
 };
 
 export function BattleVoteControls({
   battle,
   initialResults,
   shareUrl,
+  embed = false,
 }: BattleVoteControlsProps) {
   const [results, setResults] = useState(initialResults);
   const [hasVoted, setHasVoted] = useState(false);
@@ -58,7 +61,7 @@ export function BattleVoteControls({
   const [copied, setCopied] = useState(false);
   const [sharePromptDismissed, setSharePromptDismissed] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
-  const turnstileRequired = isTurnstileEnabled();
+  const turnstileRequired = isTurnstileEnabled() && !embed;
 
   const options = useMemo(
     () => [...battle.battle_options].sort((a, b) => a.position - b.position),
@@ -298,44 +301,47 @@ export function BattleVoteControls({
           Live results · updates every 8s
           {hasVoted ? " · Thanks for voting!" : null}
         </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={handleCopy} className="gap-2">
-            {copied ? <CheckIcon /> : <CopyIcon />}
-            {copied ? "Copied!" : "Copy link"}
-          </Button>
-          <Button onClick={handleShare} className="gap-2">
-            <ShareIcon />
-            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em" }}>
-              SHARE
-            </span>
-          </Button>
-          <Button variant="outline" asChild>
-            <a href={whatsAppShareUrl(shareText)} target="_blank" rel="noopener noreferrer">
-              WhatsApp
-            </a>
-          </Button>
-          <Button variant="outline" asChild>
-            <a
-              href={twitterShareUrl(shareText, shareUrl)}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              X
-            </a>
-          </Button>
-          <Button variant="outline" asChild>
-            <a
-              href={telegramShareUrl(shareText, shareUrl)}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Telegram
-            </a>
-          </Button>
-        </div>
+        {!embed ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={handleCopy} className="gap-2">
+              {copied ? <CheckIcon /> : <CopyIcon />}
+              {copied ? "Copied!" : "Copy link"}
+            </Button>
+            <EmbedCodeCopyButton slug={battle.slug} />
+            <Button onClick={handleShare} className="gap-2">
+              <ShareIcon />
+              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em" }}>
+                SHARE
+              </span>
+            </Button>
+            <Button variant="outline" asChild>
+              <a href={whatsAppShareUrl(shareText)} target="_blank" rel="noopener noreferrer">
+                WhatsApp
+              </a>
+            </Button>
+            <Button variant="outline" asChild>
+              <a
+                href={twitterShareUrl(shareText, shareUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                X
+              </a>
+            </Button>
+            <Button variant="outline" asChild>
+              <a
+                href={telegramShareUrl(shareText, shareUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Telegram
+              </a>
+            </Button>
+          </div>
+        ) : null}
       </div>
 
-      <BattleReportButton battleId={battle.id} />
+      {!embed ? <BattleReportButton battleId={battle.id} /> : null}
     </>
   );
 }

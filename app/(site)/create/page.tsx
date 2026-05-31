@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createBattle } from "@/app/create/actions";
+import { createBattle } from "@/app/(site)/create/actions";
 import { BATTLE_CATEGORIES } from "@/lib/categories";
 import { OptionUpload } from "@/components/option-upload";
 import { Button } from "@/components/ui/button";

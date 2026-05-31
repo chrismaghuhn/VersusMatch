@@ -24,6 +24,24 @@ function originsMatch(requestOrigin: string, configuredOrigin: string): boolean 
   }
 }
 
+export function isEmbedVoteRequest(request: Request): boolean {
+  const referer = request.headers.get("referer");
+  if (!referer || !APP_URL) {
+    return false;
+  }
+
+  try {
+    const refererUrl = new URL(referer);
+    if (!refererUrl.pathname.startsWith("/embed/")) {
+      return false;
+    }
+
+    return originsMatch(refererUrl.origin, APP_URL);
+  } catch {
+    return false;
+  }
+}
+
 export function isVoteRequestAllowed(request: Request): boolean {
   const secFetchSite = request.headers.get("sec-fetch-site");
   if (secFetchSite === "cross-site") {

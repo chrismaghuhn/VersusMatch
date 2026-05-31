@@ -16,7 +16,7 @@ Operational checklist for organic traffic via battle landing pages. Home is inde
 
 1. Search Console → **Sitemaps**
 2. Add: `sitemap.xml`
-3. Expected: Status **Success**, ~17+ URLs (home, feed, 6 category pages, battles)
+3. Expected: Status **Success**, ~35+ URLs (home, feed, trending, 6 category pages, battles)
 
 Verify locally:
 
@@ -40,8 +40,9 @@ Submit these five search-friendly battles first (update slugs if seed script cha
 | Marvel vs DC | `https://memefight.lol/b/marvel-vs-dc-seo01` |
 | Coffee vs Tea | `https://memefight.lol/b/coffee-vs-tea-seed02` |
 
-Also submit category landing pages (after deploy):
+Also submit:
 
+- `https://memefight.lol/trending`
 - `https://memefight.lol/feed/gaming`
 - `https://memefight.lol/feed/food`
 
@@ -60,7 +61,18 @@ Google indexes **battle pages**, not generic homepage queries.
 - Upload images when possible (OG + engagement)
 - Share in group chats after creation (WhatsApp/Reddit/Discord)
 
-**Target:** 20+ active battles in the first month.
+**Target:** 45 active battles by end of month (currently ~25 on prod). Cadence: **5 new battles per week** with searchable `X vs Y` titles.
+
+### 4-week content cadence
+
+| Week | New battles | Example titles |
+|------|-------------|----------------|
+| 1 | 5 | Mac vs Windows, Spotify vs Apple Music, Valorant vs CS2, Beer vs Wine, City vs Country |
+| 2 | 5 | Nintendo vs Steam Deck, Gym vs Home Workout, Book vs Movie, Reddit vs X, Electric vs Gas |
+| 3 | 5 | Harry Potter vs LOTR, Jordan vs LeBron, Hot Dog vs Sandwich, Chrome vs Firefox, Sushi vs Burger |
+| 4 | 5 | Early Bird vs Night Owl, Brainrot vs Classic Memes, Batman vs Superman, Manual vs Auto, Breakfast vs Brunch |
+
+After each battle: share link in 1–2 group chats immediately.
 
 Seed more battles:
 
@@ -85,6 +97,21 @@ Every week in Search Console:
 
 Export baseline: note indexed count and `/b/` impressions each Monday.
 
+### Weekly log template
+
+Copy each Monday into a note or issue:
+
+```
+Week of YYYY-MM-DD
+- Indexed pages: ___
+- /b/ impressions (7d): ___
+- /b/ clicks (7d): ___
+- Sitemap status: OK / errors
+- New battles created: ___
+- Battles shared in chats: ___
+- Notes:
+```
+
 **Normal in week 1–2:** 0 clicks, low impressions. Success metric = indexed battle URLs, not homepage rank.
 
 ---
@@ -104,4 +131,5 @@ npm run seed:battles
 - Sitemap: `app/sitemap.ts`
 - Category SEO pages: `app/feed/[category]/page.tsx`
 - Battle metadata: `app/b/[slug]/page.tsx`
-- Related battles (internal links): `components/related-battles.tsx`
+- Trending page: `app/(site)/trending/page.tsx`
+- Embed (noindex): `app/(embed)/embed/b/[slug]/page.tsx`

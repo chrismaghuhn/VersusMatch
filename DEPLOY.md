@@ -101,6 +101,9 @@ Target: Performance ≥ 80. Final prod scores (2026-06-01): `/` **95**, `/b/[slu
 - Sitemap: `https://memefight.lol/sitemap.xml`
 - Robots: `https://memefight.lol/robots.txt`
 - Category landing pages: `/feed/gaming`, `/feed/food`, etc.
+- Trending: `/trending`
+- Embed battles: `/embed/b/<slug>` (iframe-safe; Turnstile skipped, rate limit active)
+- Copy embed code on battle page and post-create banner
 - Seed battles locally: `npm run seed:battles` (needs `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`)
 - GSC checklist: [`docs/google-search-console-playbook.md`](docs/google-search-console-playbook.md)
 - List URLs for indexing: `npm run seo:list-urls`

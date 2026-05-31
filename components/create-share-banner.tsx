@@ -4,12 +4,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, CopyIcon } from "@/components/battle-vote-ui";
 import { buildBattleShareText } from "@/lib/share-links";
+import { EmbedCodeCopyButton } from "@/components/embed-code-copy-button";
 
 type CreateShareBannerProps = {
   title: string;
   optionA: string;
   optionB: string;
   shareUrl: string;
+  slug: string;
 };
 
 export function CreateShareBanner({
@@ -17,6 +19,7 @@ export function CreateShareBanner({
   optionA,
   optionB,
   shareUrl,
+  slug,
 }: CreateShareBannerProps) {
   const [copied, setCopied] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -51,6 +54,7 @@ export function CreateShareBanner({
             {copied ? <CheckIcon /> : <CopyIcon />}
             {copied ? "Copied!" : "Copy link"}
           </Button>
+          <EmbedCodeCopyButton slug={slug} />
           <Button variant="outline" onClick={() => setDismissed(true)}>
             Dismiss
           </Button>

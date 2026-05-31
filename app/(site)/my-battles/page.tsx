@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { closeBattle, deleteBattle } from "@/app/my-battles/actions";
+import { closeBattle, deleteBattle } from "@/app/(site)/my-battles/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCreatorBattles } from "@/lib/battles";

@@ -30,6 +30,7 @@ export function SiteFooter() {
               links: [
                 { label: "Create battle", href: "/create" },
                 { label: "Browse all battles", href: "/feed" },
+                { label: "Trending", href: "/trending" },
               ],
             },
             {

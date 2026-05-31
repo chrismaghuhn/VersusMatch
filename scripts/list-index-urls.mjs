@@ -41,6 +41,7 @@ const categories = ["general", "memes", "design", "food", "gaming", "music"];
 const staticUrls = [
   baseUrl,
   `${baseUrl}/feed`,
+  `${baseUrl}/trending`,
   ...categories.map((category) => `${baseUrl}/feed/${category}`),
 ];
 
