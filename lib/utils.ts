@@ -45,5 +45,7 @@ export function getPublicImageUrl(path: string | null | undefined): string | nul
 
 export function getAppUrl(path = ""): string {
   const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  return `${base.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
+  const normalized = base.replace(/\/$/, "");
+  if (!path) return normalized;
+  return `${normalized}${path.startsWith("/") ? path : `/${path}`}`;
 }
