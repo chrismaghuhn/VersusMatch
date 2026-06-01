@@ -1,6 +1,7 @@
 "use client";
 
 import { RefreshCw, Send } from "lucide-react";
+import { useEffect } from "react";
 import { CaptionField } from "@/components/brutal/party/caption-studio/CaptionField";
 import { MemeCanvasOverlay } from "@/components/brutal/party/caption-studio/MemeCanvasOverlay";
 import { useMemeCanvasEditor } from "@/components/brutal/party/caption-studio/use-meme-canvas-editor";
@@ -32,6 +33,10 @@ type PartyCaptionInputProps = {
   captionDraft?: CaptionDocumentV3 | null;
   roomId?: string;
   mobile?: boolean;
+  onRegisterCanvasReset?: (
+    reset: (revision: number, draft: CaptionDocumentV3 | null) => void
+  ) => void;
+  onLayoutFrozenChange?: (frozen: boolean) => void;
 };
 
 export function PartyCaptionInput({
@@ -55,6 +60,8 @@ export function PartyCaptionInput({
   captionDraft = null,
   roomId = "",
   mobile = false,
+  onRegisterCanvasReset,
+  onLayoutFrozenChange,
 }: PartyCaptionInputProps) {
   const inputDisabled = (locked ? true : disabled) || submitting || unlocking || rerolling;
   const labelBoxes = template?.textBoxes ?? defaultCaptionTextBoxes(2);
@@ -78,6 +85,15 @@ export function PartyCaptionInput({
     canvasEnabled && "activeBoxId" in editor
       ? editor
       : null;
+
+  useEffect(() => {
+    if (!canvasEditor?.resetCanvasFromRevision || !onRegisterCanvasReset) return;
+    onRegisterCanvasReset(canvasEditor.resetCanvasFromRevision);
+  }, [canvasEditor, onRegisterCanvasReset]);
+
+  useEffect(() => {
+    onLayoutFrozenChange?.(canvasEditor?.layoutFrozen ?? false);
+  }, [canvasEditor?.layoutFrozen, onLayoutFrozenChange]);
 
   const canReroll = Boolean(onReroll) && !locked && rerollsRemaining > 0;
   const lastFieldIndex = boxCount - 1;

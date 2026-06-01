@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { Meta } from "@/components/brutal/party/shared/Shell";
@@ -9,26 +9,37 @@ import { captionForFrame } from "@/lib/party/caption-rich/legacy-read";
 import { PARTY_DESIGN } from "@/lib/party/design";
 import type { CaptionDocument, PartySnapshot, TextBox } from "@/lib/party/types";
 
-function useSecondsRemaining(phaseEndsAt: string | null, totalFallback = 60): number {
+function useSecondsRemaining(
+  phaseEndsAt: string | null,
+  totalFallback = 60,
+  frozen = false
+): number {
   const [seconds, setSeconds] = useState(totalFallback);
+  const secondsRef = useRef(totalFallback);
 
   useEffect(() => {
     if (!phaseEndsAt) {
+      secondsRef.current = totalFallback;
       setSeconds(totalFallback);
       return;
     }
     const endsAt = new Date(phaseEndsAt).getTime();
     if (Number.isNaN(endsAt)) {
+      secondsRef.current = totalFallback;
       setSeconds(totalFallback);
       return;
     }
     function tick() {
-      setSeconds(Math.max(0, Math.ceil(Math.max(0, endsAt - Date.now()) / 1000)));
+      const next = Math.max(0, Math.ceil(Math.max(0, endsAt - Date.now()) / 1000));
+      if (!frozen) {
+        secondsRef.current = next;
+        setSeconds(next);
+      }
     }
     tick();
     const id = window.setInterval(tick, 250);
     return () => window.clearInterval(id);
-  }, [phaseEndsAt, totalFallback]);
+  }, [phaseEndsAt, totalFallback, frozen]);
 
   return seconds;
 }
@@ -38,13 +49,15 @@ export function TimerRing({
   total = 60,
   accent = PARTY_DESIGN.accent,
   size = 56,
+  frozen = false,
 }: {
   phaseEndsAt?: string | null;
   total?: number;
   accent?: string;
   size?: number;
+  frozen?: boolean;
 }) {
-  const seconds = useSecondsRemaining(phaseEndsAt ?? null, total);
+  const seconds = useSecondsRemaining(phaseEndsAt ?? null, total, frozen);
   const r = (size - 8) / 2;
   const c = 2 * Math.PI * r;
   const frac = Math.max(0, Math.min(1, seconds / total));
@@ -224,6 +237,8 @@ export function HeadCluster({
   showTimer = true,
   label,
   accent = PARTY_DESIGN.accent,
+  layoutFrozen = false,
+  captionDurationSeconds,
 }: {
   currentRound: number;
   roundCount: number;
@@ -231,6 +246,8 @@ export function HeadCluster({
   showTimer?: boolean;
   label?: string;
   accent?: string;
+  layoutFrozen?: boolean;
+  captionDurationSeconds?: number;
 }) {
   return (
     <div className="flex items-center gap-4">
@@ -243,7 +260,13 @@ export function HeadCluster({
         <RoundDots current={currentRound} total={roundCount} accent={accent} />
       </div>
       {showTimer && PARTY_DESIGN.showTimer ? (
-        <TimerRing phaseEndsAt={phaseEndsAt ?? null} accent={accent} size={58} />
+        <TimerRing
+          phaseEndsAt={phaseEndsAt ?? null}
+          total={captionDurationSeconds ?? 60}
+          accent={accent}
+          size={58}
+          frozen={layoutFrozen}
+        />
       ) : null}
     </div>
   );

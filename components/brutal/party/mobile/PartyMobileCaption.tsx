@@ -1,6 +1,7 @@
 "use client";
 
 import { RefreshCw, Send } from "lucide-react";
+import { useEffect } from "react";
 import { CaptionField } from "@/components/brutal/party/caption-studio/CaptionField";
 import { MemeCanvasOverlay } from "@/components/brutal/party/caption-studio/MemeCanvasOverlay";
 import { useMemeCanvasEditor } from "@/components/brutal/party/caption-studio/use-meme-canvas-editor";
@@ -38,6 +39,9 @@ type PartyMobileCaptionProps = {
   layoutRevision?: number;
   captionDraft?: CaptionDocumentV3 | null;
   roomId?: string;
+  onRegisterCanvasReset?: (
+    reset: (revision: number, draft: CaptionDocumentV3 | null) => void
+  ) => void;
 };
 
 export function PartyMobileCaption({
@@ -66,6 +70,7 @@ export function PartyMobileCaption({
   layoutRevision = 0,
   captionDraft = null,
   roomId = "",
+  onRegisterCanvasReset,
 }: PartyMobileCaptionProps) {
   const inputDisabled = locked || submitting || unlocking || rerolling;
   const labelBoxes = template?.textBoxes ?? defaultCaptionTextBoxes(2);
@@ -89,6 +94,13 @@ export function PartyMobileCaption({
     canvasEnabled && "activeBoxId" in editor
       ? editor
       : null;
+
+  useEffect(() => {
+    if (!canvasEditor?.resetCanvasFromRevision || !onRegisterCanvasReset) return;
+    onRegisterCanvasReset(canvasEditor.resetCanvasFromRevision);
+  }, [canvasEditor, onRegisterCanvasReset]);
+
+  const layoutFrozen = canvasEditor?.layoutFrozen ?? false;
 
   const canReroll = Boolean(onReroll) && !locked && rerollsRemaining > 0;
   const lastFieldIndex = boxCount - 1;
@@ -145,6 +157,7 @@ export function PartyMobileCaption({
       phaseLabel={PARTY_COPY.phaseCaption}
       phaseEndsAt={phaseEndsAt}
       allReady={allReady}
+      layoutFrozen={layoutFrozen}
       progressLabel={PARTY_COPY.captionProgress(captionCount, playerCount)}
       footer={footer}
       embedded={embedded}

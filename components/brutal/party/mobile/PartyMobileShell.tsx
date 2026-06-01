@@ -11,6 +11,7 @@ type PartyMobileShellProps = {
   phaseEndsAt: string | null;
   accent?: string;
   allReady?: boolean;
+  layoutFrozen?: boolean;
   progressLabel?: string;
   footer?: ReactNode;
   children: ReactNode;
@@ -24,6 +25,7 @@ export function PartyMobileShell({
   phaseEndsAt,
   accent = "#CCFF00",
   allReady = false,
+  layoutFrozen = false,
   progressLabel,
   footer,
   children,
@@ -50,7 +52,12 @@ export function PartyMobileShell({
               RUNDE {round}/{roundCount} · {phaseLabel}
             </span>
           </div>
-          <PartyPhaseTimer phaseEndsAt={phaseEndsAt} accent={accent} allReady={allReady} />
+          <PartyPhaseTimer
+            phaseEndsAt={phaseEndsAt}
+            accent={accent}
+            allReady={allReady}
+            frozen={layoutFrozen}
+          />
         </div>
 
         {progressLabel ? (

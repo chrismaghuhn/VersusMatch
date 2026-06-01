@@ -18,6 +18,8 @@ export type PartyJoinScreenProps = {
   onRoundCountChange?: (count: 3 | 5 | 7) => void;
   rerollsPerPlayer?: number;
   onRerollsPerPlayerChange?: (count: number) => void;
+  canvasEditorEnabled?: boolean;
+  onCanvasEditorEnabledChange?: (enabled: boolean) => void;
   onJoin?: (code: string) => void;
   onCreate?: () => void;
 };
@@ -28,6 +30,8 @@ export function PartyJoinScreen({
   onRoundCountChange,
   rerollsPerPlayer = 0,
   onRerollsPerPlayerChange,
+  canvasEditorEnabled = false,
+  onCanvasEditorEnabledChange,
   onJoin,
   onCreate,
 }: PartyJoinScreenProps) {
@@ -161,6 +165,27 @@ export function PartyJoinScreen({
                       </button>
                     ))}
                   </div>
+                </div>
+              ) : null}
+
+              {onCanvasEditorEnabledChange ? (
+                <div className="mb-4">
+                  <label className="flex cursor-pointer items-start gap-3 border-2 border-white/10 bg-[#0a0a0a] p-4 transition hover:border-[#CCFF00]/40">
+                    <input
+                      type="checkbox"
+                      checked={canvasEditorEnabled}
+                      onChange={(e) => onCanvasEditorEnabledChange(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#CCFF00]"
+                    />
+                    <span className="text-left">
+                      <span className="block text-white" style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.08em" }}>
+                        {PARTY_COPY.joinCanvasEditor}
+                      </span>
+                      <span className="mt-1 block text-white/45" style={{ fontSize: 11, lineHeight: 1.45 }}>
+                        {PARTY_COPY.joinCanvasEditorHint}
+                      </span>
+                    </span>
+                  </label>
                 </div>
               ) : null}
 

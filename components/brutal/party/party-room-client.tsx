@@ -19,6 +19,7 @@ import { isCaptionPhaseReady, isVotingPhaseReady } from "@/lib/party/phase-ready
 import { usePartyRealtime } from "@/lib/party/realtime";
 import { useEveryoneLeft } from "@/lib/party/use-everyone-left";
 import { tryAdvancePhase, type AdvancePhaseGuards } from "@/lib/party/try-advance-phase";
+import type { CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
 import type { PartySnapshot, PartyReactionKey } from "@/lib/party/types";
 import {
   buildCaptionFromFieldTexts,
@@ -51,6 +52,9 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const advancingRef = useRef(false);
   const cooldownUntilRef = useRef(0);
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const canvasResetRef = useRef<
+    ((revision: number, draft: CaptionDocumentV3 | null) => void) | null
+  >(null);
 
   const advanceGuardsRef = useRef<AdvancePhaseGuards>({
     advancingRef,
@@ -290,6 +294,10 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
       const data = (await res.json()) as { snapshot?: PartySnapshot; error?: string };
       if (data.snapshot) {
         setSnapshot(data.snapshot);
+        canvasResetRef.current?.(
+          data.snapshot.layoutRevision,
+          data.snapshot.captionDraft
+        );
         setShowRerollDraftHint(true);
       } else if (data.error) {
         setError(data.error);
@@ -462,6 +470,8 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         code={snapshot.room.code}
         roundCount={snapshot.room.roundCount as 3 | 5 | 7}
         rerollsPerPlayer={snapshot.room.rerollsPerPlayer}
+        canvasEditorEnabled={snapshot.room.canvasEditorEnabled}
+        captionDurationSeconds={snapshot.room.captionDurationSeconds}
         isHost={isHost}
         canStart={isHost && snapshot.players.length >= minPlayers}
         players={snapshot.players.map((p) => {
@@ -516,9 +526,13 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         statusMessage={statusMessage}
         template={snapshot.myTemplate}
         canvasEnabled={snapshot.room.canvasEditorEnabled}
+        captionDurationSeconds={snapshot.room.captionDurationSeconds}
         layoutRevision={snapshot.layoutRevision}
         captionDraft={snapshot.captionDraft}
         roomId={roomId}
+        onRegisterCanvasReset={(reset) => {
+          canvasResetRef.current = reset;
+        }}
       />
     ) : (
       <PartyMobileCaption
@@ -546,6 +560,9 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         layoutRevision={snapshot.layoutRevision}
         captionDraft={snapshot.captionDraft}
         roomId={roomId}
+        onRegisterCanvasReset={(reset) => {
+          canvasResetRef.current = reset;
+        }}
       />
     );
   }

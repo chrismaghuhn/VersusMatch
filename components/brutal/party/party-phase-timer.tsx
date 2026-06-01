@@ -1,19 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PARTY_COPY } from "@/lib/party/copy";
 
-export function usePhaseCountdown(phaseEndsAt: string | null): string | null {
+export function usePhaseCountdown(
+  phaseEndsAt: string | null,
+  frozen = false
+): string | null {
   const [label, setLabel] = useState<string | null>(null);
+  const labelRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!phaseEndsAt) {
+      labelRef.current = null;
       setLabel(null);
       return;
     }
 
     const endsAt = new Date(phaseEndsAt).getTime();
     if (Number.isNaN(endsAt)) {
+      labelRef.current = null;
       setLabel(null);
       return;
     }
@@ -23,13 +29,20 @@ export function usePhaseCountdown(phaseEndsAt: string | null): string | null {
       const totalSec = Math.ceil(remainingMs / 1000);
       const min = Math.floor(totalSec / 60);
       const sec = totalSec % 60;
-      setLabel(`${min}:${sec.toString().padStart(2, "0")}`);
+      const nextLabel = `${min}:${sec.toString().padStart(2, "0")}`;
+      if (!frozen) {
+        labelRef.current = nextLabel;
+        setLabel(nextLabel);
+      } else if (labelRef.current === null) {
+        labelRef.current = nextLabel;
+        setLabel(nextLabel);
+      }
     }
 
     tick();
     const id = window.setInterval(tick, 250);
     return () => window.clearInterval(id);
-  }, [phaseEndsAt]);
+  }, [phaseEndsAt, frozen]);
 
   return label;
 }
@@ -38,14 +51,16 @@ type PartyPhaseTimerProps = {
   phaseEndsAt: string | null;
   accent?: string;
   allReady?: boolean;
+  frozen?: boolean;
 };
 
 export function PartyPhaseTimer({
   phaseEndsAt,
   accent = "#CCFF00",
   allReady = false,
+  frozen = false,
 }: PartyPhaseTimerProps) {
-  const label = usePhaseCountdown(phaseEndsAt);
+  const label = usePhaseCountdown(phaseEndsAt, frozen);
 
   if (allReady) {
     return (

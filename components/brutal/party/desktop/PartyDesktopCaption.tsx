@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { PartyCaptionInput } from "@/components/brutal/party/party-caption-input";
 import { PartyLayout } from "@/components/brutal/party/shared/PartyLayout";
 import { HeadCluster } from "@/components/brutal/party/shared/PartyPrimitives";
@@ -32,9 +33,13 @@ type PartyDesktopCaptionProps = {
   statusMessage?: string | null;
   template?: { imageUrl: string; textBoxes: TextBox[] } | null;
   canvasEnabled?: boolean;
+  captionDurationSeconds?: number;
   layoutRevision?: number;
   captionDraft?: CaptionDocumentV3 | null;
   roomId?: string;
+  onRegisterCanvasReset?: (
+    reset: (revision: number, draft: CaptionDocumentV3 | null) => void
+  ) => void;
 };
 
 export function PartyDesktopCaption({
@@ -59,11 +64,20 @@ export function PartyDesktopCaption({
   statusMessage,
   template = null,
   canvasEnabled = false,
+  captionDurationSeconds = 60,
   layoutRevision = 0,
   captionDraft = null,
   roomId = "",
+  onRegisterCanvasReset,
 }: PartyDesktopCaptionProps) {
   const accent = PARTY_DESIGN.accent;
+  const [layoutFrozen, setLayoutFrozen] = useState(false);
+
+  useEffect(() => {
+    if (!canvasEnabled) setLayoutFrozen(false);
+  }, [canvasEnabled]);
+
+  const captionTimerTotal = captionDurationSeconds;
 
   return (
     <Shell>
@@ -84,6 +98,8 @@ export function PartyDesktopCaption({
               phaseEndsAt={phaseEndsAt}
               label={PARTY_COPY.captionProgress(captionCount, playerCount).toUpperCase()}
               accent={accent}
+              layoutFrozen={layoutFrozen}
+              captionDurationSeconds={captionTimerTotal}
             />
           ),
           main: (
@@ -106,6 +122,8 @@ export function PartyDesktopCaption({
                 layoutRevision={layoutRevision}
                 captionDraft={captionDraft}
                 roomId={roomId}
+                onRegisterCanvasReset={onRegisterCanvasReset}
+                onLayoutFrozenChange={setLayoutFrozen}
               />
               {statusMessage ? (
                 <p

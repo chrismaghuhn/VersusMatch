@@ -96,25 +96,36 @@ export function useMemeCanvasEditor({
   const [activeBoxId, setActiveBoxId] = useState<string>(() => textBoxes[0]?.id ?? "box-0");
   const [layoutFrozen, setLayoutFrozen] = useState(false);
 
+  const resetCanvasFromRevision = useCallback(
+    (revision: number, draft: CaptionDocumentV3 | null) => {
+      layoutRevisionRef.current = revision;
+
+      const nextBoxes =
+        draft?.v === 3 ? draft.boxes : defaultTemplateBoxes(textBoxes);
+      const nextTexts =
+        draft?.v === 3 ? draft.rawTexts : emptyFieldTexts(textBoxes.length);
+
+      skipDebounceRef.current = true;
+      skipDraftSyncRef.current = true;
+      setBoxes(nextBoxes);
+      setFieldTexts(nextTexts);
+      setSegmentOverrides(emptyOverrides(textBoxes.length));
+      setActiveBoxId(textBoxes[0]?.id ?? "box-0");
+      onChange(buildCaptionFromFieldTexts(nextTexts));
+    },
+    [textBoxes, onChange]
+  );
+
   useEffect(() => {
     if (!canvasEnabled) return;
     if (layoutRevision === layoutRevisionRef.current) return;
-
-    layoutRevisionRef.current = layoutRevision;
-
-    const nextBoxes =
-      captionDraft?.v === 3 ? captionDraft.boxes : defaultTemplateBoxes(textBoxes);
-    const nextTexts =
-      captionDraft?.v === 3 ? captionDraft.rawTexts : emptyFieldTexts(textBoxes.length);
-
-    skipDebounceRef.current = true;
-    skipDraftSyncRef.current = true;
-    setBoxes(nextBoxes);
-    setFieldTexts(nextTexts);
-    setSegmentOverrides(emptyOverrides(textBoxes.length));
-    setActiveBoxId(textBoxes[0]?.id ?? "box-0");
-    onChange(buildCaptionFromFieldTexts(nextTexts));
-  }, [layoutRevision, captionDraft, textBoxes, canvasEnabled, onChange]);
+    resetCanvasFromRevision(layoutRevision, captionDraft);
+  }, [
+    layoutRevision,
+    captionDraft,
+    canvasEnabled,
+    resetCanvasFromRevision,
+  ]);
 
   useEffect(() => {
     if (!canvasEnabled) return;
@@ -252,5 +263,6 @@ export function useMemeCanvasEditor({
     updateBoxLayout,
     onInteractionStart,
     onInteractionEnd,
+    resetCanvasFromRevision,
   };
 }
