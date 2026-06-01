@@ -20,6 +20,20 @@ export function splitCaptionToFields(caption: string): [string, string] {
   return [caption.slice(0, pipeIndex), caption.slice(pipeIndex + 1)];
 }
 
+/** Label for a v3 caption box (template or custom). */
+export function captionBoxFieldLabel(
+  box: { id: string; kind: "template" | "custom"; templateIndex?: number },
+  textBoxes: Array<{ id: string }>
+): string {
+  if (box.kind === "custom") {
+    const match = /^custom-(\d+)$/.exec(box.id);
+    return match ? `Custom ${match[1]}` : "Custom";
+  }
+  const idx = box.templateIndex ?? 0;
+  const tb = textBoxes[idx];
+  return humanizeTextBoxLabel(tb?.id ?? box.id, idx);
+}
+
 /** Humanize a template text box id for field labels. */
 export function humanizeTextBoxLabel(id: string, index: number): string {
   const qMatch = /^q(\d+)$/i.exec(id);

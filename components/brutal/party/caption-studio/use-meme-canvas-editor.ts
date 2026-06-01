@@ -10,7 +10,7 @@ import {
 import type { CanvasSubmitOptions, CaptionSubmitPayload } from "@/lib/party/caption-submit";
 import { prepareCaptionSubmit } from "@/lib/party/caption-submit";
 import { finalizeCaptionDocumentV3 } from "@/lib/party/caption-rich/document";
-import { defaultTemplateBoxes } from "@/lib/party/caption-rich/layout";
+import { defaultTemplateBoxes, nextCustomBox } from "@/lib/party/caption-rich/layout";
 import { parseMarkup } from "@/lib/party/caption-rich/parse-markup";
 import { plainTextLengthFromBoxes } from "@/lib/party/caption-rich/plain-text";
 import {
@@ -76,22 +76,24 @@ export function useMemeCanvasEditor({
   const skipDebounceRef = useRef(false);
   const skipDraftSyncRef = useRef(false);
 
-  const [boxes, setBoxes] = useState<CaptionBox[]>(() =>
-    captionDraft?.v === 3 ? captionDraft.boxes : defaultTemplateBoxes(textBoxes)
-  );
+  const initialBoxes =
+    captionDraft?.v === 3 ? captionDraft.boxes : defaultTemplateBoxes(textBoxes);
+  const initialFieldCount = initialBoxes.length;
+
+  const [boxes, setBoxes] = useState<CaptionBox[]>(() => initialBoxes);
   const [fieldTexts, setFieldTexts] = useState<string[]>(() =>
     captionDraft?.v === 3
       ? captionDraft.rawTexts
-      : splitCaptionToFieldTexts(value, boxCount)
+      : splitCaptionToFieldTexts(value, initialFieldCount)
   );
   const [segmentOverrides, setSegmentOverrides] = useState<(CaptionSegment[] | null)[]>(() =>
-    emptyOverrides(boxCount)
+    emptyOverrides(initialFieldCount)
   );
   const [previewDoc, setPreviewDoc] = useState<CaptionDocumentV3>(() => ({
     v: 3,
     layoutRevision,
     rawTexts: fieldTexts,
-    boxes: buildPreviewBoxesV3(boxes, fieldTexts, emptyOverrides(boxCount)),
+    boxes: buildPreviewBoxesV3(boxes, fieldTexts, emptyOverrides(initialFieldCount)),
   }));
   const [activeBoxId, setActiveBoxId] = useState<string>(() => textBoxes[0]?.id ?? "box-0");
   const [layoutFrozen, setLayoutFrozen] = useState(false);
@@ -103,14 +105,14 @@ export function useMemeCanvasEditor({
       const nextBoxes =
         draft?.v === 3 ? draft.boxes : defaultTemplateBoxes(textBoxes);
       const nextTexts =
-        draft?.v === 3 ? draft.rawTexts : emptyFieldTexts(textBoxes.length);
+        draft?.v === 3 ? draft.rawTexts : emptyFieldTexts(nextBoxes.length);
 
       skipDebounceRef.current = true;
       skipDraftSyncRef.current = true;
       setBoxes(nextBoxes);
       setFieldTexts(nextTexts);
-      setSegmentOverrides(emptyOverrides(textBoxes.length));
-      setActiveBoxId(textBoxes[0]?.id ?? "box-0");
+      setSegmentOverrides(emptyOverrides(nextBoxes.length));
+      setActiveBoxId(nextBoxes[0]?.id ?? textBoxes[0]?.id ?? "box-0");
       onChange(buildCaptionFromFieldTexts(nextTexts));
     },
     [textBoxes, onChange]
@@ -161,7 +163,7 @@ export function useMemeCanvasEditor({
       const draft = finalizeCaptionDocumentV3({
         boxes,
         layoutRevision: layoutRevisionRef.current,
-        rawTexts: trimmed.slice(0, boxCount),
+        rawTexts: trimmed.slice(0, boxes.length),
         segmentOverrides,
       });
 
@@ -177,7 +179,16 @@ export function useMemeCanvasEditor({
     }, DRAFT_SYNC_MS);
 
     return () => window.clearTimeout(timer);
-  }, [previewDoc, boxes, canvasEnabled, roomId, fieldTexts, segmentOverrides, boxCount]);
+  }, [previewDoc, boxes, canvasEnabled, roomId, fieldTexts, segmentOverrides]);
+
+  const activeBoxIndex = useMemo(
+    () => boxes.findIndex((b) => b.id === activeBoxId),
+    [boxes, activeBoxId]
+  );
+
+  const canAddCustomBox = useMemo(() => nextCustomBox(boxes) !== null, [boxes]);
+  const canDeleteActiveCustomBox =
+    activeBoxIndex >= 0 && boxes[activeBoxIndex]?.kind === "custom";
 
   const plainLength = useMemo(
     () => plainTextLengthFromBoxes(buildPreviewBoxesV3(boxes, fieldTexts, segmentOverrides)),
@@ -199,9 +210,9 @@ export function useMemeCanvasEditor({
   const submitPayload: CaptionSubmitPayload | null = useMemo(
     () =>
       canvasEnabled
-        ? prepareCaptionSubmit(fieldTexts, boxCount, segmentOverrides, canvasSubmitOptions)
+        ? prepareCaptionSubmit(fieldTexts, boxes.length, segmentOverrides, canvasSubmitOptions)
         : null,
-    [canvasEnabled, fieldTexts, boxCount, segmentOverrides, canvasSubmitOptions]
+    [canvasEnabled, fieldTexts, boxes.length, segmentOverrides, canvasSubmitOptions]
   );
 
   const updateField = useCallback(
@@ -245,6 +256,53 @@ export function useMemeCanvasEditor({
   const onInteractionStart = useCallback(() => setLayoutFrozen(true), []);
   const onInteractionEnd = useCallback(() => setLayoutFrozen(false), []);
 
+  const addCustomBox = useCallback(() => {
+    const next = nextCustomBox(boxes);
+    if (!next) return;
+    setBoxes((prev) => [...prev, next]);
+    setFieldTexts((prev) => [...prev, ""]);
+    setSegmentOverrides((prev) => [...prev, null]);
+    setActiveBoxId(next.id);
+    skipDebounceRef.current = false;
+  }, [boxes]);
+
+  const deleteActiveCustomBox = useCallback(() => {
+    const idx = boxes.findIndex((b) => b.id === activeBoxId);
+    if (idx < 0 || boxes[idx]?.kind !== "custom") return;
+
+    const nextBoxes = boxes.filter((_, i) => i !== idx);
+    const nextTexts = fieldTexts.filter((_, i) => i !== idx);
+    const nextOverrides = segmentOverrides.filter((_, i) => i !== idx);
+    const nextActiveId =
+      nextBoxes[Math.min(idx, nextBoxes.length - 1)]?.id ??
+      textBoxes[0]?.id ??
+      "box-0";
+
+    setBoxes(nextBoxes);
+    setFieldTexts(nextTexts);
+    setSegmentOverrides(nextOverrides);
+    setActiveBoxId(nextActiveId);
+    skipDebounceRef.current = false;
+    onChange(buildCaptionFromFieldTexts(nextTexts));
+  }, [boxes, activeBoxId, fieldTexts, segmentOverrides, textBoxes, onChange]);
+
+  const resetLayout = useCallback(() => {
+    const templateOnly = defaultTemplateBoxes(textBoxes);
+    const nextTexts = templateOnly.map((tb) => {
+      const existingIdx = boxes.findIndex(
+        (b) => b.kind === "template" && b.templateIndex === tb.templateIndex
+      );
+      return existingIdx >= 0 ? (fieldTexts[existingIdx] ?? "") : "";
+    });
+
+    skipDebounceRef.current = false;
+    setBoxes(templateOnly);
+    setFieldTexts(nextTexts);
+    setSegmentOverrides(emptyOverrides(templateOnly.length));
+    setActiveBoxId(templateOnly[0]?.id ?? textBoxes[0]?.id ?? "box-0");
+    onChange(buildCaptionFromFieldTexts(nextTexts));
+  }, [textBoxes, boxes, fieldTexts, onChange]);
+
   if (!canvasEnabled) {
     return studio;
   }
@@ -258,11 +316,17 @@ export function useMemeCanvasEditor({
     applyToolbar,
     activeBoxId,
     setActiveBoxId,
+    activeBoxIndex,
     layoutFrozen,
     boxes,
     updateBoxLayout,
     onInteractionStart,
     onInteractionEnd,
+    addCustomBox,
+    deleteActiveCustomBox,
+    resetLayout,
+    canAddCustomBox,
+    canDeleteActiveCustomBox,
     resetCanvasFromRevision,
   };
 }

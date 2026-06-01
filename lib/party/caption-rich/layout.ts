@@ -66,3 +66,14 @@ export function applyCardFit(layout: BoxLayout, fit: CardFitTransform): BoxLayou
     h: layout.h * fit.scale,
   });
 }
+
+export function nextCustomBox(existing: CaptionBox[]): CaptionBox | null {
+  const customCount = existing.filter((b) => b.kind === "custom").length;
+  if (customCount >= 2 || existing.length >= 6) return null;
+  return {
+    id: `custom-${customCount + 1}`,
+    kind: "custom",
+    segments: [{ text: "" }],
+    layout: clampLayout({ x: 0.25, y: 0.4, w: 0.5, h: 0.12, align: "center" }),
+  };
+}

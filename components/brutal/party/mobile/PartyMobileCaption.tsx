@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, Send } from "lucide-react";
+import { RefreshCw, Send, Trash2 } from "lucide-react";
 import { useEffect } from "react";
 import { CaptionField } from "@/components/brutal/party/caption-studio/CaptionField";
 import { MemeCanvasOverlay } from "@/components/brutal/party/caption-studio/MemeCanvasOverlay";
@@ -8,7 +8,7 @@ import { useMemeCanvasEditor } from "@/components/brutal/party/caption-studio/us
 import { PartyMobileShell } from "@/components/brutal/party/mobile/PartyMobileShell";
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import { PARTY_COPY } from "@/lib/party/copy";
-import { captionFieldLabels, defaultCaptionTextBoxes } from "@/lib/party/caption-fields";
+import { captionBoxFieldLabel, captionFieldLabels, defaultCaptionTextBoxes } from "@/lib/party/caption-fields";
 import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
 import type { CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
@@ -103,7 +103,9 @@ export function PartyMobileCaption({
   const layoutFrozen = canvasEditor?.layoutFrozen ?? false;
 
   const canReroll = Boolean(onReroll) && !locked && rerollsRemaining > 0;
-  const lastFieldIndex = boxCount - 1;
+  const editorBoxes = canvasEditor?.boxes ?? null;
+  const fieldCount = editorBoxes?.length ?? boxCount;
+  const lastFieldIndex = fieldCount - 1;
   const showOverlay =
     Boolean(canvasEditor) && !inputDisabled && Boolean(canvasEditor?.activeBoxId);
 
@@ -111,6 +113,40 @@ export function PartyMobileCaption({
     if (inputDisabled || !submitPayload) return;
     onSubmit(submitPayload);
   }
+
+  const canvasToolbar =
+    canvasEditor && !inputDisabled ? (
+      <div className="mx-1 mb-2 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={!canvasEditor.canAddCustomBox}
+          onClick={canvasEditor.addCustomBox}
+          className="min-h-[44px] border border-white/20 px-3 py-2 text-white/80 transition hover:border-[#CCFF00] hover:text-[#CCFF00] disabled:cursor-not-allowed disabled:opacity-40"
+          style={{ fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" }}
+        >
+          {PARTY_COPY.canvasAddText}
+        </button>
+        {canvasEditor.canDeleteActiveCustomBox ? (
+          <button
+            type="button"
+            onClick={canvasEditor.deleteActiveCustomBox}
+            className="flex min-h-[44px] items-center gap-1.5 border border-white/20 px-3 py-2 text-white/80 transition hover:border-[#FF2D87] hover:text-[#FF2D87]"
+            style={{ fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {PARTY_COPY.canvasDeleteCustom}
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={canvasEditor.resetLayout}
+          className="min-h-[44px] border border-white/20 px-3 py-2 text-white/60 transition hover:border-[#00E1FF] hover:text-[#00E1FF]"
+          style={{ fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" }}
+        >
+          {PARTY_COPY.canvasResetLayout}
+        </button>
+      </div>
+    ) : null;
 
   const footer = !locked ? (
     <div className="flex flex-col gap-2">
@@ -163,6 +199,7 @@ export function PartyMobileCaption({
       embedded={embedded}
     >
       <div className="flex flex-1 flex-col p-3">
+        {canvasToolbar}
         <div className="relative p-1">
           <PartyTemplateFrame
             density={canvasEnabled ? "editor" : undefined}
@@ -191,27 +228,46 @@ export function PartyMobileCaption({
           </p>
         ) : null}
         <div className="mt-3 flex-1 space-y-3 px-1">
-          {labels.map((label, index) => {
-            const inputId = `party-caption-mobile-${index}`;
-            const boxId = labelBoxes[index]?.id;
-            return (
-              <CaptionField
-                key={inputId}
-                id={inputId}
-                label={label}
-                value={fieldTexts[index] ?? ""}
-                disabled={inputDisabled}
-                mobile
-                isLastField={index === lastFieldIndex}
-                onChange={(next) => updateField(index, next)}
-                onSubmit={handleSubmit}
-                onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
-                onFocus={
-                  canvasEditor && boxId ? () => canvasEditor.setActiveBoxId(boxId) : undefined
-                }
-              />
-            );
-          })}
+          {editorBoxes
+            ? editorBoxes.map((box, index) => {
+                const inputId = `party-caption-mobile-${index}`;
+                return (
+                  <CaptionField
+                    key={box.id}
+                    id={inputId}
+                    label={captionBoxFieldLabel(box, labelBoxes)}
+                    value={fieldTexts[index] ?? ""}
+                    disabled={inputDisabled}
+                    mobile
+                    isLastField={index === lastFieldIndex}
+                    onChange={(next) => updateField(index, next)}
+                    onSubmit={handleSubmit}
+                    onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
+                    onFocus={() => canvasEditor?.setActiveBoxId(box.id)}
+                  />
+                );
+              })
+            : labels.map((label, index) => {
+                const inputId = `party-caption-mobile-${index}`;
+                const boxId = labelBoxes[index]?.id;
+                return (
+                  <CaptionField
+                    key={inputId}
+                    id={inputId}
+                    label={label}
+                    value={fieldTexts[index] ?? ""}
+                    disabled={inputDisabled}
+                    mobile
+                    isLastField={index === lastFieldIndex}
+                    onChange={(next) => updateField(index, next)}
+                    onSubmit={handleSubmit}
+                    onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
+                    onFocus={
+                      canvasEditor && boxId ? () => canvasEditor.setActiveBoxId(boxId) : undefined
+                    }
+                  />
+                );
+              })}
           <div className="flex justify-between text-white/40" style={{ fontSize: 11 }}>
             <span>{PARTY_COPY.captionExample}</span>
             <span className={remaining < 20 ? "text-[#FF2D87]" : undefined}>{remaining}</span>

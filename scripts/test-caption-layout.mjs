@@ -5,6 +5,7 @@ import {
   clampLayout,
   computeCardFit,
   defaultTemplateBoxes,
+  nextCustomBox,
 } from "../lib/party/caption-rich/layout.ts";
 import { validateCaptionDocumentV3 } from "../lib/party/caption-rich/validate-document.ts";
 import { boxPlainText } from "../lib/party/caption-rich/plain-text.ts";
@@ -54,6 +55,25 @@ test("validateCaptionDocumentV3 rejects wrong layoutRevision", () => {
   const result = validateCaptionDocumentV3(doc, TEMPLATE_BOXES, 1);
   assert.equal(result.ok, false);
   if (!result.ok) assert.equal(result.error, "stale_revision");
+});
+
+test("nextCustomBox rejects 3rd custom box", () => {
+  const boxes = defaultTemplateBoxes(TEMPLATE_BOXES);
+  boxes.push(
+    {
+      id: "custom-1",
+      kind: "custom",
+      segments: [{ text: "" }],
+      layout: { x: 0.25, y: 0.4, w: 0.5, h: 0.12, align: "center" },
+    },
+    {
+      id: "custom-2",
+      kind: "custom",
+      segments: [{ text: "" }],
+      layout: { x: 0.25, y: 0.5, w: 0.5, h: 0.12, align: "center" },
+    }
+  );
+  assert.equal(nextCustomBox(boxes), null);
 });
 
 test("validateCaptionDocumentV3 rejects >2 custom boxes", () => {
