@@ -1,7 +1,8 @@
 "use client";
 
-import { Redo2, RefreshCw, Send, Trash2, Undo2 } from "lucide-react";
+import { RefreshCw, Send } from "lucide-react";
 import { useEffect } from "react";
+import { CanvasLayoutToolbar } from "@/components/brutal/party/caption-studio/CanvasLayoutToolbar";
 import { CaptionField } from "@/components/brutal/party/caption-studio/CaptionField";
 import { MemeCanvasOverlay } from "@/components/brutal/party/caption-studio/MemeCanvasOverlay";
 import { useMemeCanvasEditor } from "@/components/brutal/party/caption-studio/use-meme-canvas-editor";
@@ -121,59 +122,37 @@ export function PartyMobileCaption({
     onSubmit(submitPayload);
   }
 
-  const canvasToolbar =
-    canvasEditor && !inputDisabled ? (
-      <div className="mx-1 mb-2 flex flex-wrap gap-2">
-        <button
-          type="button"
-          disabled={!canvasEditor.canUndo}
-          onClick={canvasEditor.undo}
-          className="flex min-h-[44px] items-center gap-1.5 border border-white/20 px-3 py-2 text-white/80 transition hover:border-[#CCFF00] hover:text-[#CCFF00] disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" }}
-        >
-          <Undo2 className="h-3.5 w-3.5" />
-          {PARTY_COPY.canvasUndo}
-        </button>
-        <button
-          type="button"
-          disabled={!canvasEditor.canRedo}
-          onClick={canvasEditor.redo}
-          className="flex min-h-[44px] items-center gap-1.5 border border-white/20 px-3 py-2 text-white/80 transition hover:border-[#CCFF00] hover:text-[#CCFF00] disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" }}
-        >
-          <Redo2 className="h-3.5 w-3.5" />
-          {PARTY_COPY.canvasRedo}
-        </button>
-        <button
-          type="button"
-          disabled={!canvasEditor.canAddCustomBox}
-          onClick={canvasEditor.addCustomBox}
-          className="min-h-[44px] border border-white/20 px-3 py-2 text-white/80 transition hover:border-[#CCFF00] hover:text-[#CCFF00] disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" }}
-        >
-          {PARTY_COPY.canvasAddText}
-        </button>
-        {canvasEditor.canDeleteActiveCustomBox ? (
-          <button
-            type="button"
-            onClick={canvasEditor.deleteActiveCustomBox}
-            className="flex min-h-[44px] items-center gap-1.5 border border-white/20 px-3 py-2 text-white/80 transition hover:border-[#FF2D87] hover:text-[#FF2D87]"
-            style={{ fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            {PARTY_COPY.canvasDeleteCustom}
-          </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={canvasEditor.resetLayout}
-          className="min-h-[44px] border border-white/20 px-3 py-2 text-white/60 transition hover:border-[#00E1FF] hover:text-[#00E1FF]"
-          style={{ fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" }}
-        >
-          {PARTY_COPY.canvasResetLayout}
-        </button>
-      </div>
-    ) : null;
+  const activeBox =
+    canvasEditor?.activeBoxId != null
+      ? canvasEditor.boxes.find((b) => b.id === canvasEditor.activeBoxId)
+      : undefined;
+
+  const canvasToolbar = canvasEditor ? (
+    <CanvasLayoutToolbar
+      disabled={inputDisabled}
+      mobile
+      canUndo={canvasEditor.canUndo}
+      canRedo={canvasEditor.canRedo}
+      canAddCustomBox={canvasEditor.canAddCustomBox}
+      canDeleteActiveCustomBox={canvasEditor.canDeleteActiveCustomBox}
+      activeBoxFill={activeBox?.style?.fill ?? "white"}
+      activeBoxPill={activeBox?.style?.pill ?? false}
+      styleControlsEnabled={Boolean(canvasEditor.activeBoxId)}
+      onUndo={canvasEditor.undo}
+      onRedo={canvasEditor.redo}
+      onAddCustomBox={canvasEditor.addCustomBox}
+      onDeleteActiveCustomBox={canvasEditor.deleteActiveCustomBox}
+      onResetLayout={canvasEditor.resetLayout}
+      onSetBoxFill={(fill) => {
+        const id = canvasEditor.activeBoxId;
+        if (id) canvasEditor.updateBoxStyle(id, { fill });
+      }}
+      onTogglePill={() => {
+        const id = canvasEditor.activeBoxId;
+        if (id) canvasEditor.toggleBoxPill(id);
+      }}
+    />
+  ) : null;
 
   const footer = !locked ? (
     <div className="flex flex-col gap-2">
