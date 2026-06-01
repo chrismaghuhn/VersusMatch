@@ -153,6 +153,7 @@ export function ShareCard({ snapshot, embedded = false, showPngDownload = true }
                 <div className="w-full max-w-[200px] sm:max-w-[240px]">
                   {data.template || data.roundWinner?.caption ? (
                     <PartyTemplateFrame
+                      density="export"
                       caption={data.roundWinner?.caption}
                       captionRich={data.roundWinner?.captionRich}
                       imageUrl={data.template?.imageUrl}

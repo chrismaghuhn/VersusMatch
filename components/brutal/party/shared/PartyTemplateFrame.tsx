@@ -8,11 +8,19 @@ import {
   memeBoxContainerStyle,
 } from "@/lib/party/caption-rich/render-segments";
 import {
+  applyCardFit,
+  computeCardFit,
+} from "@/lib/party/caption-rich/layout";
+import {
   isCaptionDocumentV3,
+  type BoxLayout,
+  type CaptionBox,
   type CaptionDocument,
   type CaptionSegment,
 } from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
+
+export type FrameDensity = "editor" | "card" | "export";
 
 const memeTextStyle = (fontSize: number, align: TextBox["align"]): React.CSSProperties => ({
   fontFamily: "Impact, 'Arial Black', sans-serif",
@@ -50,7 +58,42 @@ function boxPlainText(segments: CaptionSegment[]): string {
   return segments.map((s) => s.text).join("");
 }
 
+function maxLinesForBox(box: CaptionBox, textBoxes: TextBox[]): number {
+  if (box.kind === "template" && box.templateIndex != null) {
+    return textBoxes[box.templateIndex]?.maxLines ?? 3;
+  }
+  return 3;
+}
+
+function resolveV3BoxLayouts(
+  boxes: CaptionBox[],
+  density: FrameDensity
+): Array<{ box: CaptionBox; layout: BoxLayout }> {
+  const nonEmpty = boxes.filter((b) => boxPlainText(b.segments).length > 0);
+  const cardFit = density === "card" ? computeCardFit(boxes) : null;
+
+  return nonEmpty.map((box) => ({
+    box,
+    layout: cardFit ? applyCardFit(box.layout, cardFit) : box.layout,
+  }));
+}
+
+function positionedBoxStyle(
+  layout: BoxLayout,
+  align: TextBox["align"]
+): React.CSSProperties {
+  return {
+    left: `${layout.x * 100}%`,
+    top: `${layout.y * 100}%`,
+    width: `${layout.w * 100}%`,
+    height: `${layout.h * 100}%`,
+    justifyContent:
+      align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center",
+  };
+}
+
 type PartyTemplateFrameProps = {
+  density?: FrameDensity;
   caption?: string;
   captionRich?: CaptionDocument | null;
   imageUrl?: string | null;
@@ -62,6 +105,7 @@ type PartyTemplateFrameProps = {
 };
 
 export function PartyTemplateFrame({
+  density = "editor",
   caption,
   captionRich = null,
   imageUrl,
@@ -86,6 +130,8 @@ export function PartyTemplateFrame({
   }
 
   const legacyParts = captionRich ? null : captionParts(caption);
+  const useV3Layout = captionRich != null && isCaptionDocumentV3(captionRich);
+  const v3Boxes = useV3Layout ? resolveV3BoxLayouts(captionRich.boxes, density) : [];
 
   return (
     <div
@@ -103,45 +149,60 @@ export function PartyTemplateFrame({
         onError={() => setImageFailed(true)}
       />
 
-      {textBoxes.map((box, index) => {
-        const segments = captionRich ? segmentsForTemplateIndex(captionRich, index) : [];
-        const text = captionRich
-          ? boxPlainText(segments)
-          : (legacyParts?.[index] ?? (index === 0 ? legacyParts?.[0] : "")) ?? "";
-        if (!text) return null;
+      {useV3Layout
+        ? v3Boxes.map(({ box, layout }) => {
+            const segments = box.segments;
+            const text = boxPlainText(segments);
+            const align = layout.align ?? "center";
+            const fittedSize = fitMemeFontSize(
+              text,
+              fontSize,
+              maxLinesForBox(box, textBoxes)
+            );
 
-        const fittedSize = fitMemeFontSize(text, fontSize, box.maxLines);
-
-        return (
-          <div
-            key={box.id}
-            className="absolute z-10 flex items-center justify-center"
-            style={{
-              left: `${box.x * 100}%`,
-              top: `${box.y * 100}%`,
-              width: `${box.w * 100}%`,
-              height: `${box.h * 100}%`,
-              justifyContent:
-                box.align === "left"
-                  ? "flex-start"
-                  : box.align === "right"
-                    ? "flex-end"
-                    : "center",
-            }}
-          >
-            {captionRich ? (
-              <div style={memeBoxContainerStyle(box.align)}>
-                <CaptionSegments
-                  segments={segments ?? []}
-                  baseFontSize={fittedSize}
-                />
+            return (
+              <div
+                key={box.id}
+                className="absolute z-10 flex items-center justify-center"
+                style={positionedBoxStyle(layout, align)}
+              >
+                <div style={memeBoxContainerStyle(align)}>
+                  <CaptionSegments segments={segments} baseFontSize={fittedSize} />
+                </div>
               </div>
-            ) : (
-              <div style={memeTextStyle(fittedSize, box.align)}>{text}</div>
-            )}
-          </div>
-        );
-      })}
+            );
+          })
+        : textBoxes.map((box, index) => {
+            const segments = captionRich ? segmentsForTemplateIndex(captionRich, index) : [];
+            const text = captionRich
+              ? boxPlainText(segments)
+              : (legacyParts?.[index] ?? (index === 0 ? legacyParts?.[0] : "")) ?? "";
+            if (!text) return null;
+
+            const fittedSize = fitMemeFontSize(text, fontSize, box.maxLines);
+
+            return (
+              <div
+                key={box.id}
+                className="absolute z-10 flex items-center justify-center"
+                style={positionedBoxStyle(
+                  { x: box.x, y: box.y, w: box.w, h: box.h },
+                  box.align
+                )}
+              >
+                {captionRich ? (
+                  <div style={memeBoxContainerStyle(box.align)}>
+                    <CaptionSegments
+                      segments={segments ?? []}
+                      baseFontSize={fittedSize}
+                    />
+                  </div>
+                ) : (
+                  <div style={memeTextStyle(fittedSize, box.align)}>{text}</div>
+                )}
+              </div>
+            );
+          })}
     </div>
   );
 }
