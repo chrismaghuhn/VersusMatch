@@ -1,7 +1,7 @@
 # MemeFight Party — Meme Canvas Editor (P2.5)
 
 **Date:** 2026-06-03  
-**Status:** Approved — ready for implementation plan  
+**Status:** Approved — implementation plan ready  
 **Phase:** P2.5 — post–Caption Studio (P2)  
 **Depends on:** P2 Caption Studio (`caption_rich` v2, shared renderer, Arena caption UI)  
 **Parent spec:** [`2026-06-03-meme-party-live-design.md`](2026-06-03-meme-party-live-design.md)  
@@ -382,4 +382,4 @@ All clients need `canvasEditorEnabled` for UI; only `isYou` player receives draf
 | `layout_revision` mandatory | Approved |
 | Server draft clear on reroll | Approved |
 
-**Next step:** [`docs/superpowers/plans/2026-06-03-party-meme-canvas-editor.md`](../plans/2026-06-03-party-meme-canvas-editor.md) (writing-plans skill)
+**Next step:** Execute [`docs/superpowers/plans/2026-06-03-party-meme-canvas-editor.md`](../plans/2026-06-03-party-meme-canvas-editor.md) — P2.5a → P2.5b.
