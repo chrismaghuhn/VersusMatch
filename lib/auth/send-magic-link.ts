@@ -8,7 +8,9 @@ export function isMagicLinkEmailConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL);
 }
 
-type SendMagicLinkResult = { ok: true } | { ok: false; error: string };
+type SendMagicLinkResult =
+  | { ok: true; devLoginUrl?: string }
+  | { ok: false; error: string };
 
 function buildCallbackLoginUrl(redirectTo: string, tokenHash: string): string {
   const redirectUrl = new URL(redirectTo);
@@ -22,6 +24,29 @@ function buildCallbackLoginUrl(redirectTo: string, tokenHash: string): string {
   return loginUrl.toString();
 }
 
+async function createMagicLinkLoginUrl(
+  email: string,
+  redirectTo: string
+): Promise<{ url: string } | { error: string }> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+    options: { redirectTo },
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  const tokenHash = data.properties?.hashed_token;
+  if (!tokenHash) {
+    return { error: "Failed to generate login link" };
+  }
+
+  return { url: buildCallbackLoginUrl(redirectTo, tokenHash) };
+}
+
 async function sendViaResend(
   email: string,
   redirectTo: string
@@ -33,22 +58,12 @@ async function sendViaResend(
     return { ok: false, error: "Email service not configured" };
   }
 
-  const supabase = createAdminClient();
-  const { data, error } = await supabase.auth.admin.generateLink({
-    type: "magiclink",
-    email,
-  });
-
-  if (error) {
-    return { ok: false, error: error.message };
+  const link = await createMagicLinkLoginUrl(email, redirectTo);
+  if ("error" in link) {
+    return { ok: false, error: link.error };
   }
 
-  const tokenHash = data.properties?.hashed_token;
-  if (!tokenHash) {
-    return { ok: false, error: "Failed to generate login link" };
-  }
-
-  const loginUrl = buildCallbackLoginUrl(redirectTo, tokenHash);
+  const loginUrl = link.url;
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -79,6 +94,19 @@ async function sendViaResend(
   return { ok: true };
 }
 
+async function sendViaDevLink(
+  email: string,
+  redirectTo: string
+): Promise<SendMagicLinkResult> {
+  const link = await createMagicLinkLoginUrl(email, redirectTo);
+  if ("error" in link) {
+    return { ok: false, error: link.error };
+  }
+
+  console.log(`[dev magic link] ${email}\n${link.url}`);
+  return { ok: true, devLoginUrl: link.url };
+}
+
 async function sendViaSupabaseOtp(
   email: string,
   redirectTo: string
@@ -102,6 +130,10 @@ export async function sendMagicLinkEmail(
 ): Promise<SendMagicLinkResult> {
   if (isMagicLinkEmailConfigured()) {
     return sendViaResend(email, redirectTo);
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    return sendViaDevLink(email, redirectTo);
   }
 
   return sendViaSupabaseOtp(email, redirectTo);

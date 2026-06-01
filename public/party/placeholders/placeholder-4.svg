@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="256" fill="#0891b2"/>
+  <rect y="256" width="512" height="256" fill="#ea580c"/>
+  <text x="256" y="140" text-anchor="middle" font-family="Impact,Arial Black,sans-serif" font-size="72" fill="#fff" stroke="#000" stroke-width="4">VOTE</text>
+  <text x="256" y="396" text-anchor="middle" font-family="Impact,Arial Black,sans-serif" font-size="72" fill="#fff" stroke="#000" stroke-width="4">NOW</text>
+</svg>

@@ -10,10 +10,12 @@ function sanitizeNextPath(next: string | null): string {
   return next;
 }
 
-function loginErrorRedirect(origin: string, message: string) {
-  return NextResponse.redirect(
-    `${origin}/auth/login?error=${encodeURIComponent(message)}`
-  );
+function loginErrorRedirect(origin: string, message: string, returnTo?: string) {
+  const params = new URLSearchParams({ error: message });
+  if (returnTo) {
+    params.set("returnTo", returnTo);
+  }
+  return NextResponse.redirect(`${origin}/auth/login?${params.toString()}`);
 }
 
 export async function GET(request: NextRequest) {
@@ -25,7 +27,7 @@ export async function GET(request: NextRequest) {
   const authError = searchParams.get("error_description") ?? searchParams.get("error");
 
   if (authError) {
-    return loginErrorRedirect(origin, authError);
+    return loginErrorRedirect(origin, authError, next);
   }
 
   const redirectUrl = `${origin}${next}`;
@@ -49,16 +51,13 @@ export async function GET(request: NextRequest) {
   );
 
   if (tokenHash && otpType) {
-    const verifyType: EmailOtpType =
-      otpType === "magiclink" ? "email" : (otpType as EmailOtpType);
-
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
-      type: verifyType,
+      type: otpType as EmailOtpType,
     });
 
     if (error) {
-      return loginErrorRedirect(origin, error.message);
+      return loginErrorRedirect(origin, error.message, next);
     }
 
     return supabaseResponse;
@@ -68,7 +67,7 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-      return loginErrorRedirect(origin, error.message);
+      return loginErrorRedirect(origin, error.message, next);
     }
 
     return supabaseResponse;
@@ -76,6 +75,7 @@ export async function GET(request: NextRequest) {
 
   return loginErrorRedirect(
     origin,
-    "Login link expired or already used. Request a fresh magic link and open the newest email only."
+    "Login link expired or already used. Request a fresh magic link and open the newest email only.",
+    next
   );
 }

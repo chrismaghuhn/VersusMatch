@@ -1,0 +1,445 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { LobbyReactionFeedItem } from "@/components/brutal/party/lobby-reaction-bar";
+import { PartyCaptionInput } from "@/components/brutal/party/party-caption-input";
+import { PartyFinishedScreen } from "@/components/brutal/party/party-finished-screen";
+import { PartyPhaseTimer } from "@/components/brutal/party/party-phase-timer";
+import { PartyRevealScreen } from "@/components/brutal/party/party-reveal-screen";
+import { PartyVotingScreen } from "@/components/brutal/party/party-voting-screen";
+import { PartyLobbyScreen } from "@/components/brutal/party/screens/HostOnboarding";
+import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
+import { PARTY_MAX_PLAYERS, PARTY_MIN_PLAYERS } from "@/lib/party/constants";
+import { decodePartyAvatar } from "@/lib/party/avatar";
+import { isCaptionPhaseReady, isVotingPhaseReady } from "@/lib/party/phase-ready";
+import { usePartyRealtime } from "@/lib/party/realtime";
+import { tryAdvancePhase, type AdvancePhaseGuards } from "@/lib/party/try-advance-phase";
+import type { PartySnapshot, PartyReactionKey } from "@/lib/party/types";
+import { getAppUrl } from "@/lib/utils";
+
+type PartyRoomClientProps = {
+  roomId: string;
+};
+
+export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
+  const router = useRouter();
+  const [snapshot, setSnapshot] = useState<PartySnapshot | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [captionDraft, setCaptionDraft] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [voting, setVoting] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
+  const [retractingVote, setRetractingVote] = useState(false);
+  const [phaseTransitioning, setPhaseTransitioning] = useState(false);
+  const [lobbyReactions, setLobbyReactions] = useState<LobbyReactionFeedItem[]>([]);
+  const playersRef = useRef<PartySnapshot["players"]>([]);
+  const snapshotRef = useRef<PartySnapshot | null>(null);
+  const advancingRef = useRef(false);
+  const cooldownUntilRef = useRef(0);
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const advanceGuardsRef = useRef<AdvancePhaseGuards>({
+    advancingRef,
+    cooldownUntilRef,
+    cooldownTimerRef,
+  });
+  advanceGuardsRef.current = { advancingRef, cooldownUntilRef, cooldownTimerRef };
+
+  const runAdvance = useCallback(
+    async (snap: PartySnapshot | null, options?: { forceTimer?: boolean }) => {
+      if (!snap) return snap;
+      setPhaseTransitioning(true);
+      try {
+        const result = await tryAdvancePhase(
+          roomId,
+          snap,
+          advanceGuardsRef.current,
+          options
+        );
+        if (result.snapshot) {
+          setSnapshot(result.snapshot);
+          return result.snapshot;
+        }
+        return snap;
+      } finally {
+        setPhaseTransitioning(false);
+      }
+    },
+    [roomId]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) {
+        clearTimeout(cooldownTimerRef.current);
+      }
+    };
+  }, []);
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/party/rooms/${roomId}`, { cache: "no-store" });
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        setError(data.error ?? "Could not load room.");
+        return;
+      }
+      const data = (await res.json()) as { snapshot: PartySnapshot };
+      setSnapshot(data.snapshot);
+      playersRef.current = data.snapshot.players;
+      setError(null);
+
+      if (data.snapshot.mySubmission) {
+        setCaptionDraft((prev) => prev || data.snapshot.mySubmission!.caption);
+      }
+
+      if (data.snapshot.room.phase === "waiting") {
+        setLobbyReactions(
+          data.snapshot.recentReactions.map((r) => ({
+            id: r.id,
+            handle: r.handle,
+            reactionKey: r.reactionKey,
+          }))
+        );
+      }
+    } catch {
+      setError("Network error.");
+    }
+  }, [roomId]);
+
+  const phase = snapshot?.room.phase ?? "waiting";
+  const playerCount = snapshot?.players.length ?? 0;
+  const captionCount = snapshot?.captionCount ?? 0;
+  const votesCastCount = snapshot?.votesCastCount ?? 0;
+  const phaseEndsAt = snapshot?.room.phaseEndsAt ?? null;
+
+  snapshotRef.current = snapshot;
+
+  useEffect(() => {
+    if (phase !== "caption" && phase !== "voting") return;
+    const snap = snapshotRef.current;
+    if (!snap) return;
+    if (phase === "caption" && !isCaptionPhaseReady(snap)) return;
+    if (phase === "voting" && !isVotingPhaseReady(snap)) return;
+
+    void runAdvance(snap);
+  }, [roomId, phase, captionCount, votesCastCount, playerCount, runAdvance]);
+
+  useEffect(() => {
+    if (!phaseEndsAt) return;
+    const endsAt = new Date(phaseEndsAt).getTime();
+    if (Number.isNaN(endsAt)) return;
+
+    const tick = window.setInterval(() => {
+      const snap = snapshotRef.current;
+      if (Date.now() >= endsAt && snap) {
+        void runAdvance(snap, { forceTimer: true });
+      }
+    }, 1000);
+
+    return () => window.clearInterval(tick);
+  }, [phaseEndsAt, roomId, runAdvance]);
+
+  const { teardownRealtime } = usePartyRealtime(roomId, {
+    phase,
+    onRefresh: () => void refresh(),
+    onLeaveWaiting: () => setLobbyReactions([]),
+    onReactionInsert: (reaction) => {
+      setLobbyReactions((prev) => {
+        const handle =
+          playersRef.current.find((p) => p.userId === reaction.userId)?.handle ?? "?";
+        return [
+          { id: reaction.id, handle, reactionKey: reaction.reactionKey },
+          ...prev,
+        ].slice(0, 20);
+      });
+    },
+  });
+
+  useEffect(() => {
+    void refresh();
+    const pollMs = phase === "waiting" ? 2500 : 8000;
+    const poll = window.setInterval(() => void refresh(), pollMs);
+    return () => window.clearInterval(poll);
+  }, [refresh, phase]);
+
+  useEffect(() => {
+    const beat = window.setInterval(() => {
+      void fetch("/api/party/heartbeat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId }),
+      });
+    }, 20_000);
+
+    void fetch("/api/party/heartbeat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId }),
+    });
+
+    return () => window.clearInterval(beat);
+  }, [roomId]);
+
+  async function handleSendReaction(key: PartyReactionKey) {
+    const res = await fetch("/api/party/reaction", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId, reactionKey: key }),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { snapshot?: PartySnapshot };
+      if (data.snapshot) {
+        setSnapshot(data.snapshot);
+        if (data.snapshot.room.phase === "waiting") {
+          setLobbyReactions(
+            data.snapshot.recentReactions.map((r) => ({
+              id: r.id,
+              handle: r.handle,
+              reactionKey: r.reactionKey,
+            }))
+          );
+        }
+      }
+    }
+  }
+
+  async function handleStartGame() {
+    teardownRealtime();
+    setLobbyReactions([]);
+
+    const res = await fetch("/api/party/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId }),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { snapshot?: PartySnapshot };
+      if (data.snapshot) {
+        setSnapshot(data.snapshot);
+      } else {
+        void refresh();
+      }
+    }
+  }
+
+  async function handleSubmitCaption() {
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/party/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId, caption: captionDraft }),
+      });
+      const data = (await res.json()) as { snapshot?: PartySnapshot; error?: string };
+      if (data.snapshot) {
+        setSnapshot(data.snapshot);
+        await runAdvance(data.snapshot);
+      } else if (data.error) {
+        setError(data.error);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleRetractCaption() {
+    if (!snapshot) return;
+    if (!captionDraft && snapshot.mySubmission?.caption) {
+      setCaptionDraft(snapshot.mySubmission.caption);
+    }
+
+    setUnlocking(true);
+    try {
+      const res = await fetch("/api/party/retract-caption", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId }),
+      });
+      const data = (await res.json()) as { snapshot?: PartySnapshot; error?: string };
+      if (data.snapshot) {
+        setSnapshot(data.snapshot);
+      } else if (data.error) {
+        setError(data.error);
+      }
+    } finally {
+      setUnlocking(false);
+    }
+  }
+
+  async function handleVote(submissionId: string) {
+    setVoting(true);
+    try {
+      const res = await fetch("/api/party/vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId, submissionId }),
+      });
+      const data = (await res.json()) as { snapshot?: PartySnapshot; error?: string };
+      if (data.snapshot) {
+        setSnapshot(data.snapshot);
+        await runAdvance(data.snapshot);
+      } else if (data.error) {
+        setError(data.error);
+      }
+    } finally {
+      setVoting(false);
+    }
+  }
+
+  async function handleRetractVote() {
+    setRetractingVote(true);
+    try {
+      const res = await fetch("/api/party/retract-vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId }),
+      });
+      const data = (await res.json()) as { snapshot?: PartySnapshot; error?: string };
+      if (data.snapshot) {
+        setSnapshot(data.snapshot);
+      } else if (data.error) {
+        setError(data.error);
+      }
+    } finally {
+      setRetractingVote(false);
+    }
+  }
+
+  async function handleLeaveLobby() {
+    teardownRealtime();
+    const res = await fetch("/api/party/leave", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId }),
+    });
+    if (res.ok) {
+      router.push("/party");
+      return;
+    }
+    void refresh();
+  }
+
+  function handleCopyLink() {
+    if (!snapshot) return;
+    const url = getAppUrl(`/party/join/${snapshot.room.code}`);
+    void navigator.clipboard.writeText(url);
+  }
+
+  if (error && !snapshot) {
+    return (
+      <Shell>
+        <div className="px-6 py-20 text-center text-[#FF2D87]" style={{ fontWeight: 800 }}>
+          {error}
+        </div>
+      </Shell>
+    );
+  }
+
+  if (!snapshot) {
+    return (
+      <Shell>
+        <div className="px-6 py-20 text-center text-white/50">Loading room…</div>
+      </Shell>
+    );
+  }
+
+  const me = snapshot.players.find((p) => p.isYou);
+  const isHost = me?.isHost ?? false;
+  const minPlayers = PARTY_MIN_PLAYERS;
+
+  if (snapshot.room.phase === "waiting") {
+    return (
+      <PartyLobbyScreen
+        code={snapshot.room.code}
+        roundCount={snapshot.room.roundCount as 3 | 5 | 7}
+        isHost={isHost}
+        canStart={isHost && snapshot.players.length >= minPlayers}
+        players={snapshot.players.map((p) => {
+          const avatar = decodePartyAvatar(p.avatarUrl);
+          return {
+            handle: p.isYou ? "you" : p.handle,
+            avatarId: avatar.id,
+            color: avatar.color,
+            isHost: p.isHost,
+          };
+        })}
+        recentReactions={lobbyReactions}
+        onSendReaction={handleSendReaction}
+        onCopyLink={handleCopyLink}
+        onStartGame={handleStartGame}
+        onLeave={handleLeaveLobby}
+      />
+    );
+  }
+
+  if (snapshot.room.phase === "caption") {
+    const locked = Boolean(snapshot.mySubmission);
+    const allReady = isCaptionPhaseReady(snapshot);
+    return (
+      <Shell>
+        <div className="mx-auto max-w-lg px-6 py-12">
+          <div className="flex items-center justify-between">
+            <Meta>
+              ROUND {snapshot.room.currentRound}/{snapshot.room.roundCount} · CAPTION
+            </Meta>
+            <PartyPhaseTimer phaseEndsAt={snapshot.room.phaseEndsAt} allReady={allReady} />
+          </div>
+          <p className="mt-2 text-white/50" style={{ fontSize: 13 }}>
+            {snapshot.captionCount}/{snapshot.players.length} locked in
+          </p>
+          <div className="mt-6">
+            <PartyCaptionInput
+              value={captionDraft}
+              onChange={setCaptionDraft}
+              onSubmit={handleSubmitCaption}
+              onUnlock={() => void handleRetractCaption()}
+              locked={locked}
+              unlockDisabled={phaseTransitioning}
+              unlocking={unlocking}
+              submitting={submitting}
+              template={snapshot.room.template}
+            />
+          </div>
+          {locked ? (
+            <p
+              className="mt-4 text-center"
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: phaseTransitioning ? "rgba(255,255,255,0.5)" : "#CCFF00",
+              }}
+            >
+              {phaseTransitioning
+                ? "Phase changing…"
+                : allReady
+                  ? "Everyone locked in — starting vote…"
+                  : "Locked in — waiting for others…"}
+            </p>
+          ) : null}
+        </div>
+      </Shell>
+    );
+  }
+
+  if (snapshot.room.phase === "voting") {
+    return (
+      <PartyVotingScreen
+        snapshot={snapshot}
+        onVote={handleVote}
+        onRetractVote={handleRetractVote}
+        voting={voting}
+        retracting={retractingVote}
+        retractDisabled={phaseTransitioning}
+        phaseTransitioning={phaseTransitioning}
+      />
+    );
+  }
+
+  if (snapshot.room.phase === "reveal") {
+    return <PartyRevealScreen snapshot={snapshot} />;
+  }
+
+  return <PartyFinishedScreen snapshot={snapshot} />;
+}

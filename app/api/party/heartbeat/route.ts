@@ -1,0 +1,33 @@
+import { NextResponse } from "next/server";
+import { requirePartyApi } from "@/lib/party/api-auth";
+import { parsePartyRpc, partyRpcStatus } from "@/lib/party/rpc-response";
+import { partyHeartbeatRpc } from "@/lib/supabase/party-rpc";
+
+export async function POST(request: Request) {
+  const auth = await requirePartyApi();
+  if ("error" in auth) return auth.error;
+
+  let roomId = "";
+  try {
+    const body = (await request.json()) as { roomId?: string };
+    roomId = body.roomId ?? "";
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  if (!roomId) {
+    return NextResponse.json({ error: "roomId required" }, { status: 400 });
+  }
+
+  const { data, error } = await partyHeartbeatRpc(auth.supabase, roomId);
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const result = parsePartyRpc(data);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: partyRpcStatus(result.error) });
+  }
+
+  return NextResponse.json({ ok: true });
+}

@@ -50,9 +50,11 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const returnTo = sanitizeReturnPath(searchParams.get("returnTo"));
   const isBattleReturn = returnTo.startsWith("/b/");
+  const isPartyJoinReturn = returnTo.startsWith("/party/join/");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(searchParams.get("sent") === "1");
+  const [devLoginUrl, setDevLoginUrl] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const [error, setError] = useState<string | null>(() => {
     const param = searchParams.get("error");
@@ -78,6 +80,7 @@ export function LoginForm() {
     setIsLoading(true);
     setError(null);
     setSent(false);
+    setDevLoginUrl(null);
 
     const response = await fetch("/api/auth/magic-link", {
       method: "POST",
@@ -85,7 +88,7 @@ export function LoginForm() {
       body: JSON.stringify({ email: email.trim(), next: returnTo }),
     });
 
-    const data = await parseJsonResponse<{ error?: string }>(response);
+    const data = await parseJsonResponse<{ error?: string; devLoginUrl?: string }>(response);
 
     setIsLoading(false);
 
@@ -102,6 +105,7 @@ export function LoginForm() {
     }
 
     setSent(true);
+    setDevLoginUrl(data?.devLoginUrl ?? null);
     setCooldown(COOLDOWN_SECONDS);
   }
 
@@ -112,13 +116,28 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle className="text-white">Login</CardTitle>
         <CardDescription>
-          {isBattleReturn
-            ? "Magic link via email — log in to claim XP and streak rewards for your vote. Open the link in the same browser where you requested it."
-            : "Magic link via email — only needed to create battles. Open the link in the same browser where you requested it."}
+          {isPartyJoinReturn
+            ? "Magic link per E-Mail — danach wirst du automatisch der Lobby beitreten. Link in Chrome öffnen, in dem du ihn angefordert hast."
+            : isBattleReturn
+              ? "Magic link via email — log in to claim XP and streak rewards for your vote. Open the link in the same browser where you requested it."
+              : "Magic link via email — only needed to create battles. Open the link in the same browser where you requested it."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {sent && (
+        {sent && devLoginUrl && (
+          <div className="space-y-2 border border-[#CCFF00]/40 bg-[#CCFF00]/10 px-4 py-3 text-sm text-white">
+            <p style={{ fontWeight: 700 }}>Lokal-Dev: Kein E-Mail-Versand aktiv.</p>
+            <p className="text-white/80">Direkt hier einloggen (bleibt auf localhost):</p>
+            <a
+              href={devLoginUrl}
+              className="inline-block bg-[#CCFF00] px-4 py-2 text-black transition hover:bg-white"
+              style={{ fontWeight: 800, fontSize: 12, letterSpacing: "0.12em" }}
+            >
+              JETZT EINLOGGEN →
+            </a>
+          </div>
+        )}
+        {sent && !devLoginUrl && (
           <p className="border border-[#CCFF00]/30 bg-[#CCFF00]/5 px-4 py-3 text-sm text-white">
             Check your inbox — the login link is on its way. Open it in the same browser.
             You can request a new link {cooldown > 0 ? `in ${cooldown}s` : "later"}.

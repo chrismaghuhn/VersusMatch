@@ -28,5 +28,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status });
   }
 
+  if ("devLoginUrl" in result && result.devLoginUrl) {
+    return NextResponse.json({ success: true, devLoginUrl: result.devLoginUrl });
+  }
+
   return NextResponse.json({ success: true });
 }

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="256" height="256" fill="#4f46e5"/>
+  <rect x="256" width="256" height="256" fill="#f97316"/>
+  <rect y="256" width="256" height="256" fill="#14b8a6"/>
+  <rect x="256" y="256" width="256" height="256" fill="#f43f5e"/>
+  <text x="256" y="280" text-anchor="middle" font-family="Impact,Arial Black,sans-serif" font-size="52" fill="#fff" stroke="#000" stroke-width="3">BRUTAL</text>
+</svg>

@@ -242,6 +242,228 @@ export type Database = {
         };
         Relationships: [];
       };
+      party_players: {
+        Row: {
+          is_host: boolean;
+          joined_at: string;
+          last_reaction_at: string | null;
+          last_seen_at: string;
+          room_id: string;
+          score: number;
+          user_id: string;
+        };
+        Insert: {
+          is_host?: boolean;
+          joined_at?: string;
+          last_reaction_at?: string | null;
+          last_seen_at?: string;
+          room_id: string;
+          score?: number;
+          user_id: string;
+        };
+        Update: {
+          is_host?: boolean;
+          joined_at?: string;
+          last_reaction_at?: string | null;
+          last_seen_at?: string;
+          room_id?: string;
+          score?: number;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      party_reactions: {
+        Row: {
+          created_at: string;
+          id: string;
+          reaction_key: string;
+          room_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          reaction_key: string;
+          room_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          reaction_key?: string;
+          room_id?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      party_rooms: {
+        Row: {
+          caption_count: number;
+          code: string;
+          created_at: string;
+          current_round: number;
+          host_id: string;
+          id: string;
+          phase: string;
+          phase_ends_at: string | null;
+          phase_seed: number | null;
+          round_count: number;
+          status: string;
+          template_id: string | null;
+          used_template_ids: string[];
+          votes_cast_count: number;
+        };
+        Insert: {
+          caption_count?: number;
+          code: string;
+          created_at?: string;
+          current_round?: number;
+          host_id: string;
+          id?: string;
+          phase?: string;
+          phase_ends_at?: string | null;
+          phase_seed?: number | null;
+          round_count?: number;
+          status?: string;
+          template_id?: string | null;
+          used_template_ids?: string[];
+          votes_cast_count?: number;
+        };
+        Update: {
+          caption_count?: number;
+          code?: string;
+          created_at?: string;
+          current_round?: number;
+          host_id?: string;
+          id?: string;
+          phase?: string;
+          phase_ends_at?: string | null;
+          phase_seed?: number | null;
+          round_count?: number;
+          status?: string;
+          template_id?: string | null;
+          used_template_ids?: string[];
+          votes_cast_count?: number;
+        };
+        Relationships: [];
+      };
+      party_round_results: {
+        Row: {
+          room_id: string;
+          round: number;
+          submission_id: string;
+          vote_count: number;
+        };
+        Insert: {
+          room_id: string;
+          round: number;
+          submission_id: string;
+          vote_count?: number;
+        };
+        Update: {
+          room_id?: string;
+          round?: number;
+          submission_id?: string;
+          vote_count?: number;
+        };
+        Relationships: [];
+      };
+      party_submissions: {
+        Row: {
+          caption: string;
+          created_at: string;
+          id: string;
+          room_id: string;
+          round: number;
+          user_id: string;
+        };
+        Insert: {
+          caption: string;
+          created_at?: string;
+          id?: string;
+          room_id: string;
+          round: number;
+          user_id: string;
+        };
+        Update: {
+          caption?: string;
+          created_at?: string;
+          id?: string;
+          room_id?: string;
+          round?: number;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      party_templates: {
+        Row: {
+          active: boolean;
+          id: string;
+          image_path: string;
+          sort_order: number;
+          text_boxes: unknown;
+        };
+        Insert: {
+          active?: boolean;
+          id?: string;
+          image_path: string;
+          sort_order?: number;
+          text_boxes?: unknown;
+        };
+        Update: {
+          active?: boolean;
+          id?: string;
+          image_path?: string;
+          sort_order?: number;
+          text_boxes?: unknown;
+        };
+        Relationships: [];
+      };
+      party_votes: {
+        Row: {
+          created_at: string;
+          room_id: string;
+          round: number;
+          submission_id: string;
+          voter_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          room_id: string;
+          round: number;
+          submission_id: string;
+          voter_id: string;
+        };
+        Update: {
+          created_at?: string;
+          room_id?: string;
+          round?: number;
+          submission_id?: string;
+          voter_id?: string;
+        };
+        Relationships: [];
+      };
+      profiles: {
+        Row: {
+          avatar_url: string | null;
+          created_at: string;
+          handle: string;
+          user_id: string;
+        };
+        Insert: {
+          avatar_url?: string | null;
+          created_at?: string;
+          handle: string;
+          user_id: string;
+        };
+        Update: {
+          avatar_url?: string | null;
+          created_at?: string;
+          handle?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       user_badges: {
         Row: {
           badge_key: string;
@@ -418,6 +640,58 @@ export type Database = {
           error?: string;
         };
       };
+      party_advance_phase: {
+        Args: { p_room_id: string };
+        Returns: Record<string, unknown>;
+      };
+      party_cast_vote: {
+        Args: { p_room_id: string; p_submission_id: string };
+        Returns: Record<string, unknown>;
+      };
+      party_create_room: {
+        Args: { p_round_count?: number };
+        Returns: Record<string, unknown>;
+      };
+      party_get_my_vote: {
+        Args: { p_room_id: string };
+        Returns: Record<string, unknown>;
+      };
+      upsert_profile: {
+        Args: { p_handle: string; p_avatar_url: string };
+        Returns: Record<string, unknown>;
+      };
+      party_heartbeat: {
+        Args: { p_room_id: string };
+        Returns: Record<string, unknown>;
+      };
+      party_join_room: {
+        Args: { p_code: string };
+        Returns: Record<string, unknown>;
+      };
+      party_leave_room: {
+        Args: { p_room_id: string };
+        Returns: Record<string, unknown>;
+      };
+      party_retract_caption: {
+        Args: { p_room_id: string };
+        Returns: Record<string, unknown>;
+      };
+      party_retract_vote: {
+        Args: { p_room_id: string };
+        Returns: Record<string, unknown>;
+      };
+      party_send_reaction: {
+        Args: { p_room_id: string; p_reaction_key: string };
+        Returns: Record<string, unknown>;
+      };
+      party_start_game: {
+        Args: { p_room_id: string };
+        Returns: Record<string, unknown>;
+      };
+      party_submit_caption: {
+        Args: { p_room_id: string; p_caption: string };
+        Returns: Record<string, unknown>;
+      };
     };
     Enums: {
       [_ in never]: never;
@@ -557,6 +831,7 @@ export type Vote = Database["public"]["Tables"]["votes"]["Row"];
 export type Season = Database["public"]["Tables"]["seasons"]["Row"];
 export type UserProgress = Database["public"]["Tables"]["user_progress"]["Row"];
 export type UserBadge = Database["public"]["Tables"]["user_badges"]["Row"];
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type RewardGrant = Database["public"]["Tables"]["reward_grants"]["Row"];
 export type FeaturedBattle = Database["public"]["Tables"]["featured_battles"]["Row"];
 
