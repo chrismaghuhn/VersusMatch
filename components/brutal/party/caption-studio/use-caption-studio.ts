@@ -24,7 +24,7 @@ function buildPreviewBoxes(
   fieldTexts: string[],
   boxCount: number,
   segmentOverrides: (CaptionSegment[] | null)[]
-): CaptionDocument["boxes"] {
+): CaptionSegment[][] {
   return Array.from({ length: boxCount }, (_, i) => {
     const override = segmentOverrides[i];
     if (override) return override;

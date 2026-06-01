@@ -7,7 +7,11 @@ import {
   CaptionSegments,
   memeBoxContainerStyle,
 } from "@/lib/party/caption-rich/render-segments";
-import type { CaptionDocument } from "@/lib/party/caption-rich/types";
+import {
+  isCaptionDocumentV3,
+  type CaptionDocument,
+  type CaptionSegment,
+} from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
 
 const memeTextStyle = (fontSize: number, align: TextBox["align"]): React.CSSProperties => ({
@@ -34,7 +38,15 @@ function captionParts(caption?: string): string[] {
   return [caption.trim()];
 }
 
-function boxPlainText(segments: CaptionDocument["boxes"][number]): string {
+function segmentsForTemplateIndex(doc: CaptionDocument, index: number): CaptionSegment[] {
+  if (isCaptionDocumentV3(doc)) {
+    const box = doc.boxes.find((b) => b.kind === "template" && b.templateIndex === index);
+    return box?.segments ?? [];
+  }
+  return doc.boxes[index] ?? [];
+}
+
+function boxPlainText(segments: CaptionSegment[]): string {
   return segments.map((s) => s.text).join("");
 }
 
@@ -92,9 +104,9 @@ export function PartyTemplateFrame({
       />
 
       {textBoxes.map((box, index) => {
-        const segments = captionRich?.boxes[index];
+        const segments = captionRich ? segmentsForTemplateIndex(captionRich, index) : [];
         const text = captionRich
-          ? boxPlainText(segments ?? [])
+          ? boxPlainText(segments)
           : (legacyParts?.[index] ?? (index === 0 ? legacyParts?.[0] : "")) ?? "";
         if (!text) return null;
 

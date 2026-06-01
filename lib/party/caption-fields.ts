@@ -1,5 +1,6 @@
 import { CAPTION_MAX_LENGTH } from "@/lib/party/caption";
-import type { CaptionDocument } from "@/lib/party/caption-rich/types";
+import { boxPlainText } from "@/lib/party/caption-rich/plain-text";
+import { isCaptionDocumentV3, type CaptionDocument } from "@/lib/party/caption-rich/types";
 
 export const CAPTION_FIELD_COUNT = 2;
 
@@ -141,8 +142,15 @@ export function fieldTextsFromSubmission(
   boxCount: number
 ): string[] {
   if (sub.captionRich) {
+    const rich = sub.captionRich;
+    if (isCaptionDocumentV3(rich)) {
+      return Array.from({ length: boxCount }, (_, i) => {
+        const box = rich.boxes.find((b) => b.kind === "template" && b.templateIndex === i);
+        return box ? boxPlainText(box.segments) : "";
+      });
+    }
     return Array.from({ length: boxCount }, (_, i) => {
-      const box = sub.captionRich!.boxes[i];
+      const box = rich.boxes[i];
       if (!box) return "";
       return box.map((s) => s.text).join("");
     });

@@ -98,9 +98,22 @@ function toTemplateViewFull(row: TemplateRow): PartyTemplateView {
 
 function parseCaptionRich(raw: unknown): CaptionDocument | null {
   if (!raw || typeof raw !== "object") return null;
-  const doc = raw as { v?: unknown; boxes?: unknown };
-  if (doc.v !== 2 || !Array.isArray(doc.boxes)) return null;
-  return doc as CaptionDocument;
+  const doc = raw as {
+    v?: unknown;
+    boxes?: unknown;
+    layoutRevision?: unknown;
+    rawTexts?: unknown;
+  };
+  if (doc.v === 2 && Array.isArray(doc.boxes)) return doc as CaptionDocument;
+  if (
+    doc.v === 3 &&
+    Array.isArray(doc.boxes) &&
+    typeof doc.layoutRevision === "number" &&
+    Array.isArray(doc.rawTexts)
+  ) {
+    return doc as CaptionDocument;
+  }
+  return null;
 }
 
 async function loadTemplatesByIds(

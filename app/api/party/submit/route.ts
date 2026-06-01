@@ -10,8 +10,21 @@ import { partySubmitCaptionRpc } from "@/lib/supabase/party-rpc";
 
 function isCaptionDocument(value: unknown): value is CaptionDocument {
   if (!value || typeof value !== "object") return false;
-  const doc = value as { v?: unknown; boxes?: unknown };
-  return doc.v === 2 && Array.isArray(doc.boxes);
+  const doc = value as {
+    v?: unknown;
+    boxes?: unknown;
+    layoutRevision?: unknown;
+    rawTexts?: unknown;
+  };
+  if (doc.v === 2) return Array.isArray(doc.boxes);
+  if (doc.v === 3) {
+    return (
+      Array.isArray(doc.boxes) &&
+      typeof doc.layoutRevision === "number" &&
+      Array.isArray(doc.rawTexts)
+    );
+  }
+  return false;
 }
 
 export async function POST(request: Request) {
