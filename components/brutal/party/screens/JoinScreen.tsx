@@ -35,11 +35,7 @@ export function PartyJoinScreen({
 
   return (
     <Shell>
-      <div className="relative overflow-hidden">
-        <div className="absolute -right-32 top-0 h-[600px] w-[600px] rounded-full bg-[#CCFF00] opacity-10 blur-[140px]" />
-        <div className="absolute -left-32 bottom-0 h-[400px] w-[400px] rounded-full bg-[#FF2D87] opacity-15 blur-[140px]" />
-
-        <div className="relative mx-auto max-w-[1280px] px-6 py-16">
+      <div className="mx-auto max-w-[1280px] px-6 py-16">
           <div className="mb-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center bg-[#CCFF00]" style={{ fontSize: 18 }}>
@@ -278,7 +274,6 @@ export function PartyJoinScreen({
             </div>
           )}
         </div>
-      </div>
     </Shell>
   );
 }

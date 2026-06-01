@@ -41,9 +41,11 @@ type ShareCardProps = {
   snapshot?: PartySnapshot;
   /** Compact layout for embedding under finished leaderboard */
   embedded?: boolean;
+  /** Hide PNG download (e.g. desktop finished arena layout) */
+  showPngDownload?: boolean;
 };
 
-export function ShareCard({ snapshot, embedded = false }: ShareCardProps) {
+export function ShareCard({ snapshot, embedded = false, showPngDownload = true }: ShareCardProps) {
   const data = useMemo(
     () => (snapshot ? buildShareCardData(snapshot) : MOCK_DATA),
     [snapshot]
@@ -268,28 +270,30 @@ export function ShareCard({ snapshot, embedded = false }: ShareCardProps) {
           <Twitter className="h-4 w-4 fill-current" /> POST TO TWITTER
         </a>
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <button
-            type="button"
-            onClick={() => void downloadPng()}
-            disabled={pngState === "generating"}
-            className="flex items-center justify-center gap-2 border border-white/20 py-3 text-white hover:border-[#CCFF00] hover:text-[#CCFF00] disabled:opacity-50"
-            style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em" }}
-          >
-            {pngState === "generating" ? (
-              <>GENERATING…</>
-            ) : pngState === "done" ? (
-              <>
-                <Check className="h-3.5 w-3.5 text-[#CCFF00]" /> SAVED
-              </>
-            ) : pngState === "error" ? (
-              <>PNG FAILED</>
-            ) : (
-              <>
-                <Download className="h-3.5 w-3.5" /> DOWNLOAD PNG
-              </>
-            )}
-          </button>
+        <div className={"grid grid-cols-1 gap-2 " + (showPngDownload ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
+          {showPngDownload ? (
+            <button
+              type="button"
+              onClick={() => void downloadPng()}
+              disabled={pngState === "generating"}
+              className="flex items-center justify-center gap-2 border border-white/20 py-3 text-white hover:border-[#CCFF00] hover:text-[#CCFF00] disabled:opacity-50"
+              style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em" }}
+            >
+              {pngState === "generating" ? (
+                <>GENERATING…</>
+              ) : pngState === "done" ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-[#CCFF00]" /> SAVED
+                </>
+              ) : pngState === "error" ? (
+                <>PNG FAILED</>
+              ) : (
+                <>
+                  <Download className="h-3.5 w-3.5" /> DOWNLOAD PNG
+                </>
+              )}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => void copyTweet()}

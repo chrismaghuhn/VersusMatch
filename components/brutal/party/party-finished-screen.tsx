@@ -1,19 +1,21 @@
 "use client";
 
-import Link from "next/link";
-import { Crown } from "lucide-react";
+import { PartyDesktopFinished } from "@/components/brutal/party/desktop";
 import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
-import { Avatar } from "@/components/brutal/party/shared/Avatar";
-import { decodePartyAvatar } from "@/lib/party/avatar";
+import { ShareCard } from "@/components/brutal/party/screens/ShareCard";
+import { usePartyDesktop } from "@/lib/party/use-party-desktop";
 import { PARTY_COPY } from "@/lib/party/copy";
 import type { PartySnapshot } from "@/lib/party/types";
-import { ShareCard } from "@/components/brutal/party/screens/ShareCard";
+import Link from "next/link";
+import { Crown } from "lucide-react";
+import { Avatar } from "@/components/brutal/party/shared/Avatar";
+import { decodePartyAvatar } from "@/lib/party/avatar";
 
 type PartyFinishedScreenProps = {
   snapshot: PartySnapshot;
 };
 
-export function PartyFinishedScreen({ snapshot }: PartyFinishedScreenProps) {
+function PartyFinishedMobile({ snapshot }: PartyFinishedScreenProps) {
   const ranked = [...snapshot.players].sort((a, b) => b.score - a.score);
   const topScore = ranked[0]?.score ?? 0;
   const winners = ranked.filter((p) => p.score === topScore && topScore > 0);
@@ -32,9 +34,13 @@ export function PartyFinishedScreen({ snapshot }: PartyFinishedScreenProps) {
           }}
         >
           {winners.length === 1 ? (
-            <span className="italic text-[#CCFF00]">{PARTY_COPY.finishedWinner(winners[0]!.handle)}</span>
+            <span className="italic text-[#CCFF00]">
+              {PARTY_COPY.finishedWinner(winners[0]!.handle)}
+            </span>
           ) : winners.length > 1 ? (
-            <span className="italic text-[#CCFF00]">{PARTY_COPY.finishedTie(winners.length)}</span>
+            <span className="italic text-[#CCFF00]">
+              {PARTY_COPY.finishedTie(winners.length)}
+            </span>
           ) : (
             PARTY_COPY.finishedScores
           )}
@@ -94,4 +100,12 @@ export function PartyFinishedScreen({ snapshot }: PartyFinishedScreenProps) {
       </div>
     </Shell>
   );
+}
+
+export function PartyFinishedScreen({ snapshot }: PartyFinishedScreenProps) {
+  const desktop = usePartyDesktop();
+  if (desktop) {
+    return <PartyDesktopFinished snapshot={snapshot} />;
+  }
+  return <PartyFinishedMobile snapshot={snapshot} />;
 }

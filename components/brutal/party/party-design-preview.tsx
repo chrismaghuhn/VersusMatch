@@ -143,6 +143,10 @@ export function PartyDesignPreview() {
         {!collapsed && (
           <div className="border-t border-white/10 p-4">
             <div className="text-white/40" style={{ fontSize: 10, lineHeight: 1.5 }}>
+              Live <code className="text-[#CCFF00]" style={{ fontFamily: "ui-monospace, monospace" }}>/party</code>{" "}
+              uses Arena layout, glow background, and regular card density (desktop lg+ for in-game).
+            </div>
+            <div className="mt-2 text-white/40" style={{ fontSize: 10, lineHeight: 1.5 }}>
               Source:{" "}
               <code className="text-[#CCFF00]" style={{ fontFamily: "ui-monospace, monospace" }}>
                 components/brutal/party/

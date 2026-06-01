@@ -61,7 +61,8 @@ Use this checklist when changing party RPCs, Realtime, or UI. Run with at least 
 - [ ] **Error join** — full room → `room_full`; invalid code → `bad_code`
 - [ ] **Error solo** — all others leave mid-game → `everyone_left` only after ~2s debounce (no flash on reconnect)
 - [ ] **Header nav** — **PARTY** in site header links to `/party`
-- [ ] **Mobile layout** — caption/vote/reveal: bottom CTA, meme fills screen on phone width
+- [ ] **Mobile layout** — caption/vote/reveal: bottom CTA, meme fills screen on phone width (< lg / 1024px)
+- [ ] **Desktop layout (lg+)** — at 1280px: Arena PartyLayout, composited glow background, voting grid with regular card density (`minmax(230px, 1fr)`); mobile swipe UI unchanged below lg
 
 ---
 

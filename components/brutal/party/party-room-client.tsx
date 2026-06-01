@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import type { LobbyReactionFeedItem } from "@/components/brutal/party/lobby-reaction-bar";
 import { PartyFinishedScreen } from "@/components/brutal/party/party-finished-screen";
 import { PartyMobileCaption } from "@/components/brutal/party/mobile/PartyMobileCaption";
+import { PartyDesktopCaption } from "@/components/brutal/party/desktop";
+import { usePartyDesktop } from "@/lib/party/use-party-desktop";
 import { PartyRevealScreen } from "@/components/brutal/party/party-reveal-screen";
 import { PartyVotingScreen } from "@/components/brutal/party/party-voting-screen";
 import { PartyLobbyScreen } from "@/components/brutal/party/screens/HostOnboarding";
@@ -26,6 +28,7 @@ type PartyRoomClientProps = {
 
 export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const router = useRouter();
+  const desktop = usePartyDesktop();
   const [snapshot, setSnapshot] = useState<PartySnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [captionDraft, setCaptionDraft] = useState("");
@@ -471,7 +474,30 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
           : PARTY_COPY.captionLockedIn
       : null;
 
-    return (
+    return desktop ? (
+      <PartyDesktopCaption
+        round={snapshot.room.currentRound}
+        roundCount={snapshot.room.roundCount}
+        phaseEndsAt={snapshot.room.phaseEndsAt}
+        allReady={allReady}
+        captionCount={snapshot.captionCount}
+        playerCount={snapshot.players.length}
+        value={captionDraft}
+        onChange={handleCaptionChange}
+        onSubmit={() => void handleSubmitCaption()}
+        onReroll={() => void handleReroll()}
+        onUnlock={() => void handleRetractCaption()}
+        locked={locked}
+        unlockDisabled={phaseTransitioning}
+        unlocking={unlocking}
+        submitting={submitting}
+        rerolling={rerolling}
+        rerollsRemaining={snapshot.myRerollsRemaining}
+        showRerollDraftHint={showRerollDraftHint}
+        statusMessage={statusMessage}
+        template={snapshot.myTemplate}
+      />
+    ) : (
       <PartyMobileCaption
         round={snapshot.room.currentRound}
         roundCount={snapshot.room.roundCount}
