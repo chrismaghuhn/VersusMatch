@@ -10,6 +10,7 @@ import {
 import {
   applyCardFit,
   computeCardFit,
+  sortBoxesByZ,
 } from "@/lib/party/caption-rich/layout";
 import {
   isCaptionDocumentV3,
@@ -19,6 +20,7 @@ import {
   type CaptionSegment,
 } from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
+import type { StrokeRenderMode } from "@/lib/party/caption-rich/fill";
 
 export type FrameDensity = "editor" | "card" | "export";
 
@@ -69,8 +71,9 @@ function resolveV3BoxLayouts(
   boxes: CaptionBox[],
   density: FrameDensity
 ): Array<{ box: CaptionBox; layout: BoxLayout }> {
-  const nonEmpty = boxes.filter((b) => boxPlainText(b.segments).length > 0);
-  const cardFit = density === "card" ? computeCardFit(boxes) : null;
+  const ordered = sortBoxesByZ(boxes);
+  const nonEmpty = ordered.filter((b) => boxPlainText(b.segments).length > 0);
+  const cardFit = density === "card" ? computeCardFit(ordered) : null;
 
   return nonEmpty.map((box) => ({
     box,
@@ -132,6 +135,7 @@ export function PartyTemplateFrame({
   const legacyParts = captionRich ? null : captionParts(caption);
   const useV3Layout = captionRich != null && isCaptionDocumentV3(captionRich);
   const v3Boxes = useV3Layout ? resolveV3BoxLayouts(captionRich.boxes, density) : [];
+  const strokeMode: StrokeRenderMode = density === "export" ? "export" : "default";
 
   return (
     <div className="relative w-full overflow-hidden border-2 border-white">
@@ -159,14 +163,18 @@ export function PartyTemplateFrame({
             return (
               <div
                 key={box.id}
-                className="absolute z-10 flex items-center justify-center"
-                style={positionedBoxStyle(layout, align)}
+                className="absolute flex items-center justify-center"
+                style={{
+                  ...positionedBoxStyle(layout, align),
+                  zIndex: 10 + (box.z ?? 0),
+                }}
               >
                 <div style={memeBoxContainerStyle(align)}>
                   <CaptionSegments
                     segments={segments}
                     baseFontSize={fittedSize}
                     boxStyle={box.style}
+                    strokeMode={strokeMode}
                   />
                 </div>
               </div>
@@ -195,6 +203,7 @@ export function PartyTemplateFrame({
                     <CaptionSegments
                       segments={segments ?? []}
                       baseFontSize={fittedSize}
+                      strokeMode={strokeMode}
                     />
                   </div>
                 ) : (

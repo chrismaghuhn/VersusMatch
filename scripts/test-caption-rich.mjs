@@ -124,6 +124,13 @@ test("strokeStylesForFill inverts outline for black fill", () => {
   assert.match(String(styles.WebkitTextStroke), /#fff/i);
 });
 
+test("strokeStylesForFill export mode uses text-shadow only", () => {
+  const styles = strokeStylesForFill("white", "export");
+  assert.equal(styles.color, "#fff");
+  assert.equal(styles.WebkitTextStroke, undefined);
+  assert.match(String(styles.textShadow), /#000/i);
+});
+
 test("fillBlack applies to selection range only", () => {
   const segments = [{ text: "hello world" }];
   const next = applyToolbarToSegments(segments, { start: 0, end: 5 }, "fillBlack");
@@ -160,6 +167,32 @@ test("snapshotsEqual detects style.fill change", () => {
   };
   const a = takeSnapshot([base], ["a"], [null]);
   const b = takeSnapshot([{ ...base, style: { fill: "black" } }], ["a"], [null]);
+  assert.equal(snapshotsEqual(a, b), false);
+});
+
+test("snapshotsEqual detects style.pill change", () => {
+  const base = {
+    id: "t0",
+    kind: "template",
+    templateIndex: 0,
+    segments: [{ text: "a" }],
+    layout: { x: 0.1, y: 0.05, w: 0.8, h: 0.2 },
+  };
+  const a = takeSnapshot([base], ["a"], [null]);
+  const b = takeSnapshot([{ ...base, style: { pill: true } }], ["a"], [null]);
+  assert.equal(snapshotsEqual(a, b), false);
+});
+
+test("snapshotsEqual detects z change", () => {
+  const base = {
+    id: "t0",
+    kind: "template",
+    templateIndex: 0,
+    segments: [{ text: "a" }],
+    layout: { x: 0.1, y: 0.05, w: 0.8, h: 0.2 },
+  };
+  const a = takeSnapshot([base], ["a"], [null]);
+  const b = takeSnapshot([{ ...base, z: 9 }], ["a"], [null]);
   assert.equal(snapshotsEqual(a, b), false);
 });
 

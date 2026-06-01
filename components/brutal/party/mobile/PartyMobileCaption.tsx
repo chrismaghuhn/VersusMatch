@@ -33,6 +33,7 @@ type PartyMobileCaptionProps = {
   rerolling?: boolean;
   rerollsRemaining?: number;
   showRerollDraftHint?: boolean;
+  rerollError?: string | null;
   statusMessage?: string | null;
   template?: { imageUrl: string; textBoxes: TextBox[] } | null;
   embedded?: boolean;
@@ -65,6 +66,7 @@ export function PartyMobileCaption({
   rerolling = false,
   rerollsRemaining = 0,
   showRerollDraftHint = false,
+  rerollError = null,
   statusMessage,
   template = null,
   embedded = false,
@@ -114,8 +116,7 @@ export function PartyMobileCaption({
   const editorBoxes = canvasEditor?.boxes ?? null;
   const fieldCount = editorBoxes?.length ?? boxCount;
   const lastFieldIndex = fieldCount - 1;
-  const showOverlay =
-    Boolean(canvasEditor) && !inputDisabled && Boolean(canvasEditor?.activeBoxId);
+  const showCanvasOverlay = Boolean(canvasEditor) && !inputDisabled;
 
   function handleSubmit() {
     if (inputDisabled || !submitPayload) return;
@@ -137,7 +138,10 @@ export function PartyMobileCaption({
       canDeleteActiveCustomBox={canvasEditor.canDeleteActiveCustomBox}
       activeBoxFill={activeBox?.style?.fill ?? "white"}
       activeBoxPill={activeBox?.style?.pill ?? false}
+      activeBoxAlign={activeBox?.layout.align ?? "center"}
       styleControlsEnabled={Boolean(canvasEditor.activeBoxId)}
+      layoutControlsEnabled={Boolean(canvasEditor.activeBoxId)}
+      peekMode={canvasEditor.peekMode}
       onUndo={canvasEditor.undo}
       onRedo={canvasEditor.redo}
       onAddCustomBox={canvasEditor.addCustomBox}
@@ -151,6 +155,12 @@ export function PartyMobileCaption({
         const id = canvasEditor.activeBoxId;
         if (id) canvasEditor.toggleBoxPill(id);
       }}
+      onAlignLeft={() => canvasEditor.setActiveBoxAlign("left")}
+      onAlignCenter={() => canvasEditor.setActiveBoxAlign("center")}
+      onAlignRight={() => canvasEditor.setActiveBoxAlign("right")}
+      onSnapHorizontal={canvasEditor.snapActiveBoxHorizontal}
+      onSnapVertical={canvasEditor.snapActiveBoxVertical}
+      onTogglePeek={canvasEditor.togglePeekMode}
     />
   ) : null;
 
@@ -168,6 +178,15 @@ export function PartyMobileCaption({
           {rerolling ? PARTY_COPY.rerollButtonBusy : PARTY_COPY.rerollButton}
           <span className="text-white/40">· {PARTY_COPY.rerollsRemaining(rerollsRemaining)}</span>
         </button>
+      ) : null}
+      {rerollError ? (
+        <p
+          className="text-center text-[#FF2D87]"
+          style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em" }}
+          role="alert"
+        >
+          {rerollError}
+        </p>
       ) : null}
       <button
         type="button"
@@ -213,11 +232,13 @@ export function PartyMobileCaption({
             imageUrl={template?.imageUrl}
             textBoxes={template?.textBoxes}
           />
-          {showOverlay && canvasEditor ? (
+          {showCanvasOverlay && canvasEditor ? (
             <MemeCanvasOverlay
               boxes={canvasEditor.boxes}
               activeBoxId={canvasEditor.activeBoxId}
+              peekMode={canvasEditor.peekMode}
               mobile
+              onSelectBox={canvasEditor.selectBox}
               onMoveBox={canvasEditor.updateBoxLayout}
               onResizeBox={canvasEditor.updateBoxLayout}
               onInteractionStart={canvasEditor.onInteractionStart}
@@ -251,7 +272,7 @@ export function PartyMobileCaption({
                     onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
                     onFocus={() => {
                       canvasEditor?.onCaptionFieldFocus();
-                      canvasEditor?.setActiveBoxId(box.id);
+                      canvasEditor?.selectBox(box.id);
                     }}
                     onBlur={() => canvasEditor?.commitTextHistory()}
                   />
@@ -276,7 +297,7 @@ export function PartyMobileCaption({
                       canvasEditor && boxId
                         ? () => {
                             canvasEditor.onCaptionFieldFocus();
-                            canvasEditor.setActiveBoxId(boxId);
+                            canvasEditor.selectBox(boxId);
                           }
                         : undefined
                     }

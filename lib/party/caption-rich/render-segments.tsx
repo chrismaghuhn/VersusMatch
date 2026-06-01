@@ -6,6 +6,7 @@ import {
   PILL_BOX_STYLE,
   resolveSegmentFill,
   strokeStylesForFill,
+  type StrokeRenderMode,
 } from "./fill";
 
 export const MEME_STROKE_STYLES = strokeStylesForFill("white");
@@ -32,11 +33,13 @@ export function CaptionSegments({
   baseFontSize,
   defaultCaps = true,
   boxStyle,
+  strokeMode = "default",
 }: {
   segments: CaptionSegment[];
   baseFontSize: number;
   defaultCaps?: boolean;
   boxStyle?: BoxVisualStyle;
+  strokeMode?: StrokeRenderMode;
 }) {
   const inner = (
     <>
@@ -59,7 +62,7 @@ export function CaptionSegments({
               fontStyle: seg.style?.italic ? "italic" : "normal",
               whiteSpace: "pre-wrap",
               fontFamily: "Impact, 'Arial Black', sans-serif",
-              ...strokeStylesForFill(fill),
+              ...strokeStylesForFill(fill, strokeMode),
             }}
           >
             {seg.text}

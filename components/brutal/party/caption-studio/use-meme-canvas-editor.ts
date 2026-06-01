@@ -10,7 +10,7 @@ import {
 import type { CanvasSubmitOptions, CaptionSubmitPayload } from "@/lib/party/caption-submit";
 import { prepareCaptionSubmit } from "@/lib/party/caption-submit";
 import { finalizeCaptionDocumentV3 } from "@/lib/party/caption-rich/document";
-import { defaultTemplateBoxes, nextCustomBox } from "@/lib/party/caption-rich/layout";
+import { defaultTemplateBoxes, nextCustomBox, bringBoxToFront, snapLayoutCenterHorizontal, snapLayoutCenterVertical } from "@/lib/party/caption-rich/layout";
 import { parseMarkup } from "@/lib/party/caption-rich/parse-markup";
 import { plainTextLengthFromBoxes } from "@/lib/party/caption-rich/plain-text";
 import {
@@ -144,7 +144,10 @@ export function useMemeCanvasEditor({
     rawTexts: fieldTexts,
     boxes: buildPreviewBoxesV3(boxes, fieldTexts, emptyOverrides(initialFieldCount)),
   }));
-  const [activeBoxId, setActiveBoxId] = useState<string>(() => textBoxes[0]?.id ?? "box-0");
+  const [activeBoxId, setActiveBoxIdState] = useState<string | null>(
+    () => textBoxes[0]?.id ?? "box-0"
+  );
+  const [peekMode, setPeekMode] = useState(false);
   const [layoutFrozen, setLayoutFrozen] = useState(false);
 
   const resetCanvasFromRevision = useCallback(
@@ -162,7 +165,8 @@ export function useMemeCanvasEditor({
       setBoxes(nextBoxes);
       setFieldTexts(nextTexts);
       setSegmentOverrides(emptyOverrides(nextBoxes.length));
-      setActiveBoxId(nextBoxes[0]?.id ?? textBoxes[0]?.id ?? "box-0");
+      setActiveBoxIdState(nextBoxes[0]?.id ?? textBoxes[0]?.id ?? "box-0");
+      setPeekMode(false);
       onChange(buildCaptionFromFieldTexts(nextTexts));
     },
     [textBoxes, onChange, clearHistory]
@@ -301,6 +305,38 @@ export function useMemeCanvasEditor({
     }, TEXT_HISTORY_DEBOUNCE_MS);
   }, [boxes, fieldTexts, segmentOverrides, commitTextHistory]);
 
+  const pushLayoutUndo = useCallback(() => {
+    commitTextHistory();
+    pushUndo(takeSnapshot(boxes, fieldTexts, segmentOverrides));
+  }, [boxes, fieldTexts, segmentOverrides, pushUndo, commitTextHistory]);
+
+  const selectBox = useCallback(
+    (boxId: string | null) => {
+      if (boxId === null) {
+        setActiveBoxIdState(null);
+        return;
+      }
+      if (!boxes.some((b) => b.id === boxId)) return;
+
+      const topId = [...boxes]
+        .map((box, index) => ({ box, index }))
+        .sort((a, b) => {
+          const az = a.box.z ?? a.index;
+          const bz = b.box.z ?? b.index;
+          return az !== bz ? az - bz : a.index - b.index;
+        })
+        .at(-1)?.box.id;
+
+      if (topId !== boxId) {
+        pushLayoutUndo();
+        setBoxes((prev) => bringBoxToFront(prev, boxId));
+      }
+      setActiveBoxIdState(boxId);
+      setPeekMode(false);
+    },
+    [boxes, pushLayoutUndo]
+  );
+
   const updateField = useCallback(
     (index: number, nextValue: string) => {
       if (!textHistoryBaselineRef.current) {
@@ -324,6 +360,8 @@ export function useMemeCanvasEditor({
 
   const applyToolbar = useCallback(
     (boxIndex: number, action: ToolbarAction, selection: TextSelection | null) => {
+      commitTextHistory();
+      pushUndo(takeSnapshot(boxes, fieldTexts, segmentOverrides));
       const raw = fieldTexts[boxIndex] ?? "";
       const base = segmentOverrides[boxIndex] ?? parseMarkup(raw);
       const next = applyToolbarToSegments(base, selection, action);
@@ -334,13 +372,43 @@ export function useMemeCanvasEditor({
         return updated;
       });
     },
-    [fieldTexts, segmentOverrides]
+    [fieldTexts, segmentOverrides, boxes, commitTextHistory, pushUndo]
   );
 
   const updateBoxLayout = useCallback((boxId: string, layout: BoxLayout) => {
     setBoxes((prev) =>
       prev.map((box) => (box.id === boxId ? { ...box, layout } : box))
     );
+  }, []);
+
+  const mutateActiveBoxLayout = useCallback(
+    (mutator: (layout: BoxLayout) => BoxLayout) => {
+      if (!activeBoxId) return;
+      const box = boxes.find((b) => b.id === activeBoxId);
+      if (!box) return;
+      pushLayoutUndo();
+      updateBoxLayout(activeBoxId, mutator(box.layout));
+    },
+    [activeBoxId, boxes, pushLayoutUndo, updateBoxLayout]
+  );
+
+  const setActiveBoxAlign = useCallback(
+    (align: BoxLayout["align"]) => {
+      mutateActiveBoxLayout((layout) => ({ ...layout, align: align ?? "center" }));
+    },
+    [mutateActiveBoxLayout]
+  );
+
+  const snapActiveBoxHorizontal = useCallback(() => {
+    mutateActiveBoxLayout(snapLayoutCenterHorizontal);
+  }, [mutateActiveBoxLayout]);
+
+  const snapActiveBoxVertical = useCallback(() => {
+    mutateActiveBoxLayout(snapLayoutCenterVertical);
+  }, [mutateActiveBoxLayout]);
+
+  const togglePeekMode = useCallback(() => {
+    setPeekMode((prev) => !prev);
   }, []);
 
   const onInteractionStart = useCallback(() => {
@@ -386,7 +454,7 @@ export function useMemeCanvasEditor({
     setBoxes((prev) => [...prev, next]);
     setFieldTexts((prev) => [...prev, ""]);
     setSegmentOverrides((prev) => [...prev, null]);
-    setActiveBoxId(next.id);
+    setActiveBoxIdState(next.id);
     skipDebounceRef.current = false;
   }, [boxes, fieldTexts, segmentOverrides, pushUndo, commitTextHistory]);
 
@@ -408,7 +476,7 @@ export function useMemeCanvasEditor({
     setBoxes(nextBoxes);
     setFieldTexts(nextTexts);
     setSegmentOverrides(nextOverrides);
-    setActiveBoxId(nextActiveId);
+    setActiveBoxIdState(nextActiveId);
     skipDebounceRef.current = false;
     onChange(buildCaptionFromFieldTexts(nextTexts));
   }, [
@@ -469,7 +537,7 @@ export function useMemeCanvasEditor({
     setBoxes(templateOnly);
     setFieldTexts(nextTexts);
     setSegmentOverrides(emptyOverrides(templateOnly.length));
-    setActiveBoxId(templateOnly[0]?.id ?? textBoxes[0]?.id ?? "box-0");
+    setActiveBoxIdState(templateOnly[0]?.id ?? textBoxes[0]?.id ?? "box-0");
     onChange(buildCaptionFromFieldTexts(nextTexts));
   }, [textBoxes, boxes, fieldTexts, segmentOverrides, onChange, pushUndo, commitTextHistory]);
 
@@ -485,9 +553,15 @@ export function useMemeCanvasEditor({
     updateField,
     applyToolbar,
     activeBoxId,
-    setActiveBoxId,
+    selectBox,
+    setActiveBoxId: selectBox,
     activeBoxIndex,
     layoutFrozen,
+    peekMode,
+    togglePeekMode,
+    setActiveBoxAlign,
+    snapActiveBoxHorizontal,
+    snapActiveBoxVertical,
     boxes,
     updateBoxLayout,
     onInteractionStart,

@@ -78,10 +78,34 @@ export async function tryAdvancePhase(
 
     const next = data.snapshot ?? snapshot;
     const phaseChanged = next.room.phase !== phaseBefore;
-    const advanced = Boolean(data.ok && phaseChanged);
+    const advanced = phaseChanged;
 
     if (advanced) {
       startCooldown(guards);
+    } else if (allReady && !options?.forceTimer) {
+      // Denormalized counters or concurrent submits can lag; one retry before timer fallback.
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      if (!isInCooldown(guards.cooldownUntilRef)) {
+        try {
+          const retryRes = await fetch("/api/party/advance", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ roomId }),
+          });
+          const retryData = (await retryRes.json()) as {
+            ok?: boolean;
+            snapshot?: PartySnapshot;
+          };
+          const retryNext = retryData.snapshot ?? next;
+          const retryChanged = retryNext.room.phase !== phaseBefore;
+          if (retryChanged) {
+            startCooldown(guards);
+            return { snapshot: retryData.snapshot ?? snapshot, advanced: true };
+          }
+        } catch {
+          /* fall through */
+        }
+      }
     }
 
     return { snapshot: data.snapshot ?? snapshot, advanced };

@@ -1,6 +1,6 @@
 "use client";
 
-import { Redo2, Trash2, Undo2 } from "lucide-react";
+import { Eye, EyeOff, Redo2, Trash2, Undo2 } from "lucide-react";
 import { PARTY_COPY } from "@/lib/party/copy";
 
 type CanvasLayoutToolbarProps = {
@@ -12,7 +12,10 @@ type CanvasLayoutToolbarProps = {
   canDeleteActiveCustomBox: boolean;
   activeBoxFill?: "white" | "black";
   activeBoxPill?: boolean;
+  activeBoxAlign?: "left" | "center" | "right";
   styleControlsEnabled: boolean;
+  layoutControlsEnabled: boolean;
+  peekMode: boolean;
   onUndo: () => void;
   onRedo: () => void;
   onAddCustomBox: () => void;
@@ -20,6 +23,12 @@ type CanvasLayoutToolbarProps = {
   onResetLayout: () => void;
   onSetBoxFill: (fill: "white" | "black") => void;
   onTogglePill: () => void;
+  onAlignLeft: () => void;
+  onAlignCenter: () => void;
+  onAlignRight: () => void;
+  onSnapHorizontal: () => void;
+  onSnapVertical: () => void;
+  onTogglePeek: () => void;
 };
 
 const btnClass =
@@ -34,7 +43,10 @@ export function CanvasLayoutToolbar({
   canDeleteActiveCustomBox,
   activeBoxFill = "white",
   activeBoxPill = false,
+  activeBoxAlign = "center",
   styleControlsEnabled,
+  layoutControlsEnabled,
+  peekMode,
   onUndo,
   onRedo,
   onAddCustomBox,
@@ -42,10 +54,20 @@ export function CanvasLayoutToolbar({
   onResetLayout,
   onSetBoxFill,
   onTogglePill,
+  onAlignLeft,
+  onAlignCenter,
+  onAlignRight,
+  onSnapHorizontal,
+  onSnapVertical,
+  onTogglePeek,
 }: CanvasLayoutToolbarProps) {
   const labelStyle = { fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" } as const;
   const styleDisabled = disabled || !styleControlsEnabled;
+  const layoutDisabled = disabled || !layoutControlsEnabled;
   const wrapClass = mobile ? "mx-1 mb-2 flex flex-wrap gap-2" : "mb-2 flex flex-wrap gap-2";
+
+  const alignActive = (align: "left" | "center" | "right") =>
+    activeBoxAlign === align ? "border-[#CCFF00] text-[#CCFF00]" : "";
 
   return (
     <div className={wrapClass}>
@@ -98,6 +120,67 @@ export function CanvasLayoutToolbar({
         style={labelStyle}
       >
         {PARTY_COPY.canvasResetLayout}
+      </button>
+      <button
+        type="button"
+        disabled={layoutDisabled}
+        onClick={onAlignLeft}
+        title={PARTY_COPY.canvasAlignLeft}
+        className={`${btnClass} ${alignActive("left")}`}
+        style={labelStyle}
+      >
+        L
+      </button>
+      <button
+        type="button"
+        disabled={layoutDisabled}
+        onClick={onAlignCenter}
+        title={PARTY_COPY.canvasAlignCenter}
+        className={`${btnClass} ${alignActive("center")}`}
+        style={labelStyle}
+      >
+        C
+      </button>
+      <button
+        type="button"
+        disabled={layoutDisabled}
+        onClick={onAlignRight}
+        title={PARTY_COPY.canvasAlignRight}
+        className={`${btnClass} ${alignActive("right")}`}
+        style={labelStyle}
+      >
+        R
+      </button>
+      <button
+        type="button"
+        disabled={layoutDisabled}
+        onClick={onSnapHorizontal}
+        title={PARTY_COPY.canvasSnapH}
+        className={btnClass}
+        style={labelStyle}
+      >
+        ↔
+      </button>
+      <button
+        type="button"
+        disabled={layoutDisabled}
+        onClick={onSnapVertical}
+        title={PARTY_COPY.canvasSnapV}
+        className={btnClass}
+        style={labelStyle}
+      >
+        ↕
+      </button>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={onTogglePeek}
+        title={PARTY_COPY.canvasPeek}
+        className={`flex items-center gap-1.5 ${btnClass} ${peekMode ? "border-[#CCFF00] text-[#CCFF00]" : ""}`}
+        style={labelStyle}
+      >
+        {peekMode ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+        {PARTY_COPY.canvasPeek}
       </button>
       <button
         type="button"

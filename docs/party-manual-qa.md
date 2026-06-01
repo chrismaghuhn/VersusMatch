@@ -20,10 +20,10 @@ Use this checklist when changing party RPCs, Realtime, or UI. Run with at least 
 - [x] **Second player (min start)** — host + one guest → host can start game (2-player minimum)
 - [x] **Start game** — host Start Game → phase `caption`, **each player sees a different** template image
 - [x] **Caption phase** — Top/Bottom fields; locked state after submit; timer advances phase when expired
-- [ ] **Reroll** — with rerolls > 0: reroll changes meme preview; text kept; hint banner shown; budget decrements; 3rd reroll when max=2 fails
+- [x] **Reroll** — with rerolls > 0: reroll changes meme preview; text kept; hint banner shown; budget decrements; 3rd reroll when max=2 fails (inline `rerollNoBudget` message)
 - [x] **Voting phase** — each card shows **that player's meme** + caption; **self-vote allowed**
 - [x] **Reveal** — vote counts shown; scores update on players
-- [ ] **Finished** — after final round: leaderboard, tie handling, **ShareCard** (copy link, copy tweet, Twitter intent opens with correct room code)
+- [x] **Finished** — after final round: leaderboard, tie handling, **ShareCard** (copy link, copy tweet, Twitter intent opens with correct room code)
 
 ---
 
@@ -35,7 +35,7 @@ Use this checklist when changing party RPCs, Realtime, or UI. Run with at least 
 - [ ] **Leave lobby** — non-host leaves before start → returns to `/party`; host leaves → next player becomes host; last player leaves → room abandoned
 - [ ] **Retract caption** — after submit, unlock/edit caption before phase ends
 - [ ] **Retract vote** — after vote, change vote before phase ends
-- [ ] **Early advance** — when all players ready in caption/vote, phase advances without waiting for full timer
+- [x] **Early advance** — when all players ready in caption/vote, phase advances without waiting for full timer (retry + phase-change detection in `try-advance-phase.ts`)
 
 ---
 
@@ -56,7 +56,7 @@ Use this checklist when changing party RPCs, Realtime, or UI. Run with at least 
 
 ## Polish & errors
 
-- [ ] **Tutorial** — first `/party` visit shows overlay; reload or after dismiss (`memefight_party_tutorial_v1`) → no overlay
+- [x] **Tutorial** — first `/party` visit shows overlay with canvas/W-B/pill/ShareCard copy; reload or after dismiss (`memefight_party_tutorial_v1`) → no overlay
 - [ ] **Tutorial vs error** — `/party?error=bad_code` shows error card only, **no** tutorial overlay
 - [ ] **Error join** — full room → `room_full`; invalid code → `bad_code`
 - [ ] **Error solo** — all others leave mid-game → `everyone_left` only after ~2s debounce (no flash on reconnect)
@@ -68,9 +68,9 @@ Use this checklist when changing party RPCs, Realtime, or UI. Run with at least 
 
 ## Share & polish
 
-- [ ] **ShareCard copy link** — clipboard contains `…/party/join/CODE`
-- [ ] **ShareCard Twitter** — intent URL includes room code and join URL
-- [ ] **ShareCard PNG** — Download PNG saves `memefight-party-CODE.png` with meme + winner text (1200×675)
+- [x] **ShareCard copy link** — clipboard contains `…/party/join/CODE`
+- [x] **ShareCard Twitter** — intent URL includes room code and join URL
+- [x] **ShareCard PNG** — Download PNG saves `memefight-party-CODE.png` with meme + winner text (1200×675); see **P2.6a ShareCard PNG** rows for stroke/pill assertions (not visual-only)
 - [ ] **Footer nav** — **Party** in site footer PRODUCT column; **Credits** link in footer bar → `/credits`
 - [ ] **Credits page** — `/credits` lists Party meme template attribution (20 templates + Meme Archive License)
 - [ ] **Party disabled** — `PARTY_ENABLED=false` → party API returns **503** (preview/staging only)
@@ -117,12 +117,57 @@ Branch `feat/party-meme-canvas-p25` — `npm run typecheck`, `test:caption-field
 
 Branch `feat/p2.6a-canvas-readability` — `node --experimental-strip-types --test scripts/test-caption-rich.mjs scripts/test-caption-layout.mjs scripts/test-caption-fields.mjs` pass.
 
-- [ ] **Black text on light meme** — canvas on: active box **B** → black fill readable on bright template area in editor
-- [ ] **Pill background** — **Pill** toggle → semi-transparent bar behind text in editor preview
-- [ ] **Selection W/B** — highlight word in field → CaptionToolbar **W** / **B** overrides box default for that run only
-- [ ] **WYSIWYG colors** — submit with black fill and/or pill → desktop voting, reveal, and ShareCard PNG match editor
-- [ ] **Legacy v3 without style** — old submission with no `box.style` still renders white text
-- [ ] **Undo/redo fill/pill** — box **W** / **B** / **Pill** changes undo/redo; unchanged keystrokes after debounce do not stack duplicate undo entries
+- [x] **Black text on light meme** — canvas on: active box **B** → black fill readable on bright template area in editor
+- [x] **Pill background** — **Pill** toggle → semi-transparent bar behind text in editor preview
+- [x] **Selection W/B** — highlight word in field → CaptionToolbar **W** / **B** overrides box default for that run only
+- [x] **WYSIWYG colors** — submit with black fill and/or pill → desktop voting and reveal match editor (`PartyTemplateFrame` + `CaptionSegments` on all surfaces)
+- [x] **ShareCard PNG — white fill stroke** — export density uses text-shadow-only stroke (`strokeMode=export`) for `html-to-image`; zoom 200%: black outline around white text
+- [x] **ShareCard PNG — black fill stroke** — box **B**: white outline via export stroke layers in PNG
+- [x] **ShareCard PNG — pill** — pill bar (`rgba(0,0,0,0.55)`) present in PNG
+- [ ] **ShareCard PNG — engines** — repeat stroke checks on **Chrome desktop** + **Safari iOS** (or one WebKit mobile); file bug if stroke missing on either *(smoke on deploy)*
+- [x] **Legacy v3 without style** — old submission with no `box.style` still renders white text with black outline
+- [x] **Undo/redo fill/pill** — box **W** / **B** / **Pill** changes undo/redo; toolbar W/B pushes undo stack; `snapshotsEqual` covers fill/pill
+
+---
+
+## P2.6b Canvas layout QoL
+
+- [x] **Tap select** — tap text box on meme selects it without scrolling to textarea
+- [x] **Tap deselect** — tap empty meme area clears selection (handles hidden)
+- [x] **Align L/C/R** — updates `layout.align` on active box
+- [x] **Snap ↔ / ↕** — centers active box horizontally / vertically
+- [x] **Preview (peek)** — toggles handles off; meme preview matches submit WYSIWYG
+- [x] **Z-order on select** — selecting overlapping box brings it to front; render sorted by `z`
+- [x] **Undo/redo layout** — align, snap, z, drag/resize captured in undo stack
+
+---
+
+## Sprint 3 — Early advance (B1 verification)
+
+`phaseTransitioning` and early-advance hooks **already exist** in `party-room-client.tsx` — Sprint 3 added retry-on-not-ready in `try-advance-phase.ts`.
+
+- [x] **Caption all-ready** — 2 players, both lock in caption → status shows `Everyone's ready — voting starts…` (or `captionPhaseChanging` during advance); voting phase within ~3s without waiting full timer
+- [x] **Vote all-ready** — 2 players, both vote → `Everyone voted — results incoming…`; reveal within ~3s
+- [x] **Copy on mobile** — same all-ready / phase-changing strings visible in `PartyMobileShell` status line
+- [x] **Copy on desktop** — same strings in `PartyDesktopCaption` / `PartyDesktopVoting`
+- [x] **Buttons locked during advance** — unlock caption / change vote disabled while `phaseTransitioning` (no double-submit)
+
+---
+
+## Sprint 3 — Reroll (B2)
+
+- [x] **Hint banner** — after reroll, `rerollDraftHint` shown; dismisses on edit or after 5s
+- [x] **Budget label** — `N rerolls left` on button when budget > 0
+- [x] **Custom box confirm** — canvas on + custom boxes → EN confirm dialog before reroll
+- [x] **No budget** — inline `rerollNoBudget` when API returns `no_rerolls_left` (not silent / full-room error)
+
+---
+
+## Sprint 3 — Tutorial (B4)
+
+- [x] **Slide 02** — mentions canvas editor (90s), W/B/pill, standard 60s, rerolls
+- [x] **Slide 04** — mentions ShareCard copy link + PNG download
+- [x] **Storage key** — `memefight_party_tutorial_v1` unchanged (no re-show for returning users)
 
 ---
 

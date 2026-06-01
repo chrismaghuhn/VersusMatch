@@ -2,10 +2,15 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  bringBoxToFront,
   clampLayout,
   computeCardFit,
   defaultTemplateBoxes,
+  hitTestBox,
   nextCustomBox,
+  snapLayoutCenterHorizontal,
+  snapLayoutCenterVertical,
+  sortBoxesByZ,
 } from "../lib/party/caption-rich/layout.ts";
 import { validateCaptionDocumentV3 } from "../lib/party/caption-rich/validate-document.ts";
 import { boxPlainText } from "../lib/party/caption-rich/plain-text.ts";
@@ -119,4 +124,38 @@ test("validateCaptionDocumentV3 accepts black fill and pill", () => {
   doc.boxes[0].style = { fill: "black", pill: true };
   const result = validateCaptionDocumentV3(doc, TEMPLATE_BOXES, 1);
   assert.equal(result.ok, true);
+});
+
+test("hitTestBox returns topmost box in reverse z-order", () => {
+  const boxes = defaultTemplateBoxes(TEMPLATE_BOXES);
+  boxes[0].layout = { x: 0.1, y: 0.1, w: 0.8, h: 0.8, align: "center" };
+  boxes[1].layout = { x: 0.2, y: 0.2, w: 0.6, h: 0.6, align: "center" };
+  boxes[1].z = 5;
+  const hit = hitTestBox(boxes, 0.5, 0.5);
+  assert.equal(hit?.id, boxes[1].id);
+});
+
+test("snapLayoutCenterHorizontal centers box", () => {
+  const layout = { x: 0.1, y: 0.2, w: 0.4, h: 0.1, align: "center" };
+  const snapped = snapLayoutCenterHorizontal(layout);
+  assert.equal(snapped.x, 0.3);
+});
+
+test("snapLayoutCenterVertical centers box", () => {
+  const layout = { x: 0.1, y: 0.2, w: 0.4, h: 0.2, align: "center" };
+  const snapped = snapLayoutCenterVertical(layout);
+  assert.equal(snapped.y, 0.4);
+});
+
+test("bringBoxToFront assigns highest z", () => {
+  const boxes = defaultTemplateBoxes(TEMPLATE_BOXES);
+  const next = bringBoxToFront(boxes, boxes[0].id);
+  assert.equal(next[0].z, 2);
+});
+
+test("sortBoxesByZ orders by z then array index", () => {
+  const boxes = defaultTemplateBoxes(TEMPLATE_BOXES);
+  boxes[0].z = 3;
+  const sorted = sortBoxesByZ(boxes);
+  assert.equal(sorted[1].id, boxes[0].id);
 });

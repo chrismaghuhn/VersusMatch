@@ -80,6 +80,7 @@ export function snapshotsEqual(a: EditorSnapshot, b: EditorSnapshot): boolean {
     ) {
       return false;
     }
+    if ((left.z ?? i) !== (right.z ?? i)) return false;
   }
   return true;
 }

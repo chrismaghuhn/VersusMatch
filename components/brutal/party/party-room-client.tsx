@@ -43,6 +43,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const [submitting, setSubmitting] = useState(false);
   const [rerolling, setRerolling] = useState(false);
   const [rerollConfirmOpen, setRerollConfirmOpen] = useState(false);
+  const [rerollError, setRerollError] = useState<string | null>(null);
   const [voting, setVoting] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [retractingVote, setRetractingVote] = useState(false);
@@ -287,6 +288,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   }
 
   function requestReroll() {
+    setRerollError(null);
     if (snapshot?.room.canvasEditorEnabled && hasCustomBoxesRef.current) {
       setRerollConfirmOpen(true);
       return;
@@ -296,6 +298,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
 
   async function handleReroll() {
     setRerolling(true);
+    setRerollError(null);
     try {
       const res = await fetch("/api/party/reroll", {
         method: "POST",
@@ -311,7 +314,11 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         );
         setShowRerollDraftHint(true);
       } else if (data.error) {
-        setError(data.error);
+        if (data.error === "no_rerolls_left") {
+          setRerollError(PARTY_COPY.rerollNoBudget);
+        } else {
+          setRerollError(PARTY_COPY.working);
+        }
       }
     } finally {
       setRerolling(false);
@@ -326,6 +333,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   function handleCaptionChange(value: string) {
     setCaptionDraft(value);
     setShowRerollDraftHint(false);
+    setRerollError(null);
   }
 
   async function handleSubmitCaption(payload: CaptionSubmitPayload) {
@@ -553,6 +561,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
             rerolling={rerolling}
             rerollsRemaining={snapshot.myRerollsRemaining}
             showRerollDraftHint={showRerollDraftHint}
+            rerollError={rerollError}
             statusMessage={statusMessage}
             template={snapshot.myTemplate}
             canvasEnabled={snapshot.room.canvasEditorEnabled}
@@ -585,6 +594,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
             rerolling={rerolling}
             rerollsRemaining={snapshot.myRerollsRemaining}
             showRerollDraftHint={showRerollDraftHint}
+            rerollError={rerollError}
             statusMessage={statusMessage}
             template={snapshot.myTemplate}
             canvasEnabled={snapshot.room.canvasEditorEnabled}

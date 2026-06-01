@@ -10,9 +10,32 @@ export function resolveSegmentFill(
   return seg.style?.fill ?? boxStyle?.fill ?? "white";
 }
 
-export function strokeStylesForFill(fill: TextFill): React.CSSProperties {
+export type StrokeRenderMode = "default" | "export";
+
+export function strokeStylesForFill(
+  fill: TextFill,
+  mode: StrokeRenderMode = "default"
+): React.CSSProperties {
   const color = fill === "black" ? "#000" : "#fff";
   const outline = fill === "black" ? "#fff" : "#000";
+
+  if (mode === "export") {
+    // html-to-image often drops WebkitTextStroke; rely on layered text-shadow for PNG capture.
+    const shadow = [
+      `2px 2px 0 ${outline}`,
+      `-2px -2px 0 ${outline}`,
+      `2px -2px 0 ${outline}`,
+      `-2px 2px 0 ${outline}`,
+      `0 2px 0 ${outline}`,
+      `0 -2px 0 ${outline}`,
+      `2px 0 0 ${outline}`,
+      `-2px 0 0 ${outline}`,
+      `3px 3px 0 ${outline}`,
+      `-3px -3px 0 ${outline}`,
+    ].join(", ");
+    return { color, textShadow: shadow };
+  }
+
   return {
     color,
     textShadow: `2px 2px 0 ${outline}, -2px -2px 0 ${outline}, 2px -2px 0 ${outline}, -2px 2px 0 ${outline}`,
