@@ -24,7 +24,6 @@ export type PartyLobbyScreenProps = {
   players?: PartyLobbyPlayer[];
   roundCount?: 3 | 5 | 7;
   rerollsPerPlayer?: number;
-  canvasEditorEnabled?: boolean;
   captionDurationSeconds?: number;
   minPlayers?: number;
   maxPlayers?: number;
@@ -50,8 +49,7 @@ export function PartyLobbyScreen({
   players = DEFAULT_PLAYERS,
   roundCount = 5,
   rerollsPerPlayer = 0,
-  canvasEditorEnabled = false,
-  captionDurationSeconds = 60,
+  captionDurationSeconds = 90,
   minPlayers = PARTY_MIN_PLAYERS,
   maxPlayers = PARTY_MAX_PLAYERS,
   isHost = true,
@@ -160,13 +158,6 @@ export function PartyLobbyScreen({
               node: (
                 <div>
                   <SettingRow icon={<Clock className="h-4 w-4" />} label={PARTY_COPY.lobbyCaptionTimer} value={`${captionDurationSeconds}s`} />
-                  {canvasEditorEnabled ? (
-                    <SettingRow
-                      icon={<Users className="h-4 w-4" />}
-                      label={PARTY_COPY.lobbyCanvasEditor}
-                      value="ON"
-                    />
-                  ) : null}
                   <SettingRow icon={<Clock className="h-4 w-4" />} label={PARTY_COPY.lobbyVoteTimer} value="30s" />
                   <SettingRow
                     icon={<Users className="h-4 w-4" />}

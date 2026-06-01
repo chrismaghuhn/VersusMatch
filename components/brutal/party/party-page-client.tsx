@@ -19,7 +19,6 @@ function PartyPageClientInner() {
   const [busy, setBusy] = useState(false);
   const [roundCount, setRoundCount] = useState<3 | 5 | 7>(5);
   const [rerollsPerPlayer, setRerollsPerPlayer] = useState(0);
-  const [canvasEditorEnabled, setCanvasEditorEnabled] = useState(false);
   const [tutorialSeen, setTutorialSeen] = useState(true);
 
   useEffect(() => {
@@ -83,7 +82,7 @@ function PartyPageClientInner() {
       const res = await fetch("/api/party/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roundCount, rerollsPerPlayer, canvasEditorEnabled }),
+        body: JSON.stringify({ roundCount, rerollsPerPlayer, canvasEditorEnabled: true }),
       });
       const data = (await res.json()) as { roomId?: string; error?: string };
 
@@ -124,8 +123,6 @@ function PartyPageClientInner() {
         onRoundCountChange={setRoundCount}
         rerollsPerPlayer={rerollsPerPlayer}
         onRerollsPerPlayerChange={setRerollsPerPlayer}
-        canvasEditorEnabled={canvasEditorEnabled}
-        onCanvasEditorEnabledChange={setCanvasEditorEnabled}
         onJoin={handleJoin}
         onCreate={handleCreate}
       />

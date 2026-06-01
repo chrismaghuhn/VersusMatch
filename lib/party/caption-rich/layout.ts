@@ -32,7 +32,8 @@ export function defaultTemplateBoxes(textBoxes: TextBox[]): CaptionBox[] {
   }));
 }
 
-/** Fit-to-card: scale + offset for card density rendering */
+/** Fit-to-card: scale + offset for card density rendering.
+ * Not used in production (WYSIWYG: voting/reveal use editor layouts). Kept for optional future fit modes. */
 export type CardFitTransform = { scale: number; offsetX: number; offsetY: number };
 
 export function computeCardFit(boxes: CaptionBox[]): CardFitTransform {

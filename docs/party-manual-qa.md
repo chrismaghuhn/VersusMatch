@@ -100,7 +100,7 @@ Branch `feat/party-meme-canvas-p25` — `npm run typecheck`, `test:caption-field
 - [ ] **Canvas on** — create room with Canvas Editor enabled → caption phase **90s** timer; overlay handles visible on meme
 - [ ] **Drag template box** — canvas on: drag a template text box within bounds; preview updates live
 - [ ] **Resize template box** — canvas on: resize via handle; layout clamped to image bounds (no overflow past edges)
-- [ ] **Card density** — submit offset/resized layout → voting card at ~230px shows text without clipping (`density="card"`); reveal matches
+- [ ] **WYSIWYG layout** — submit offset/resized layout in caption editor → desktop voting grid and reveal show text at the **same positions** as the editor (no fit-to-card shift); ShareCard PNG matches
 - [ ] **Custom boxes** — **+ Text** adds custom box (max 2); 3rd add rejected in UI; delete removes active custom box only
 - [ ] **Reset layout** — restores template box defaults and removes all custom boxes
 - [ ] **Reroll dialog** — canvas on with custom boxes + rerolls: reroll shows confirmation; confirm → new meme, custom boxes gone, layout reset

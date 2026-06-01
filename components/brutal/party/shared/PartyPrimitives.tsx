@@ -362,7 +362,7 @@ export function SubmissionCard({
       }}
     >
       <PartyTemplateFrame
-        density="card"
+        density="editor"
         imageUrl={imageUrl}
         textBoxes={textBoxes}
         {...("rich" in frame

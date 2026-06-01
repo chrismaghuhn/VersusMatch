@@ -134,21 +134,17 @@ export function PartyTemplateFrame({
   const v3Boxes = useV3Layout ? resolveV3BoxLayouts(captionRich.boxes, density) : [];
 
   return (
-    <div
-      className={
-        "relative w-full overflow-hidden border-2 border-white " +
-        (big ? "aspect-[4/5]" : "aspect-square")
-      }
-    >
+    <div className="relative w-full overflow-hidden border-2 border-white">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={imageUrl}
         alt=""
-        className="h-full w-full object-cover"
+        className="block h-auto w-full select-none"
         crossOrigin={crossOrigin}
         onError={() => setImageFailed(true)}
       />
 
+      <div className="absolute inset-0">
       {useV3Layout
         ? v3Boxes.map(({ box, layout }) => {
             const segments = box.segments;
@@ -203,6 +199,7 @@ export function PartyTemplateFrame({
               </div>
             );
           })}
+      </div>
     </div>
   );
 }

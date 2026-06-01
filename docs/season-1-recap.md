@@ -182,7 +182,7 @@ Optional host toggle at room create turns the caption phase into a drag/resize m
 
 | Deliverable | Detail |
 |-------------|--------|
-| P2.5a | v3 types, layout helpers, DB migration `20260608120000_party_canvas_editor`, canvas toggle, draft sync, template drag/resize, `density="card"` voting fit |
+| P2.5a | v3 types, layout helpers, DB migration `20260608120000_party_canvas_editor`, canvas toggle, draft sync, template drag/resize, WYSIWYG editor layouts in voting/reveal |
 | P2.5b | Custom boxes, `RerollConfirmDialog`, undo/redo stack (depth 10), manual QA checklist in [`party-manual-qa.md`](party-manual-qa.md) |
 
 **Branch:** `feat/party-meme-canvas-p25` (HEAD `043fde1`) — **not merged to `main` yet**; Vercel production deploy follows merge.

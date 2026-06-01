@@ -486,7 +486,6 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         code={snapshot.room.code}
         roundCount={snapshot.room.roundCount as 3 | 5 | 7}
         rerollsPerPlayer={snapshot.room.rerollsPerPlayer}
-        canvasEditorEnabled={snapshot.room.canvasEditorEnabled}
         captionDurationSeconds={snapshot.room.captionDurationSeconds}
         isHost={isHost}
         canStart={isHost && snapshot.players.length >= minPlayers}
