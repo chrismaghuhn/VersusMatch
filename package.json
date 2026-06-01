@@ -14,6 +14,8 @@
     "seed:battles": "node scripts/seed-battles.mjs",
     "seo:list-urls": "node scripts/list-index-urls.mjs",
     "test:party-handle": "node scripts/test-party-handle.mjs",
+    "test:caption-fields": "node scripts/test-caption-fields.mjs",
+    "test:caption-rich": "node --experimental-strip-types scripts/test-caption-rich.mjs",
     "party:analytics": "node scripts/party-analytics-report.mjs"
   },
   "dependencies": {

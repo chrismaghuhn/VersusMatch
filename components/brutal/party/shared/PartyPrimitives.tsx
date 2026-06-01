@@ -5,8 +5,9 @@ import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTempla
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { Meta } from "@/components/brutal/party/shared/Shell";
 import { decodePartyAvatar } from "@/lib/party/avatar";
+import { captionForFrame } from "@/lib/party/caption-rich/legacy-read";
 import { PARTY_DESIGN } from "@/lib/party/design";
-import type { PartySnapshot, TextBox } from "@/lib/party/types";
+import type { CaptionDocument, PartySnapshot, TextBox } from "@/lib/party/types";
 
 function useSecondsRemaining(phaseEndsAt: string | null, totalFallback = 60): number {
   const [seconds, setSeconds] = useState(totalFallback);
@@ -281,6 +282,7 @@ export function CountChip({
 export type SubmissionCardProps = {
   submissionId?: string;
   caption: string;
+  captionRich?: CaptionDocument | null;
   imageUrl?: string | null;
   textBoxes?: TextBox[];
   authorHandle?: string;
@@ -297,6 +299,7 @@ export type SubmissionCardProps = {
 
 export function SubmissionCard({
   caption,
+  captionRich = null,
   imageUrl,
   textBoxes,
   authorHandle,
@@ -312,6 +315,7 @@ export function SubmissionCard({
 }: SubmissionCardProps) {
   const avatar = decodePartyAvatar(authorAvatarUrl);
   const interactive = Boolean(onVote);
+  const frame = captionForFrame({ caption, captionRich });
 
   return (
     <div
@@ -334,7 +338,13 @@ export function SubmissionCard({
         ["--card-accent" as string]: accent,
       }}
     >
-      <PartyTemplateFrame caption={caption} imageUrl={imageUrl} textBoxes={textBoxes} />
+      <PartyTemplateFrame
+        imageUrl={imageUrl}
+        textBoxes={textBoxes}
+        {...("rich" in frame
+          ? { captionRich: frame.rich }
+          : { caption: frame.legacy })}
+      />
       <div
         className="flex items-center justify-between gap-2 px-3 py-2"
         style={{

@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { MemeFrame } from "@/components/brutal/party/shared/MemeFrame";
+import { fitMemeFontSize } from "@/lib/party/meme-text-fit";
+import {
+  CaptionSegments,
+  memeBoxContainerStyle,
+} from "@/lib/party/caption-rich/render-segments";
+import type { CaptionDocument } from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
 
 const memeTextStyle = (fontSize: number, align: TextBox["align"]): React.CSSProperties => ({
@@ -16,10 +22,8 @@ const memeTextStyle = (fontSize: number, align: TextBox["align"]): React.CSSProp
   WebkitTextStroke: "1.5px #000",
   fontSize,
   width: "100%",
-  overflow: "hidden",
-  display: "-webkit-box",
-  WebkitLineClamp: 3,
-  WebkitBoxOrient: "vertical",
+  whiteSpace: "pre-wrap",
+  wordBreak: "break-word",
 });
 
 function captionParts(caption?: string): string[] {
@@ -30,8 +34,13 @@ function captionParts(caption?: string): string[] {
   return [caption.trim()];
 }
 
+function boxPlainText(segments: CaptionDocument["boxes"][number]): string {
+  return segments.map((s) => s.text).join("");
+}
+
 type PartyTemplateFrameProps = {
   caption?: string;
+  captionRich?: CaptionDocument | null;
   imageUrl?: string | null;
   textBoxes?: TextBox[];
   big?: boolean;
@@ -42,6 +51,7 @@ type PartyTemplateFrameProps = {
 
 export function PartyTemplateFrame({
   caption,
+  captionRich = null,
   imageUrl,
   textBoxes = [],
   big = false,
@@ -63,7 +73,7 @@ export function PartyTemplateFrame({
     );
   }
 
-  const parts = captionParts(caption);
+  const legacyParts = captionRich ? null : captionParts(caption);
 
   return (
     <div
@@ -82,8 +92,13 @@ export function PartyTemplateFrame({
       />
 
       {textBoxes.map((box, index) => {
-        const text = parts[index] ?? (index === 0 ? parts[0] : "");
+        const segments = captionRich?.boxes[index];
+        const text = captionRich
+          ? boxPlainText(segments ?? [])
+          : (legacyParts?.[index] ?? (index === 0 ? legacyParts?.[0] : "")) ?? "";
         if (!text) return null;
+
+        const fittedSize = fitMemeFontSize(text, fontSize, box.maxLines);
 
         return (
           <div
@@ -102,7 +117,16 @@ export function PartyTemplateFrame({
                     : "center",
             }}
           >
-            <div style={memeTextStyle(fontSize, box.align)}>{text}</div>
+            {captionRich ? (
+              <div style={memeBoxContainerStyle(box.align)}>
+                <CaptionSegments
+                  segments={segments ?? []}
+                  baseFontSize={fittedSize}
+                />
+              </div>
+            ) : (
+              <div style={memeTextStyle(fittedSize, box.align)}>{text}</div>
+            )}
           </div>
         );
       })}

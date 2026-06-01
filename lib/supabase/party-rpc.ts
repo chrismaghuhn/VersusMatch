@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
+import type { CaptionDocument } from "@/lib/party/caption-rich/types";
 import type { PartyReactionKey } from "@/lib/party/types";
 
 type RpcSupabase = Pick<SupabaseClient<Database>, "rpc">;
@@ -34,11 +35,13 @@ export function partyStartGameRpc(supabase: RpcSupabase, roomId: string) {
 export function partySubmitCaptionRpc(
   supabase: RpcSupabase,
   roomId: string,
-  caption: string
+  caption: string,
+  captionRich?: CaptionDocument | null
 ) {
   return callRpc(supabase, "party_submit_caption", {
     p_room_id: roomId,
     p_caption: caption,
+    ...(captionRich != null ? { p_caption_rich: captionRich } : {}),
   });
 }
 

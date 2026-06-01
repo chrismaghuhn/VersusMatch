@@ -1,3 +1,4 @@
+import type { CaptionDocument } from "@/lib/party/caption-rich/types";
 import type { PartySnapshot } from "@/lib/party/types";
 import type { AvatarId } from "@/lib/party/avatar-ids";
 import { decodePartyAvatar } from "@/lib/party/avatar";
@@ -15,6 +16,7 @@ export type ShareCardData = {
   roundWinner: {
     handle: string;
     caption: string;
+    captionRich?: CaptionDocument | null;
     voteCount: number;
     avatarId: AvatarId;
     avatarColor: string;
@@ -48,6 +50,7 @@ export function buildShareCardData(snapshot: PartySnapshot): ShareCardData {
     roundWinner = {
       handle: author?.isYou ? "you" : (author?.handle ?? "?"),
       caption: best.caption,
+      captionRich: best.captionRich ?? null,
       voteCount: best.voteCount ?? 0,
       avatarId: avatar.id,
       avatarColor: avatar.color,

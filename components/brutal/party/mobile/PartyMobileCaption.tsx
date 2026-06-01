@@ -1,16 +1,13 @@
 "use client";
 
 import { RefreshCw, Send } from "lucide-react";
+import { CaptionField } from "@/components/brutal/party/caption-studio/CaptionField";
+import { useCaptionStudio } from "@/components/brutal/party/caption-studio/use-caption-studio";
 import { PartyMobileShell } from "@/components/brutal/party/mobile/PartyMobileShell";
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import { PARTY_COPY } from "@/lib/party/copy";
-import {
-  buildCaptionFromFields,
-  captionFieldsTotalLength,
-  clampCaptionFields,
-  splitCaptionToFields,
-} from "@/lib/party/caption-fields";
-import { CAPTION_MAX_LENGTH, normalizeCaption } from "@/lib/party/caption";
+import { captionFieldLabels, defaultCaptionTextBoxes } from "@/lib/party/caption-fields";
+import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
 import type { TextBox } from "@/lib/party/types";
 
 type PartyMobileCaptionProps = {
@@ -22,7 +19,7 @@ type PartyMobileCaptionProps = {
   playerCount: number;
   value: string;
   onChange: (value: string) => void;
-  onSubmit: () => void;
+  onSubmit: (payload: CaptionSubmitPayload) => void;
   onUnlock?: () => void;
   onReroll?: () => void;
   locked?: boolean;
@@ -61,19 +58,17 @@ export function PartyMobileCaption({
   embedded = false,
 }: PartyMobileCaptionProps) {
   const inputDisabled = locked || submitting || unlocking || rerolling;
-  const [topField, bottomField] = splitCaptionToFields(value);
-  const normalized = normalizeCaption(buildCaptionFromFields(topField, bottomField));
-  const remaining = CAPTION_MAX_LENGTH - captionFieldsTotalLength(topField, bottomField);
+  const textBoxes = template?.textBoxes ?? defaultCaptionTextBoxes(2);
+  const boxCount = Math.max(1, Math.min(4, textBoxes.length));
+  const labels = captionFieldLabels(textBoxes, boxCount);
+  const { fieldTexts, previewDoc, remaining, submitPayload, updateField, applyToolbar } =
+    useCaptionStudio(value, onChange, boxCount);
   const canReroll = Boolean(onReroll) && !locked && rerollsRemaining > 0;
-
-  function updateFields(nextTop: string, nextBottom: string) {
-    const [t, b] = clampCaptionFields(nextTop, nextBottom);
-    onChange(buildCaptionFromFields(t, b));
-  }
+  const lastFieldIndex = boxCount - 1;
 
   function handleSubmit() {
-    if (inputDisabled || !normalized) return;
-    onSubmit();
+    if (inputDisabled || !submitPayload) return;
+    onSubmit(submitPayload);
   }
 
   const footer = !locked ? (
@@ -93,7 +88,7 @@ export function PartyMobileCaption({
       ) : null}
       <button
         type="button"
-        disabled={inputDisabled || !normalized}
+        disabled={inputDisabled || !submitPayload}
         onClick={handleSubmit}
         className="flex w-full items-center justify-center gap-2 bg-[#FF2D87] py-3.5 text-white transition hover:bg-[#CCFF00] hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
         style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.18em" }}
@@ -128,7 +123,7 @@ export function PartyMobileCaption({
       <div className="flex flex-1 flex-col p-3">
         <div className="p-1">
           <PartyTemplateFrame
-            caption={normalized || undefined}
+            captionRich={previewDoc}
             imageUrl={template?.imageUrl}
             textBoxes={template?.textBoxes}
           />
@@ -142,45 +137,23 @@ export function PartyMobileCaption({
           </p>
         ) : null}
         <div className="mt-3 flex-1 space-y-3 px-1">
-          {([PARTY_COPY.captionFieldTop, PARTY_COPY.captionFieldBottom] as const).map(
-            (label, index) => {
-              const fieldValue = index === 0 ? topField : bottomField;
-              const inputId = index === 0 ? "party-caption-top" : "party-caption-bottom";
-              return (
-                <div key={label}>
-                  <label
-                    htmlFor={inputId}
-                    className="text-white/40"
-                    style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em" }}
-                  >
-                    {label.toUpperCase()}
-                  </label>
-                  <input
-                    id={inputId}
-                    value={fieldValue}
-                    disabled={inputDisabled}
-                    placeholder={label}
-                    onChange={(e) => {
-                      const next = e.target.value;
-                      if (index === 0) {
-                        updateFields(next, bottomField);
-                      } else {
-                        updateFields(topField, next);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey && index === 1) {
-                        e.preventDefault();
-                        handleSubmit();
-                      }
-                    }}
-                    className="mt-2 w-full border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-white outline-none focus:border-[#CCFF00] disabled:opacity-50"
-                    style={{ fontSize: 13, fontFamily: "ui-monospace, monospace" }}
-                  />
-                </div>
-              );
-            }
-          )}
+          {labels.map((label, index) => {
+            const inputId = `party-caption-mobile-${index}`;
+            return (
+              <CaptionField
+                key={inputId}
+                id={inputId}
+                label={label}
+                value={fieldTexts[index] ?? ""}
+                disabled={inputDisabled}
+                mobile
+                isLastField={index === lastFieldIndex}
+                onChange={(next) => updateField(index, next)}
+                onSubmit={handleSubmit}
+                onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
+              />
+            );
+          })}
           <div className="flex justify-between text-white/40" style={{ fontSize: 11 }}>
             <span>{PARTY_COPY.captionExample}</span>
             <span className={remaining < 20 ? "text-[#FF2D87]" : undefined}>{remaining}</span>

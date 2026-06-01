@@ -58,6 +58,7 @@ export function PartyDesktopReveal({ snapshot }: PartyDesktopRevealProps) {
                 <div className="mt-2">
                   <SubmissionCard
                     caption={winner.caption}
+                    captionRich={winner.captionRich}
                     imageUrl={winner.template?.imageUrl}
                     textBoxes={winner.template?.textBoxes}
                     authorHandle={winnerPlayer?.handle}
@@ -83,6 +84,7 @@ export function PartyDesktopReveal({ snapshot }: PartyDesktopRevealProps) {
                       <SubmissionCard
                         key={sub.id}
                         caption={sub.caption}
+                        captionRich={sub.captionRich}
                         imageUrl={sub.template?.imageUrl}
                         textBoxes={sub.template?.textBoxes}
                         authorHandle={author?.handle}

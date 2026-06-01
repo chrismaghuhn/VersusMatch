@@ -6,7 +6,14 @@ import { limitTextBoxes } from "@/lib/party/limit-text-boxes";
 import { seededShuffle } from "@/lib/party/shuffle";
 import { partyGetMyVoteRpc } from "@/lib/supabase/party-rpc";
 import { getPartyTemplateUrl } from "@/lib/party/template-url";
-import type { PartySnapshot, PartyPhase, TextBox, PartyTemplateView, PartyReactionKey } from "@/lib/party/types";
+import type {
+  PartySnapshot,
+  PartyPhase,
+  TextBox,
+  PartyTemplateView,
+  PartyReactionKey,
+  CaptionDocument,
+} from "@/lib/party/types";
 
 type PartyRoomRow = {
   id: string;
@@ -34,6 +41,7 @@ type PartySubmissionRow = {
   id: string;
   user_id: string;
   caption: string;
+  caption_rich: unknown;
   template_id: string | null;
 };
 
@@ -80,9 +88,25 @@ function toTemplateView(row: TemplateRow): PartyTemplateView {
   };
 }
 
+function toTemplateViewFull(row: TemplateRow): PartyTemplateView {
+  return {
+    id: row.id,
+    imageUrl: getPartyTemplateUrl(row.image_path) ?? "",
+    textBoxes: asTextBoxes(row.text_boxes),
+  };
+}
+
+function parseCaptionRich(raw: unknown): CaptionDocument | null {
+  if (!raw || typeof raw !== "object") return null;
+  const doc = raw as { v?: unknown; boxes?: unknown };
+  if (doc.v !== 2 || !Array.isArray(doc.boxes)) return null;
+  return doc as CaptionDocument;
+}
+
 async function loadTemplatesByIds(
   supabase: SupabaseClient,
-  ids: string[]
+  ids: string[],
+  fullBoxes = false
 ): Promise<Map<string, PartyTemplateView>> {
   const unique = [...new Set(ids.filter(Boolean))];
   const map = new Map<string, PartyTemplateView>();
@@ -93,8 +117,9 @@ async function loadTemplatesByIds(
     .select("id, image_path, text_boxes")
     .in("id", unique);
 
+  const toView = fullBoxes ? toTemplateViewFull : toTemplateView;
   for (const row of (data ?? []) as TemplateRow[]) {
-    map.set(row.id, toTemplateView(row));
+    map.set(row.id, toView(row));
   }
   return map;
 }
@@ -156,7 +181,7 @@ export async function buildPartySnapshot(
       .maybeSingle();
 
     if (roundRow?.template_id) {
-      const templates = await loadTemplatesByIds(supabase, [roundRow.template_id]);
+      const templates = await loadTemplatesByIds(supabase, [roundRow.template_id], true);
       myTemplate = templates.get(roundRow.template_id) ?? null;
     }
   }
@@ -173,7 +198,7 @@ export async function buildPartySnapshot(
   if (phase !== "waiting" && roomRow.current_round > 0) {
     const { data: submissionRows } = await (supabase as SupabaseClient)
       .from("party_submissions")
-      .select("id, user_id, caption, template_id")
+      .select("id, user_id, caption, caption_rich, template_id")
       .eq("room_id", roomId)
       .eq("round", roomRow.current_round);
 
@@ -181,13 +206,17 @@ export async function buildPartySnapshot(
     const mine = allSubmissions.find((s) => s.user_id === userId);
 
     if (mine) {
-      mySubmission = { id: mine.id, caption: mine.caption };
+      mySubmission = {
+        id: mine.id,
+        caption: mine.caption,
+        captionRich: parseCaptionRich(mine.caption_rich),
+      };
     }
 
     const templateIds = allSubmissions
       .map((s) => s.template_id)
       .filter((id): id is string => Boolean(id));
-    const templatesById = await loadTemplatesByIds(supabase, templateIds);
+    const templatesById = await loadTemplatesByIds(supabase, templateIds, true);
 
     if (phase === "caption") {
       submissions = mine
@@ -196,6 +225,7 @@ export async function buildPartySnapshot(
               id: mine.id,
               userId: mine.user_id,
               caption: mine.caption,
+              captionRich: parseCaptionRich(mine.caption_rich),
               ...(mine.template_id
                 ? { template: templatesById.get(mine.template_id) }
                 : {}),
@@ -220,6 +250,7 @@ export async function buildPartySnapshot(
         id: s.id,
         userId: s.user_id,
         caption: s.caption,
+        captionRich: parseCaptionRich(s.caption_rich),
         ...(s.template_id ? { template: templatesById.get(s.template_id) } : {}),
         ...(phase === "reveal" || phase === "finished"
           ? { voteCount: voteCounts.get(s.id) ?? 0 }

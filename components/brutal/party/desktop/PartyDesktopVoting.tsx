@@ -80,6 +80,7 @@ export function PartyDesktopVoting({
                     key={sub.id}
                     submissionId={sub.id}
                     caption={sub.caption}
+                    captionRich={sub.captionRich}
                     imageUrl={sub.template?.imageUrl}
                     textBoxes={sub.template?.textBoxes}
                     voted={votedId === sub.id}

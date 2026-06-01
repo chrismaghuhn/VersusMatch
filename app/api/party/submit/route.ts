@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
 import { requirePartyApi } from "@/lib/party/api-auth";
 import { isCaptionValid, normalizeCaption } from "@/lib/party/caption";
+import { serializeCaptionPlain } from "@/lib/party/caption-rich/plain-text";
+import type { CaptionDocument } from "@/lib/party/caption-rich/types";
 import { captionHasProfanity } from "@/lib/party/profanity";
 import { parsePartyRpc, partyRpcStatus } from "@/lib/party/rpc-response";
 import { buildPartySnapshot } from "@/lib/party/snapshot";
 import { partySubmitCaptionRpc } from "@/lib/supabase/party-rpc";
+
+function isCaptionDocument(value: unknown): value is CaptionDocument {
+  if (!value || typeof value !== "object") return false;
+  const doc = value as { v?: unknown; boxes?: unknown };
+  return doc.v === 2 && Array.isArray(doc.boxes);
+}
 
 export async function POST(request: Request) {
   const auth = await requirePartyApi();
@@ -12,10 +20,21 @@ export async function POST(request: Request) {
 
   let roomId = "";
   let caption = "";
+  let captionRich: CaptionDocument | undefined;
   try {
-    const body = (await request.json()) as { roomId?: string; caption?: string };
+    const body = (await request.json()) as {
+      roomId?: string;
+      caption?: string;
+      captionRich?: CaptionDocument;
+    };
     roomId = body.roomId ?? "";
     caption = body.caption ?? "";
+    if (body.captionRich != null) {
+      if (!isCaptionDocument(body.captionRich)) {
+        return NextResponse.json({ error: "invalid_caption" }, { status: 409 });
+      }
+      captionRich = body.captionRich;
+    }
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
@@ -25,6 +44,14 @@ export async function POST(request: Request) {
   }
 
   const normalized = normalizeCaption(caption);
+
+  if (captionRich) {
+    const expectedPlain = serializeCaptionPlain(captionRich);
+    if (normalized !== normalizeCaption(expectedPlain)) {
+      return NextResponse.json({ error: "invalid_caption" }, { status: 409 });
+    }
+  }
+
   if (!isCaptionValid(normalized)) {
     return NextResponse.json({ error: "invalid_caption" }, { status: 409 });
   }
@@ -33,7 +60,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "profanity_rejected" }, { status: 409 });
   }
 
-  const { data, error } = await partySubmitCaptionRpc(auth.supabase, roomId, normalized);
+  const { data, error } = await partySubmitCaptionRpc(
+    auth.supabase,
+    roomId,
+    normalized,
+    captionRich ?? null
+  );
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
