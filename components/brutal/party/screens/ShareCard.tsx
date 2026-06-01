@@ -154,6 +154,7 @@ export function ShareCard({ snapshot, embedded = false, showPngDownload = true }
                   {data.template || data.roundWinner?.caption ? (
                     <PartyTemplateFrame
                       caption={data.roundWinner?.caption}
+                      captionRich={data.roundWinner?.captionRich}
                       imageUrl={data.template?.imageUrl}
                       textBoxes={data.template?.textBoxes}
                       mini={embedded}

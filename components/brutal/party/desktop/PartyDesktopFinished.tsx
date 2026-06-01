@@ -93,7 +93,7 @@ export function PartyDesktopFinished({ snapshot }: PartyDesktopFinishedProps) {
                   })}
                 </ol>
               </div>
-              <ShareCard snapshot={snapshot} embedded showPngDownload={false} />
+              <ShareCard snapshot={snapshot} embedded showPngDownload />
             </div>
           ),
           actions: (

@@ -77,6 +77,21 @@ Use this checklist when changing party RPCs, Realtime, or UI. Run with at least 
 
 ---
 
+## P2 Caption Studio (rich captions)
+
+Run after P2.2 ships — two browsers, at least one round with styled captions.
+
+- [ ] **Leading/trailing spaces** — type `" hello "` → renders correctly after submit (voting + reveal)
+- [ ] **Internal spaces** — two spaces mid-line preserved in preview and voting card
+- [ ] **Multi-line box** — Shift+Enter in a field; text wraps in live preview without clipping
+- [ ] **4-panel meme** — template with 4 text boxes shows 4 inputs; all boxes render in voting
+- [ ] **Toolbar Schräg** — toggle matches `~text~` syntax on same selection
+- [ ] **Sync submit parse** — submit `~hello` immediately (no debounce wait) → DB has slant segment, not literal tildes
+- [ ] **ShareCard PNG parity** — finished/download PNG shows same skew/scale as voting card (desktop finished PNG re-enabled)
+- [ ] **Legacy pipe replay** — room with old `top|bottom` pipe captions (no `captionRich`) still displays correctly
+
+---
+
 ## Notes
 
 Record room IDs, browser versions, and any console/network errors when filing bugs.
