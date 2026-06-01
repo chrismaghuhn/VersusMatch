@@ -1,7 +1,7 @@
 # MemeFight Party — Meme Canvas Editor (P2.5)
 
 **Date:** 2026-06-03  
-**Status:** Approved — implementation plan ready  
+**Status:** P2.5a shipped on branch `feat/party-meme-canvas-p25` (not production yet)  
 **Phase:** P2.5 — post–Caption Studio (P2)  
 **Depends on:** P2 Caption Studio (`caption_rich` v2, shared renderer, Arena caption UI)  
 **Parent spec:** [`2026-06-03-meme-party-live-design.md`](2026-06-03-meme-party-live-design.md)  
@@ -171,8 +171,9 @@ type CaptionDocument = {
 - Reject if `p_layout_revision <> layout_revision` on row → `{ ok: false, error: "stale_revision" }`  
 - Validate draft shape (v3, bounds, box counts) lightly — full validation on submit  
 - Upsert `caption_draft = p_draft`  
+- Require `(p_draft->>'v')::int = 3`, matching `layoutRevision`, and `rawTexts` array length = `boxes` array length
 
-**Debounce:** Client syncs ~2s after last edit; immediate sync after reroll response.
+**Debounce:** Draft sync runs **after** the 500ms syntax preview debounce (chained), then waits 2s — not on a separate 2s timer from raw keystrokes. Immediate sync after reroll response.
 
 ### RPC: `party_reroll_template` (extend)
 
@@ -205,17 +206,22 @@ When canvas off:
 
 ### Client: reroll race handling (mandatory)
 
+Track last applied revision in a **`useRef`**, not React state (avoids double effect runs when comparing revision).
+
 On snapshot poll **or** reroll RPC response:
 
 ```ts
-if (snapshot.layoutRevision !== localLayoutRevision) {
-  resetEditorState({ fromDraft: snapshot.captionDraft, layoutRevision: snapshot.layoutRevision });
+if (snapshot.layoutRevision !== layoutRevisionRef.current) {
+  layoutRevisionRef.current = snapshot.layoutRevision;
+  resetEditorState({
+    rawTexts: snapshot.captionDraft?.rawTexts,
+    boxes: snapshot.captionDraft?.boxes,
+    layoutRevision: snapshot.layoutRevision,
+  });
 }
 ```
 
-**Do not rely on `caption_draft === null` alone** — debounced sync may have left local React state ahead of server. **`layout_revision` bump is the authoritative reset signal.**
-
-After reroll confirm + RPC success: reset immediately from response `layout_revision` before next poll.
+**Do not rely on `caption_draft === null` alone** — debounced sync may have left local React state ahead of server. **`layout_revision` bump is the authoritative reset signal.** Restore textarea content from `rawTexts`, layouts from `boxes[].layout`.
 
 ---
 
@@ -370,6 +376,7 @@ All clients need `canvasEditorEnabled` for UI; only `isYou` player receives draf
 | 2026-06-03 | `layout_revision` mandatory for submit security |
 | 2026-06-03 | Reroll reset via revision bump + client reset (draft race) |
 | 2026-06-03 | `card` density mandatory before custom boxes (P2.5b gate) |
+| 2026-06-03 | Plan review: layoutRevision ref; v3 rawTexts; chained draft debounce; validate without canvas flag |
 
 ---
 

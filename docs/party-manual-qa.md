@@ -92,6 +92,19 @@ Verified on Production **2026-06-01** — full round with styled captions.
 
 ---
 
+## P2.5a Meme Canvas Editor (template boxes)
+
+Branch `feat/party-meme-canvas-p25` — automated tests pass; manual verification pending.
+
+- [ ] **Canvas off** — create room without Canvas Editor toggle → caption phase 60s, fixed template boxes, v2 submit path unchanged (identical to P2 Caption Studio)
+- [ ] **Canvas on** — create room with Canvas Editor enabled → caption phase **90s** timer
+- [ ] **Drag template box** — canvas on: drag a template text box within bounds; preview updates live
+- [ ] **Resize template box** — canvas on: resize via handle; layout clamped to image bounds
+- [ ] **Vote card readable** — submit offset/resized layout → voting card at ~230px shows text without clipping (`density="card"`)
+- [ ] **Reroll reset** — canvas on with rerolls: reroll clears layout + draft; client resets on `layout_revision` bump
+
+---
+
 ## Notes
 
 Record room IDs, browser versions, and any console/network errors when filing bugs.

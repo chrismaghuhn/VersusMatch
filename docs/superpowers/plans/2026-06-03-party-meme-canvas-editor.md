@@ -55,7 +55,7 @@
 - Create: `scripts/test-caption-layout.mjs`
 - Modify: `package.json`
 
-- [ ] **Step 1: Extend types**
+- [x] **Step 1: Extend types**
 
 ```ts
 // lib/party/caption-rich/types.ts
@@ -90,7 +90,7 @@ export function isCaptionDocumentV3(doc: CaptionDocument): doc is CaptionDocumen
 }
 ```
 
-- [ ] **Step 2: Create `layout.ts`**
+- [x] **Step 2: Create `layout.ts`**
 
 ```ts
 import type { BoxLayout, CaptionBox } from "./types";
@@ -160,7 +160,7 @@ export function applyCardFit(layout: BoxLayout, fit: CardFitTransform): BoxLayou
 }
 ```
 
-- [ ] **Step 3: Create `validate-document.ts`**
+- [x] **Step 3: Create `validate-document.ts`**
 
 ```ts
 import { clampLayout, LAYOUT_MIN_H, LAYOUT_MIN_W } from "./layout";
@@ -208,7 +208,7 @@ function validateBoxLayout(box: CaptionBox): string | null {
 }
 ```
 
-- [ ] **Step 4: Update `plain-text.ts` for v2 \| v3**
+- [x] **Step 4: Update `plain-text.ts` for v2 \| v3**
 
 ```ts
 export function boxPlainText(segments: CaptionSegment[]): string {
@@ -229,7 +229,7 @@ export function serializeCaptionPlain(doc: CaptionDocument): string {
 
 Keep existing `plainTextLength` delegating to `serializeCaptionPlain(doc).length`.
 
-- [ ] **Step 5: Add tests + npm script**
+- [x] **Step 5: Add tests + npm script**
 
 Create `scripts/test-caption-layout.mjs` with tests for:
 - `clampLayout` rejects overflow
@@ -241,7 +241,7 @@ Add `"test:caption-layout": "node scripts/test-caption-layout.mjs"` to `package.
 
 Run: `npm run test:caption-layout` — PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add lib/party/caption-rich/types.ts lib/party/caption-rich/layout.ts lib/party/caption-rich/validate-document.ts lib/party/caption-rich/plain-text.ts scripts/test-caption-layout.mjs package.json
@@ -256,7 +256,7 @@ git commit -m "feat(party): caption v3 types, layout helpers, and validation tes
 - Create: `supabase/migrations/20260608120000_party_canvas_editor.sql`
 - Modify: `lib/database.types.ts` (regenerate or hand-add)
 
-- [ ] **Step 1: Schema**
+- [x] **Step 1: Schema**
 
 ```sql
 alter table public.party_rooms
@@ -269,7 +269,7 @@ alter table public.party_player_rounds
   add column if not exists layout_revision smallint not null default 0;
 ```
 
-- [ ] **Step 2: Replace `party_create_room`**
+- [x] **Step 2: Replace `party_create_room`**
 
 Add third param `p_canvas_editor_enabled boolean default false`. On insert:
 
@@ -280,7 +280,7 @@ caption_duration_seconds := case when coalesce(p_canvas_editor_enabled, false) t
 
 Drop older overloads if present (follow `20260606193000_party_create_room_overload_fix.sql` pattern).
 
-- [ ] **Step 3: Caption phase timer**
+- [x] **Step 3: Caption phase timer**
 
 In **`party_start_game`** and **`party_advance_phase`** (caption branch only), replace:
 
@@ -296,7 +296,7 @@ phase_ends_at = now() + (v_room.caption_duration_seconds * interval '1 second')
 
 Copy full function bodies from latest migration `20260606220000_party_rpc_plpgsql_type_fixes.sql` and patch.
 
-- [ ] **Step 4: New RPC `party_sync_caption_draft`**
+- [x] **Step 4: New RPC `party_sync_caption_draft`**
 
 ```sql
 create or replace function public.party_sync_caption_draft(
@@ -312,7 +312,7 @@ create or replace function public.party_sync_caption_draft(
 - Require `(p_draft->>'v')::int = 3` and `(p_draft->>'layoutRevision')::int = p_layout_revision`
 - `update party_player_rounds set caption_draft = p_draft where ...`
 
-- [ ] **Step 5: Extend `party_reroll_template`**
+- [x] **Step 5: Extend `party_reroll_template`**
 
 After template pick:
 
@@ -327,7 +327,7 @@ returning layout_revision into v_new_revision;
 
 Return `{ ok: true, template_id, layout_revision: v_new_revision }`.
 
-- [ ] **Step 6: Extend `party_submit_caption`**
+- [x] **Step 6: Extend `party_submit_caption`**
 
 When room `canvas_editor_enabled`:
 
@@ -338,11 +338,11 @@ When room `canvas_editor_enabled`:
 
 When canvas off: keep existing v=2 path unchanged.
 
-- [ ] **Step 7: Apply migration locally / production**
+- [x] **Step 7: Apply migration locally / production**
 
 Run project Supabase workflow (`supabase db push` or MCP `apply_migration`).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add supabase/migrations/20260608120000_party_canvas_editor.sql lib/database.types.ts
@@ -360,7 +360,7 @@ git commit -m "feat(party): canvas editor schema, draft sync, and v3 submit RPC"
 - Modify: `app/api/party/rooms/route.ts`
 - Create: `app/api/party/sync-draft/route.ts`
 
-- [ ] **Step 1: Extend `PartySnapshot`**
+- [x] **Step 1: Extend `PartySnapshot`**
 
 ```ts
 room: {
@@ -373,17 +373,17 @@ layoutRevision: number;
 captionDraft: CaptionDocumentV3 | null;
 ```
 
-- [ ] **Step 2: `buildPartySnapshot`**
+- [x] **Step 2: `buildPartySnapshot`**
 
 - Select `canvas_editor_enabled, caption_duration_seconds` from room
 - In caption phase, load `caption_draft, layout_revision` from `party_player_rounds` for `userId`
 - Parse draft with v3 guard (`v === 3`)
 
-- [ ] **Step 3: `partyCreateRoomRpc`**
+- [x] **Step 3: `partyCreateRoomRpc`**
 
 Add `canvasEditorEnabled = false` third param → `p_canvas_editor_enabled`.
 
-- [ ] **Step 4: `partySyncCaptionDraftRpc`**
+- [x] **Step 4: `partySyncCaptionDraftRpc`**
 
 ```ts
 export function partySyncCaptionDraftRpc(
@@ -400,17 +400,17 @@ export function partySyncCaptionDraftRpc(
 }
 ```
 
-- [ ] **Step 5: POST `/api/party/sync-draft`**
+- [x] **Step 5: POST `/api/party/sync-draft`**
 
 Auth + room membership; body `{ roomId, draft, layoutRevision }`; call RPC; return `{ ok }` or 409 on `stale_revision`.
 
-- [ ] **Step 6: POST `/api/party/rooms`**
+- [x] **Step 6: POST `/api/party/rooms`**
 
 Accept optional `canvasEditorEnabled: boolean`; pass to RPC.
 
-- [ ] **Step 7: Run `npm run typecheck`**
+- [x] **Step 7: Run `npm run typecheck`**
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git commit -m "feat(party): snapshot canvas fields and draft sync API"
@@ -426,7 +426,7 @@ git commit -m "feat(party): snapshot canvas fields and draft sync API"
 - Modify: `components/brutal/party/screens/ShareCard.tsx`
 - Modify: `lib/party/caption-rich/legacy-read.ts`
 
-- [ ] **Step 1: Add `density` prop**
+- [x] **Step 1: Add `density` prop**
 
 ```ts
 export type FrameDensity = "editor" | "card" | "export";
@@ -440,7 +440,7 @@ type PartyTemplateFrameProps = {
 
 Default `density="editor"` for backward compat.
 
-- [ ] **Step 2: v3 render path**
+- [x] **Step 2: v3 render path**
 
 For each box in v3 doc:
 - Resolve layout from `box.layout` (not template DB) when v3
@@ -448,19 +448,19 @@ For each box in v3 doc:
 - If `density === "export"`: use raw editor layouts (same as editor)
 - Skip boxes with empty plain text
 
-- [ ] **Step 3: `SubmissionCard`**
+- [x] **Step 3: `SubmissionCard`**
 
 Pass `density="card"` to `PartyTemplateFrame`.
 
-- [ ] **Step 4: `ShareCard`**
+- [x] **Step 4: `ShareCard`**
 
 Pass `density="export"`.
 
-- [ ] **Step 5: Manual smoke**
+- [x] **Step 5: Manual smoke**
 
 Desktop voting grid at lg+: submit v3 layout offset box → card readable at ~230px.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git commit -m "feat(party): PartyTemplateFrame density modes and v3 layout render"
@@ -480,7 +480,7 @@ git commit -m "feat(party): PartyTemplateFrame density modes and v3 layout rende
 - Modify: `components/brutal/party/mobile/PartyMobileCaption.tsx`
 - Modify: `components/brutal/party/desktop/PartyDesktopCaption.tsx`
 
-- [ ] **Step 1: `finalizeCaptionDocumentV3`**
+- [x] **Step 1: `finalizeCaptionDocumentV3`**
 
 ```ts
 export function finalizeCaptionDocumentV3(draft: {
@@ -503,7 +503,7 @@ export function finalizeCaptionDocumentV3(draft: {
 }
 ```
 
-- [ ] **Step 2: `useMemeCanvasEditor`**
+- [x] **Step 2: `useMemeCanvasEditor`**
 
 Inputs: `value`, `onChange`, `textBoxes`, `canvasEnabled`, `layoutRevision`, `captionDraft`, `roomId`, `onLayoutRevisionChange`.
 
@@ -552,7 +552,7 @@ Immediate sync after reroll response (revision bump), before poll.
 
 When `!canvasEnabled`: delegate to existing `useCaptionStudio` (v2 path).
 
-- [ ] **Step 3: `MemeCanvasOverlay`**
+- [x] **Step 3: `MemeCanvasOverlay`**
 
 - Renders only when `canvasEnabled`
 - Selected box: dashed border + bottom-right resize handle (44px touch target on mobile)
@@ -560,13 +560,13 @@ When `!canvasEnabled`: delegate to existing `useCaptionStudio` (v2 path).
 - Handle drag → resize
 - `onInteractionStart/End` → set `layoutFrozen`
 
-- [ ] **Step 4: Wire caption inputs**
+- [x] **Step 4: Wire caption inputs**
 
 - Pass `previewDoc` as v3 when canvas on
 - Overlay absolutely positioned over `PartyTemplateFrame` (`density="editor"`)
 - Submit uses `finalizeCaptionDocumentV3` + `validateCaptionDocumentV3(doc, templateBoxes, layoutRevisionRef.current)` — **only when `canvasEnabled`** (guard at call site; no `canvas_disabled` in validator)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -m "feat(party): meme canvas drag/resize for template boxes (P2.5a)"
@@ -584,7 +584,7 @@ git commit -m "feat(party): meme canvas drag/resize for template boxes (P2.5a)"
 - Modify: `components/brutal/party/party-room-client.tsx`
 - Modify: `lib/party/copy.ts`
 
-- [ ] **Step 1: Timer freeze**
+- [x] **Step 1: Timer freeze**
 
 ```ts
 export function usePhaseCountdown(phaseEndsAt: string | null, frozen = false): string | null {
@@ -594,7 +594,7 @@ export function usePhaseCountdown(phaseEndsAt: string | null, frozen = false): s
 
 Pass `frozen={layoutFrozen}` from canvas hook through MobileShell / DesktopCaption.
 
-- [ ] **Step 2: Host toggle**
+- [x] **Step 2: Host toggle**
 
 In create lobby UI:
 
@@ -607,7 +607,7 @@ In create lobby UI:
 
 Wire to create room API.
 
-- [ ] **Step 3: `party-room-client` reroll handler**
+- [x] **Step 3: `party-room-client` reroll handler**
 
 On reroll RPC success, immediately:
 
@@ -620,11 +620,11 @@ resetCanvasFromRevision(data.layout_revision, null);
 
 Before waiting for next snapshot poll.
 
-- [ ] **Step 4: Snapshot poll**
+- [x] **Step 4: Snapshot poll**
 
 When `snapshot.layoutRevision !== layoutRevisionRef.current`, parent passes new `layoutRevision` prop → hook effect resets (Task P2.5a-5).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -m "feat(party): canvas host toggle, timer freeze, layout revision reset"
@@ -634,11 +634,11 @@ git commit -m "feat(party): canvas host toggle, timer freeze, layout revision re
 
 ### Task P2.5a-7: P2.5a verification
 
-- [ ] Run: `npm run typecheck && npm run test:caption-rich && npm run test:caption-layout`
-- [ ] Manual: canvas **off** room — identical P2 behavior
-- [ ] Manual: canvas **on** — 90s timer, drag template box, vote card readable
-- [ ] Update spec status → **P2.5a shipped**
-- [ ] Commit any QA doc stub
+- [x] Run: `npm run typecheck && npm run test:caption-rich && npm run test:caption-layout`
+- [x] Manual: canvas **off** room — identical P2 behavior
+- [x] Manual: canvas **on** — 90s timer, drag template box, vote card readable
+- [x] Update spec status → **P2.5a shipped**
+- [x] Commit any QA doc stub
 
 ---
 
