@@ -1,4 +1,4 @@
-import type { CaptionDocument } from "./types.ts";
+import type { CaptionDocument, CaptionSegment } from "./types.ts";
 import { finalizeBox } from "./parse-markup.ts";
 
 /** Build a structural v2 document from raw field texts (one segment per box, no styling). */
@@ -10,9 +10,15 @@ export function structuralDocumentFromFieldTexts(texts: string[]): CaptionDocume
 }
 
 /** Sync-parse each box on submit; applies markup syntax and flushes unclosed markers. */
-export function finalizeCaptionDocument(draft: { rawTexts: string[] }): CaptionDocument {
+export function finalizeCaptionDocument(draft: {
+  rawTexts: string[];
+  segmentOverrides?: (readonly CaptionSegment[] | null)[];
+}): CaptionDocument {
   return {
     v: 2,
-    boxes: draft.rawTexts.map((raw) => finalizeBox(raw)),
+    boxes: draft.rawTexts.map((raw, i) => {
+      const override = draft.segmentOverrides?.[i];
+      return override ? [...override] : finalizeBox(raw);
+    }),
   };
 }

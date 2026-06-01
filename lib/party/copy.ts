@@ -185,6 +185,7 @@ export const PARTY_COPY = {
   captionFieldTop: "Top",
   captionFieldBottom: "Bottom",
   captionExample: "Two lines — 120 characters total max",
+  captionSyntaxHint: "~schräg~ · *kursiv* · ^groß^",
   rerollButton: "NEW MEME",
   rerollButtonBusy: "ROLLING…",
   rerollsRemaining: (n: number) => `${n} reroll${n === 1 ? "" : "s"} left`,

@@ -1,21 +1,13 @@
 "use client";
 
 import { RefreshCw, Send } from "lucide-react";
+import { CaptionField } from "@/components/brutal/party/caption-studio/CaptionField";
+import { useCaptionStudio } from "@/components/brutal/party/caption-studio/use-caption-studio";
 import { PartyMobileShell } from "@/components/brutal/party/mobile/PartyMobileShell";
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import { PARTY_COPY } from "@/lib/party/copy";
-import {
-  buildCaptionFromFieldTexts,
-  captionFieldLabels,
-  captionFieldTextsTotalLength,
-  clampCaptionFieldTexts,
-  defaultCaptionTextBoxes,
-  splitCaptionToFieldTexts,
-} from "@/lib/party/caption-fields";
-import { CAPTION_MAX_LENGTH } from "@/lib/party/caption";
-import { structuralDocumentFromFieldTexts } from "@/lib/party/caption-rich/document";
+import { captionFieldLabels, defaultCaptionTextBoxes } from "@/lib/party/caption-fields";
 import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
-import { prepareCaptionSubmit } from "@/lib/party/caption-submit";
 import type { TextBox } from "@/lib/party/types";
 
 type PartyMobileCaptionProps = {
@@ -68,20 +60,11 @@ export function PartyMobileCaption({
   const inputDisabled = locked || submitting || unlocking || rerolling;
   const textBoxes = template?.textBoxes ?? defaultCaptionTextBoxes(2);
   const boxCount = Math.max(1, Math.min(4, textBoxes.length));
-  const fieldTexts = splitCaptionToFieldTexts(value, boxCount);
   const labels = captionFieldLabels(textBoxes, boxCount);
-  const previewDoc = structuralDocumentFromFieldTexts(fieldTexts);
-  const submitPayload = prepareCaptionSubmit(fieldTexts, boxCount);
-  const remaining = CAPTION_MAX_LENGTH - captionFieldTextsTotalLength(fieldTexts);
+  const { fieldTexts, previewDoc, remaining, submitPayload, updateField, applyToolbar } =
+    useCaptionStudio(value, onChange, boxCount);
   const canReroll = Boolean(onReroll) && !locked && rerollsRemaining > 0;
   const lastFieldIndex = boxCount - 1;
-
-  function updateField(index: number, nextValue: string) {
-    const next = [...fieldTexts];
-    next[index] = nextValue;
-    const clamped = clampCaptionFieldTexts(next);
-    onChange(buildCaptionFromFieldTexts(clamped));
-  }
 
   function handleSubmit() {
     if (inputDisabled || !submitPayload) return;
@@ -155,34 +138,20 @@ export function PartyMobileCaption({
         ) : null}
         <div className="mt-3 flex-1 space-y-3 px-1">
           {labels.map((label, index) => {
-            const fieldValue = fieldTexts[index] ?? "";
             const inputId = `party-caption-mobile-${index}`;
             return (
-              <div key={inputId}>
-                <label
-                  htmlFor={inputId}
-                  className="text-white/40"
-                  style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em" }}
-                >
-                  {label.toUpperCase()}
-                </label>
-                <textarea
-                  id={inputId}
-                  rows={2}
-                  value={fieldValue}
-                  disabled={inputDisabled}
-                  placeholder={label}
-                  onChange={(e) => updateField(index, e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey && index === lastFieldIndex) {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                  className="mt-2 w-full resize-none border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-white outline-none focus:border-[#CCFF00] disabled:opacity-50"
-                  style={{ fontSize: 13, fontFamily: "ui-monospace, monospace" }}
-                />
-              </div>
+              <CaptionField
+                key={inputId}
+                id={inputId}
+                label={label}
+                value={fieldTexts[index] ?? ""}
+                disabled={inputDisabled}
+                mobile
+                isLastField={index === lastFieldIndex}
+                onChange={(next) => updateField(index, next)}
+                onSubmit={handleSubmit}
+                onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
+              />
             );
           })}
           <div className="flex justify-between text-white/40" style={{ fontSize: 11 }}>
