@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, Send, Trash2 } from "lucide-react";
+import { Redo2, RefreshCw, Send, Trash2, Undo2 } from "lucide-react";
 import { useEffect } from "react";
 import { CaptionField } from "@/components/brutal/party/caption-studio/CaptionField";
 import { MemeCanvasOverlay } from "@/components/brutal/party/caption-studio/MemeCanvasOverlay";
@@ -108,6 +108,29 @@ export function PartyCaptionInput({
   const lastFieldIndex = fieldCount - 1;
   const showOverlay =
     Boolean(canvasEditor) && !inputDisabled && Boolean(canvasEditor?.activeBoxId);
+  useEffect(() => {
+    if (!canvasEditor || mobile || inputDisabled) return;
+    const { undo, redo, canUndo, canRedo } = canvasEditor;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+      const key = event.key.toLowerCase();
+      if (key === "z" && event.shiftKey) {
+        if (!canRedo) return;
+        event.preventDefault();
+        redo();
+        return;
+      }
+      if (key === "z" && !event.shiftKey) {
+        if (!canUndo) return;
+        event.preventDefault();
+        undo();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [canvasEditor, mobile, inputDisabled]);
 
   function handleSubmit() {
     if (inputDisabled || !submitPayload) return;
@@ -117,6 +140,26 @@ export function PartyCaptionInput({
   const canvasToolbar =
     canvasEditor && !inputDisabled ? (
       <div className="mb-2 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={!canvasEditor.canUndo}
+          onClick={canvasEditor.undo}
+          className="flex min-h-[44px] items-center gap-1.5 border border-white/20 px-3 py-2 text-white/80 transition hover:border-[#CCFF00] hover:text-[#CCFF00] disabled:cursor-not-allowed disabled:opacity-40"
+          style={{ fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" }}
+        >
+          <Undo2 className="h-3.5 w-3.5" />
+          {PARTY_COPY.canvasUndo}
+        </button>
+        <button
+          type="button"
+          disabled={!canvasEditor.canRedo}
+          onClick={canvasEditor.redo}
+          className="flex min-h-[44px] items-center gap-1.5 border border-white/20 px-3 py-2 text-white/80 transition hover:border-[#CCFF00] hover:text-[#CCFF00] disabled:cursor-not-allowed disabled:opacity-40"
+          style={{ fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" }}
+        >
+          <Redo2 className="h-3.5 w-3.5" />
+          {PARTY_COPY.canvasRedo}
+        </button>
         <button
           type="button"
           disabled={!canvasEditor.canAddCustomBox}
@@ -196,7 +239,11 @@ export function PartyCaptionInput({
                   onChange={(next) => updateField(index, next)}
                   onSubmit={handleSubmit}
                   onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
-                  onFocus={() => canvasEditor?.setActiveBoxId(box.id)}
+                  onFocus={() => {
+                    canvasEditor?.onCaptionFieldFocus();
+                    canvasEditor?.setActiveBoxId(box.id);
+                  }}
+                  onBlur={() => canvasEditor?.commitTextHistory()}
                 />
               );
             })
@@ -215,8 +262,14 @@ export function PartyCaptionInput({
                   onSubmit={handleSubmit}
                   onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
                   onFocus={
-                    canvasEditor && boxId ? () => canvasEditor.setActiveBoxId(boxId) : undefined
+                    canvasEditor && boxId
+                      ? () => {
+                          canvasEditor.onCaptionFieldFocus();
+                          canvasEditor.setActiveBoxId(boxId);
+                        }
+                      : undefined
                   }
+                  onBlur={canvasEditor ? () => canvasEditor.commitTextHistory() : undefined}
                 />
               );
             })}

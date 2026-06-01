@@ -198,6 +198,8 @@ export const PARTY_COPY = {
   canvasAddText: "+ Text",
   canvasDeleteCustom: "Delete",
   canvasResetLayout: "Reset layout",
+  canvasUndo: "Undo",
+  canvasRedo: "Redo",
   joinHeroTag: "THE PARTY GAME FOR BAD TAKES",
   joinHeroTitle1: "Worst",
   joinHeroTitle2: "wins",

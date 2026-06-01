@@ -30,6 +30,62 @@ import { useCaptionStudio } from "./use-caption-studio";
 
 const PREVIEW_DEBOUNCE_MS = 500;
 const DRAFT_SYNC_MS = 2000;
+const TEXT_HISTORY_DEBOUNCE_MS = 500;
+const MAX_UNDO = 10;
+
+type EditorSnapshot = {
+  boxes: CaptionBox[];
+  fieldTexts: string[];
+  segmentOverrides: (CaptionSegment[] | null)[];
+};
+
+function takeSnapshot(
+  boxes: CaptionBox[],
+  fieldTexts: string[],
+  segmentOverrides: (CaptionSegment[] | null)[]
+): EditorSnapshot {
+  return {
+    boxes: boxes.map((box) => ({
+      ...box,
+      layout: { ...box.layout },
+      segments: box.segments.map((segment) => ({ ...segment })),
+    })),
+    fieldTexts: [...fieldTexts],
+    segmentOverrides: segmentOverrides.map((override) =>
+      override ? override.map((segment) => ({ ...segment })) : null
+    ),
+  };
+}
+
+function snapshotsEqual(a: EditorSnapshot, b: EditorSnapshot): boolean {
+  if (a.fieldTexts.length !== b.fieldTexts.length) return false;
+  if (a.fieldTexts.some((text, i) => text !== b.fieldTexts[i])) return false;
+  if (a.segmentOverrides.length !== b.segmentOverrides.length) return false;
+  for (let i = 0; i < a.segmentOverrides.length; i++) {
+    const left = a.segmentOverrides[i];
+    const right = b.segmentOverrides[i];
+    if (left === null && right === null) continue;
+    if (left === null || right === null) return false;
+    if (left.length !== right.length) return false;
+    if (left.some((segment, j) => segment.text !== right[j]?.text)) return false;
+  }
+  if (a.boxes.length !== b.boxes.length) return false;
+  for (let i = 0; i < a.boxes.length; i++) {
+    const left = a.boxes[i];
+    const right = b.boxes[i];
+    if (left.id !== right.id || left.kind !== right.kind) return false;
+    if (
+      left.layout.x !== right.layout.x ||
+      left.layout.y !== right.layout.y ||
+      left.layout.w !== right.layout.w ||
+      left.layout.h !== right.layout.h ||
+      left.layout.align !== right.layout.align
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
 
 function emptyOverrides(boxCount: number): (CaptionSegment[] | null)[] {
   return Array.from({ length: boxCount }, () => null);
@@ -75,6 +131,47 @@ export function useMemeCanvasEditor({
   const layoutRevisionRef = useRef(layoutRevision);
   const skipDebounceRef = useRef(false);
   const skipDraftSyncRef = useRef(false);
+  const undoStackRef = useRef<EditorSnapshot[]>([]);
+  const redoStackRef = useRef<EditorSnapshot[]>([]);
+  const textHistoryBaselineRef = useRef<EditorSnapshot | null>(null);
+  const textHistoryTimerRef = useRef<number | null>(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  const clearHistory = useCallback(() => {
+    undoStackRef.current = [];
+    redoStackRef.current = [];
+    textHistoryBaselineRef.current = null;
+    if (textHistoryTimerRef.current !== null) {
+      window.clearTimeout(textHistoryTimerRef.current);
+      textHistoryTimerRef.current = null;
+    }
+    setCanUndo(false);
+    setCanRedo(false);
+  }, []);
+
+  const pushUndo = useCallback((snapshot: EditorSnapshot) => {
+    const stack = undoStackRef.current;
+    stack.push(snapshot);
+    if (stack.length > MAX_UNDO) {
+      stack.shift();
+    }
+    redoStackRef.current = [];
+    setCanUndo(stack.length > 0);
+    setCanRedo(false);
+  }, []);
+
+  const applySnapshot = useCallback(
+    (snapshot: EditorSnapshot) => {
+      skipDebounceRef.current = true;
+      skipDraftSyncRef.current = true;
+      setBoxes(snapshot.boxes);
+      setFieldTexts(snapshot.fieldTexts);
+      setSegmentOverrides(snapshot.segmentOverrides);
+      onChange(buildCaptionFromFieldTexts(snapshot.fieldTexts));
+    },
+    [onChange]
+  );
 
   const initialBoxes =
     captionDraft?.v === 3 ? captionDraft.boxes : defaultTemplateBoxes(textBoxes);
@@ -109,13 +206,14 @@ export function useMemeCanvasEditor({
 
       skipDebounceRef.current = true;
       skipDraftSyncRef.current = true;
+      clearHistory();
       setBoxes(nextBoxes);
       setFieldTexts(nextTexts);
       setSegmentOverrides(emptyOverrides(nextBoxes.length));
       setActiveBoxId(nextBoxes[0]?.id ?? textBoxes[0]?.id ?? "box-0");
       onChange(buildCaptionFromFieldTexts(nextTexts));
     },
-    [textBoxes, onChange]
+    [textBoxes, onChange, clearHistory]
   );
 
   useEffect(() => {
@@ -219,8 +317,43 @@ export function useMemeCanvasEditor({
     [canvasEnabled, fieldTexts, boxes.length, segmentOverrides, canvasSubmitOptions]
   );
 
+  const commitTextHistory = useCallback(() => {
+    const baseline = textHistoryBaselineRef.current;
+    if (!baseline) return;
+    textHistoryBaselineRef.current = null;
+    if (textHistoryTimerRef.current !== null) {
+      window.clearTimeout(textHistoryTimerRef.current);
+      textHistoryTimerRef.current = null;
+    }
+    const current = takeSnapshot(boxes, fieldTexts, segmentOverrides);
+    if (snapshotsEqual(baseline, current)) return;
+    pushUndo(baseline);
+  }, [boxes, fieldTexts, segmentOverrides, pushUndo]);
+
+  const onCaptionFieldFocus = useCallback(() => {
+    if (textHistoryTimerRef.current !== null) {
+      window.clearTimeout(textHistoryTimerRef.current);
+      textHistoryTimerRef.current = null;
+    }
+    commitTextHistory();
+    textHistoryBaselineRef.current = takeSnapshot(boxes, fieldTexts, segmentOverrides);
+  }, [boxes, fieldTexts, segmentOverrides, commitTextHistory]);
+
+  const scheduleTextHistoryCommit = useCallback(() => {
+    if (textHistoryTimerRef.current !== null) {
+      window.clearTimeout(textHistoryTimerRef.current);
+    }
+    textHistoryTimerRef.current = window.setTimeout(() => {
+      textHistoryTimerRef.current = null;
+      commitTextHistory();
+    }, TEXT_HISTORY_DEBOUNCE_MS);
+  }, [boxes, fieldTexts, segmentOverrides, commitTextHistory]);
+
   const updateField = useCallback(
     (index: number, nextValue: string) => {
+      if (!textHistoryBaselineRef.current) {
+        textHistoryBaselineRef.current = takeSnapshot(boxes, fieldTexts, segmentOverrides);
+      }
       const next = [...fieldTexts];
       next[index] = nextValue;
       const clamped = clampCaptionFieldTexts(next);
@@ -232,8 +365,9 @@ export function useMemeCanvasEditor({
       });
       skipDebounceRef.current = false;
       onChange(buildCaptionFromFieldTexts(clamped));
+      scheduleTextHistoryCommit();
     },
-    [fieldTexts, onChange]
+    [fieldTexts, onChange, boxes, segmentOverrides, scheduleTextHistoryCommit]
   );
 
   const applyToolbar = useCallback(
@@ -257,10 +391,44 @@ export function useMemeCanvasEditor({
     );
   }, []);
 
-  const onInteractionStart = useCallback(() => setLayoutFrozen(true), []);
-  const onInteractionEnd = useCallback(() => setLayoutFrozen(false), []);
+  const onInteractionStart = useCallback(() => {
+    commitTextHistory();
+    pushUndo(takeSnapshot(boxes, fieldTexts, segmentOverrides));
+    setLayoutFrozen(true);
+  }, [boxes, fieldTexts, segmentOverrides, pushUndo, commitTextHistory]);
+
+  const onInteractionEnd = useCallback(() => {
+    setLayoutFrozen(false);
+  }, []);
+
+  const undo = useCallback(() => {
+    const stack = undoStackRef.current;
+    if (stack.length === 0) return;
+    commitTextHistory();
+    redoStackRef.current.push(takeSnapshot(boxes, fieldTexts, segmentOverrides));
+    const previous = stack.pop()!;
+    applySnapshot(previous);
+    setCanUndo(stack.length > 0);
+    setCanRedo(redoStackRef.current.length > 0);
+  }, [boxes, fieldTexts, segmentOverrides, applySnapshot, commitTextHistory]);
+
+  const redo = useCallback(() => {
+    const stack = redoStackRef.current;
+    if (stack.length === 0) return;
+    commitTextHistory();
+    undoStackRef.current.push(takeSnapshot(boxes, fieldTexts, segmentOverrides));
+    if (undoStackRef.current.length > MAX_UNDO) {
+      undoStackRef.current.shift();
+    }
+    const next = stack.pop()!;
+    applySnapshot(next);
+    setCanUndo(undoStackRef.current.length > 0);
+    setCanRedo(stack.length > 0);
+  }, [boxes, fieldTexts, segmentOverrides, applySnapshot, commitTextHistory]);
 
   const addCustomBox = useCallback(() => {
+    commitTextHistory();
+    pushUndo(takeSnapshot(boxes, fieldTexts, segmentOverrides));
     const next = nextCustomBox(boxes);
     if (!next) return;
     setBoxes((prev) => [...prev, next]);
@@ -268,11 +436,14 @@ export function useMemeCanvasEditor({
     setSegmentOverrides((prev) => [...prev, null]);
     setActiveBoxId(next.id);
     skipDebounceRef.current = false;
-  }, [boxes]);
+  }, [boxes, fieldTexts, segmentOverrides, pushUndo, commitTextHistory]);
 
   const deleteActiveCustomBox = useCallback(() => {
     const idx = boxes.findIndex((b) => b.id === activeBoxId);
     if (idx < 0 || boxes[idx]?.kind !== "custom") return;
+
+    commitTextHistory();
+    pushUndo(takeSnapshot(boxes, fieldTexts, segmentOverrides));
 
     const nextBoxes = boxes.filter((_, i) => i !== idx);
     const nextTexts = fieldTexts.filter((_, i) => i !== idx);
@@ -288,9 +459,21 @@ export function useMemeCanvasEditor({
     setActiveBoxId(nextActiveId);
     skipDebounceRef.current = false;
     onChange(buildCaptionFromFieldTexts(nextTexts));
-  }, [boxes, activeBoxId, fieldTexts, segmentOverrides, textBoxes, onChange]);
+  }, [
+    boxes,
+    activeBoxId,
+    fieldTexts,
+    segmentOverrides,
+    textBoxes,
+    onChange,
+    pushUndo,
+    commitTextHistory,
+  ]);
 
   const resetLayout = useCallback(() => {
+    commitTextHistory();
+    pushUndo(takeSnapshot(boxes, fieldTexts, segmentOverrides));
+
     const templateOnly = defaultTemplateBoxes(textBoxes);
     const nextTexts = templateOnly.map((tb) => {
       const existingIdx = boxes.findIndex(
@@ -305,7 +488,7 @@ export function useMemeCanvasEditor({
     setSegmentOverrides(emptyOverrides(templateOnly.length));
     setActiveBoxId(templateOnly[0]?.id ?? textBoxes[0]?.id ?? "box-0");
     onChange(buildCaptionFromFieldTexts(nextTexts));
-  }, [textBoxes, boxes, fieldTexts, onChange]);
+  }, [textBoxes, boxes, fieldTexts, segmentOverrides, onChange, pushUndo, commitTextHistory]);
 
   if (!canvasEnabled) {
     return studio;
@@ -333,5 +516,11 @@ export function useMemeCanvasEditor({
     canDeleteActiveCustomBox,
     hasCustomBoxes,
     resetCanvasFromRevision,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    onCaptionFieldFocus,
+    commitTextHistory,
   };
 }
