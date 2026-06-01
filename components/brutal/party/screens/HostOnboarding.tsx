@@ -6,6 +6,7 @@ import { LobbyReactionBar, type LobbyReactionFeedItem } from "@/components/bruta
 import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
 import { Avatar, type AvatarId } from "@/components/brutal/party/shared/Avatar";
 import { PARTY_MAX_PLAYERS, PARTY_MIN_PLAYERS } from "@/lib/party/constants";
+import { PARTY_COPY } from "@/lib/party/copy-de";
 import type { PartyReactionKey } from "@/lib/party/types";
 
 export type PartyLobbyPlayer = {
@@ -77,7 +78,7 @@ export function PartyLobbyScreen({
             className="inline-flex items-center gap-2 border border-[#FFB800] bg-[#FFB800]/15 px-3 py-1.5 text-[#FFB800]"
             style={{ fontSize: 11, fontWeight: 900, letterSpacing: "0.18em" }}
           >
-            <Crown className="h-3.5 w-3.5" /> {isHost ? "YOU'RE HOSTING" : "WAITING FOR HOST"}
+            <Crown className="h-3.5 w-3.5" /> {isHost ? PARTY_COPY.lobbyHosting : PARTY_COPY.lobbyWaiting}
           </div>
           <h1
             className="mt-3 text-white"
@@ -85,22 +86,24 @@ export function PartyLobbyScreen({
           >
             {isHost ? (
               <>
-                Welcome, <span className="italic text-[#FFB800]">warlord</span>.
+                {PARTY_COPY.lobbyWelcomeHost}{" "}
+                <span className="italic text-[#FFB800]">{PARTY_COPY.lobbyWelcomeHostAccent}</span>.
               </>
             ) : (
               <>
-                Lobby <span className="italic text-[#CCFF00]">loading</span>.
+                {PARTY_COPY.lobbyWelcomeGuest}{" "}
+                <span className="italic text-[#CCFF00]">{PARTY_COPY.lobbyWelcomeGuestAccent}</span>.
               </>
             )}
           </h1>
           <p className="mt-3 max-w-2xl text-white/60" style={{ fontSize: 15, lineHeight: 1.5 }}>
-            Share the code. Drop reactions while you wait. Host starts at {minPlayers}+ players.
+            {PARTY_COPY.lobbyShare} {minPlayers}+ Spielern.
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.3fr_1fr]">
           <div className="border border-[#FFB800]/40 bg-gradient-to-br from-[#FFB800]/10 via-black to-black p-8">
-            <Meta color="#FFB800">━━ YOUR ROOM CODE</Meta>
+            <Meta color="#FFB800">━━ {PARTY_COPY.lobbyRoomCode}</Meta>
             <div className="mt-4 flex flex-wrap items-end gap-4">
               <div className="flex gap-1.5">
                 {code.split("").map((c, i) => (
@@ -119,21 +122,11 @@ export function PartyLobbyScreen({
                 className="flex items-center gap-2 bg-[#FFB800] px-5 py-3 text-black hover:bg-white"
                 style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.18em" }}
               >
-                <Copy className="h-3.5 w-3.5" /> COPY LINK
+                <Copy className="h-3.5 w-3.5" /> {PARTY_COPY.lobbyCopyLink}
               </button>
             </div>
             <p className="mt-5 text-white/60" style={{ fontSize: 13, lineHeight: 1.5 }}>
-              Game starts when{" "}
-              <span className="text-[#FFB800]" style={{ fontWeight: 800 }}>
-                {minPlayers}+ players
-              </span>{" "}
-              have joined.
-              {need > 0 && (
-                <>
-                  {" "}
-                  Waiting for <span className="text-white">{need}</span> more.
-                </>
-              )}
+              {PARTY_COPY.lobbyStartHint(minPlayers, need)}
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-white/10 pt-5">
@@ -148,8 +141,7 @@ export function PartyLobbyScreen({
                 ))}
               </div>
               <div className="text-white/50" style={{ fontSize: 12 }}>
-                {joined} of {maxPlayers}
-                {need > 0 ? ` · need ${need} more` : " · ready"}
+                {PARTY_COPY.lobbyPlayers(joined, maxPlayers, need)}
               </div>
             </div>
 
@@ -159,12 +151,12 @@ export function PartyLobbyScreen({
           </div>
 
           <div className="border border-white/10 bg-black p-6">
-            <Meta>P1 SETTINGS</Meta>
+            <Meta>{PARTY_COPY.lobbySettings}</Meta>
             <div className="mt-4 space-y-3">
-              <SettingRow icon={<Clock className="h-4 w-4" />} label="CAPTION TIMER" value="60s fixed" />
-              <SettingRow icon={<Clock className="h-4 w-4" />} label="VOTE TIMER" value="30s fixed" />
-              <SettingRow icon={<Users className="h-4 w-4" />} label="PLAYERS" value={`${minPlayers}–${maxPlayers}`} />
-              <SettingRow icon={<Users className="h-4 w-4" />} label="ROUNDS" value={String(roundCount)} />
+              <SettingRow icon={<Clock className="h-4 w-4" />} label={PARTY_COPY.lobbyCaptionTimer} value="60s" />
+              <SettingRow icon={<Clock className="h-4 w-4" />} label={PARTY_COPY.lobbyVoteTimer} value="30s" />
+              <SettingRow icon={<Users className="h-4 w-4" />} label={PARTY_COPY.lobbyPlayersSetting} value={`${minPlayers}–${maxPlayers}`} />
+              <SettingRow icon={<Users className="h-4 w-4" />} label={PARTY_COPY.lobbyRoundsSetting} value={String(roundCount)} />
             </div>
             {designPreview && (
               <p className="mt-4 text-white/40" style={{ fontSize: 11, lineHeight: 1.5 }}>
@@ -178,12 +170,10 @@ export function PartyLobbyScreen({
           <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border border-white/10 bg-[#0a0a0a] p-5">
             <div>
               <div className="text-white" style={{ fontWeight: 900, fontSize: 18, letterSpacing: "-0.02em" }}>
-                Ready when you are.
+                {PARTY_COPY.lobbyReady}
               </div>
               <div className="mt-1 text-white/50" style={{ fontSize: 12 }}>
-                {canStart
-                  ? "Unsubscribe reactions, then start — see spec A2."
-                  : `Need at least ${minPlayers} players to start.`}
+                {canStart ? PARTY_COPY.lobbyStartReady : PARTY_COPY.lobbyStartNeed(minPlayers)}
               </div>
             </div>
             <button
@@ -193,7 +183,7 @@ export function PartyLobbyScreen({
               className="bg-[#CCFF00] px-6 py-3 text-black hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
               style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.18em" }}
             >
-              START GAME →
+              {PARTY_COPY.lobbyStart}
             </button>
           </div>
         )}
@@ -206,7 +196,7 @@ export function PartyLobbyScreen({
               className="border border-white/20 px-5 py-2.5 text-white/60 hover:border-[#FF2D87]/50 hover:text-[#FF2D87]"
               style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.14em" }}
             >
-              LEAVE LOBBY
+              {PARTY_COPY.lobbyLeave}
             </button>
           </div>
         ) : null}

@@ -18,6 +18,10 @@
 # production
 /build
 
+# party template import scratch (full HD pack extract)
+/assets/party-templates/import/extracted/
+Memes templates -HD--*.zip
+
 # misc
 .DS_Store
 *.pem

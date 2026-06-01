@@ -18,26 +18,19 @@ const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const files = [
-  "placeholder-1.svg",
-  "placeholder-2.svg",
-  "placeholder-3.svg",
-  "placeholder-4.svg",
-  "placeholder-5.svg",
-  "placeholder-6.svg",
-  "placeholder-7.svg",
-  "placeholder-8.svg",
-];
+const manifest = JSON.parse(
+  readFileSync(resolve(root, "assets/party-templates/templates.json"), "utf8")
+);
 
-for (const name of files) {
-  const body = readFileSync(resolve(root, "public/party/placeholders", name));
-  const { error } = await supabase.storage.from("party-templates").upload(name, body, {
+for (const entry of manifest) {
+  const body = readFileSync(resolve(root, "assets/party-templates", entry.file));
+  const { error } = await supabase.storage.from("party-templates").upload(entry.file, body, {
     contentType: "image/svg+xml",
     upsert: true,
   });
   if (error) {
-    console.error("upload failed", name, error.message);
+    console.error("upload failed", entry.file, error.message);
     process.exit(1);
   }
-  console.log("uploaded", name);
+  console.log("uploaded", entry.file);
 }

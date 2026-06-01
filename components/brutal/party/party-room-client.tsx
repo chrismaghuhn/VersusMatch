@@ -3,17 +3,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { LobbyReactionFeedItem } from "@/components/brutal/party/lobby-reaction-bar";
-import { PartyCaptionInput } from "@/components/brutal/party/party-caption-input";
 import { PartyFinishedScreen } from "@/components/brutal/party/party-finished-screen";
-import { PartyPhaseTimer } from "@/components/brutal/party/party-phase-timer";
+import { PartyMobileCaption } from "@/components/brutal/party/mobile/PartyMobileCaption";
 import { PartyRevealScreen } from "@/components/brutal/party/party-reveal-screen";
 import { PartyVotingScreen } from "@/components/brutal/party/party-voting-screen";
 import { PartyLobbyScreen } from "@/components/brutal/party/screens/HostOnboarding";
-import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
+import { PartyErrorState } from "@/components/brutal/party/party-error-state";
+import { Shell } from "@/components/brutal/party/shared/Shell";
+import { PARTY_COPY } from "@/lib/party/copy-de";
 import { PARTY_MIN_PLAYERS } from "@/lib/party/constants";
 import { decodePartyAvatar } from "@/lib/party/avatar";
 import { isCaptionPhaseReady, isVotingPhaseReady } from "@/lib/party/phase-ready";
 import { usePartyRealtime } from "@/lib/party/realtime";
+import { useEveryoneLeft } from "@/lib/party/use-everyone-left";
 import { tryAdvancePhase, type AdvancePhaseGuards } from "@/lib/party/try-advance-phase";
 import type { PartySnapshot, PartyReactionKey } from "@/lib/party/types";
 import { getAppUrl } from "@/lib/utils";
@@ -33,6 +35,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const [retractingVote, setRetractingVote] = useState(false);
   const [phaseTransitioning, setPhaseTransitioning] = useState(false);
   const [lobbyReactions, setLobbyReactions] = useState<LobbyReactionFeedItem[]>([]);
+  const [disconnected, setDisconnected] = useState(false);
   const playersRef = useRef<PartySnapshot["players"]>([]);
   const snapshotRef = useRef<PartySnapshot | null>(null);
   const advancingRef = useRef(false);
@@ -82,7 +85,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
       const res = await fetch(`/api/party/rooms/${roomId}`, { cache: "no-store" });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
-        setError(data.error ?? "Could not load room.");
+        setError(data.error ?? "could_not_load_room");
         return;
       }
       const data = (await res.json()) as { snapshot: PartySnapshot };
@@ -104,9 +107,12 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         );
       }
     } catch {
-      setError("Network error.");
+      setError("network_error");
     }
   }, [roomId]);
+
+  const { isPending: everyoneLeftPending, isTriggered: everyoneLeft } =
+    useEveryoneLeft(snapshot);
 
   const phase = snapshot?.room.phase ?? "waiting";
   const playerCount = snapshot?.players.length ?? 0;
@@ -145,6 +151,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     phase,
     onRefresh: () => void refresh(),
     onLeaveWaiting: () => setLobbyReactions([]),
+    onChannelError: () => setDisconnected(true),
     onReactionInsert: (reaction) => {
       setLobbyReactions((prev) => {
         const handle =
@@ -156,6 +163,27 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
       });
     },
   });
+
+  useEffect(() => {
+    function handleOnline() {
+      setDisconnected(false);
+      void refresh();
+    }
+    function handleOffline() {
+      setDisconnected(true);
+    }
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    if (!navigator.onLine) {
+      setDisconnected(true);
+    }
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [refresh]);
 
   useEffect(() => {
     void refresh();
@@ -327,20 +355,38 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     void navigator.clipboard.writeText(url);
   }
 
+  if (disconnected && snapshot) {
+    return <PartyErrorState code="disconnected" roomCode={snapshot.room.code} />;
+  }
+
+  if (everyoneLeft && snapshot) {
+    return <PartyErrorState code="everyone_left" />;
+  }
+
   if (error && !snapshot) {
     return (
-      <Shell>
-        <div className="px-6 py-20 text-center text-[#FF2D87]" style={{ fontWeight: 800 }}>
-          {error}
-        </div>
-      </Shell>
+      <PartyErrorState
+        code={error}
+        onRetry={() => {
+          setError(null);
+          void refresh();
+        }}
+      />
     );
   }
 
   if (!snapshot) {
     return (
       <Shell>
-        <div className="px-6 py-20 text-center text-white/50">Loading room…</div>
+        <div className="px-6 py-20 text-center text-white/50">{PARTY_COPY.loadingRoom}</div>
+      </Shell>
+    );
+  }
+
+  if (everyoneLeftPending && snapshot.room.status === "in_progress") {
+    return (
+      <Shell>
+        <div className="px-6 py-20 text-center text-white/50">{PARTY_COPY.checkingConnection}</div>
       </Shell>
     );
   }
@@ -377,49 +423,33 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   if (snapshot.room.phase === "caption") {
     const locked = Boolean(snapshot.mySubmission);
     const allReady = isCaptionPhaseReady(snapshot);
+    const statusMessage = locked
+      ? phaseTransitioning
+        ? PARTY_COPY.captionPhaseChanging
+        : allReady
+          ? PARTY_COPY.captionAllReady
+          : PARTY_COPY.captionLockedIn
+      : null;
+
     return (
-      <Shell>
-        <div className="mx-auto max-w-lg px-6 py-12">
-          <div className="flex items-center justify-between">
-            <Meta>
-              ROUND {snapshot.room.currentRound}/{snapshot.room.roundCount} · CAPTION
-            </Meta>
-            <PartyPhaseTimer phaseEndsAt={snapshot.room.phaseEndsAt} allReady={allReady} />
-          </div>
-          <p className="mt-2 text-white/50" style={{ fontSize: 13 }}>
-            {snapshot.captionCount}/{snapshot.players.length} locked in
-          </p>
-          <div className="mt-6">
-            <PartyCaptionInput
-              value={captionDraft}
-              onChange={setCaptionDraft}
-              onSubmit={handleSubmitCaption}
-              onUnlock={() => void handleRetractCaption()}
-              locked={locked}
-              unlockDisabled={phaseTransitioning}
-              unlocking={unlocking}
-              submitting={submitting}
-              template={snapshot.room.template}
-            />
-          </div>
-          {locked ? (
-            <p
-              className="mt-4 text-center"
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: phaseTransitioning ? "rgba(255,255,255,0.5)" : "#CCFF00",
-              }}
-            >
-              {phaseTransitioning
-                ? "Phase changing…"
-                : allReady
-                  ? "Everyone locked in — starting vote…"
-                  : "Locked in — waiting for others…"}
-            </p>
-          ) : null}
-        </div>
-      </Shell>
+      <PartyMobileCaption
+        round={snapshot.room.currentRound}
+        roundCount={snapshot.room.roundCount}
+        phaseEndsAt={snapshot.room.phaseEndsAt}
+        allReady={allReady}
+        captionCount={snapshot.captionCount}
+        playerCount={snapshot.players.length}
+        value={captionDraft}
+        onChange={setCaptionDraft}
+        onSubmit={() => void handleSubmitCaption()}
+        onUnlock={() => void handleRetractCaption()}
+        locked={locked}
+        unlockDisabled={phaseTransitioning}
+        unlocking={unlocking}
+        submitting={submitting}
+        statusMessage={statusMessage}
+        template={snapshot.room.template}
+      />
     );
   }
 

@@ -37,6 +37,7 @@ type PartyTemplateFrameProps = {
   big?: boolean;
   mini?: boolean;
   fallbackTemplate?: "drake" | "boyfriend" | "brain" | "pikachu";
+  crossOrigin?: "anonymous" | "use-credentials";
 };
 
 export function PartyTemplateFrame({
@@ -46,6 +47,7 @@ export function PartyTemplateFrame({
   big = false,
   mini = false,
   fallbackTemplate = "drake",
+  crossOrigin,
 }: PartyTemplateFrameProps) {
   const fontSize = big ? 28 : mini ? 10 : 16;
   const [imageFailed, setImageFailed] = useState(false);
@@ -75,6 +77,7 @@ export function PartyTemplateFrame({
         src={imageUrl}
         alt=""
         className="h-full w-full object-cover"
+        crossOrigin={crossOrigin}
         onError={() => setImageFailed(true)}
       />
 

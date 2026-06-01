@@ -29,6 +29,7 @@ export function SiteFooter() {
               h: "PRODUCT",
               links: [
                 { label: "Create battle", href: "/create" },
+                { label: "Party", href: "/party" },
                 { label: "Browse all battles", href: "/feed" },
                 { label: "Trending", href: "/trending" },
               ],
@@ -74,8 +75,11 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-16 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 md:flex-row md:items-center">
-          <div className="text-white/30" style={{ fontSize: 12 }}>
-            © 2026 MemeFight.lol — Petty disputes, settled scientifically.
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-white/30" style={{ fontSize: 12 }}>
+            <span>© 2026 MemeFight.lol — Petty disputes, settled scientifically.</span>
+            <Link href="/credits" className="transition hover:text-[#CCFF00]">
+              Credits
+            </Link>
           </div>
           <div
             className="flex items-center gap-2 text-white/30"

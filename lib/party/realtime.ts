@@ -16,6 +16,7 @@ type UsePartyRealtimeOptions = {
   onRefresh: () => void;
   onReactionInsert?: (reaction: PartyReactionInsert) => void;
   onLeaveWaiting?: () => void;
+  onChannelError?: () => void;
 };
 
 function attachRoomFilter(
@@ -98,7 +99,11 @@ function buildChannel(
     });
   }
 
-  channel.subscribe();
+  channel.subscribe((status) => {
+    if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+      options.onChannelError?.();
+    }
+  });
   return channel;
 }
 
@@ -139,6 +144,7 @@ export function usePartyRealtime(roomId: string, options: UsePartyRealtimeOption
         onRefresh: () => optionsRef.current.onRefresh(),
         onReactionInsert: (r) => optionsRef.current.onReactionInsert?.(r),
         onLeaveWaiting: () => optionsRef.current.onLeaveWaiting?.(),
+        onChannelError: () => optionsRef.current.onChannelError?.(),
       });
     }
 

@@ -1,7 +1,7 @@
 # MemeFight Party — Live Private Rooms (Make It Meme Style)
 
 **Date:** 2026-06-03  
-**Status:** Draft — pending user review  
+**Status:** P1 shipped — polish 2026-05-31  
 **Phase:** New product surface (`/party`) — P0 Profiles + P1 Live MVP + **P1.5 Lobby Reactions**
 
 ## Goal
@@ -16,7 +16,7 @@ Let logged-in friends play a live meme-caption party game on MemeFight: private 
 
 ## Success Criteria
 
-- 3–8 logged-in players complete a 5-round private game in under 10 minutes without manual refresh
+- 2–8 logged-in players complete a 5-round private game in under 10 minutes without manual refresh
 - Invite link `/party/join/{code}` survives Magic Link login (`returnTo` preserved)
 - Reconnect within 60s restores correct phase and player score
 - Phase transitions are server-authoritative; clients cannot skip phases or double-vote
@@ -67,7 +67,7 @@ flowchart LR
 
 ### Players
 
-- **Minimum 3** to start, **maximum 8**
+- **Minimum 2** to start, **maximum 8**
 - Host creates room; host starts game when `count(players) >= 3`
 - Host may leave before start; after start, host promotion runs inside `party_advance_phase` (see Section B)
 
@@ -714,13 +714,13 @@ assets/party-templates/            ← seed images + LICENSE
 | Component | File | Route / when | `PartySnapshot` / API |
 |-----------|------|--------------|------------------------|
 | `PartyJoinScreen` | `screens/JoinScreen.tsx` | `/party`, `/party/join/[code]` | `onJoin` → `POST /api/party/join`; `onCreate` → `POST /api/party/rooms`. Prop `designPreview={false}` in prod. |
-| `AvatarPicker` | `screens/AvatarPicker.tsx` | `/onboarding` | Writes `profiles` (handle, avatar preset + color). |
+| `AvatarPicker` | `screens/AvatarPicker.tsx` | `/onboarding` | Writes `profiles` (handle, avatar). Encodes preset as `party:{AvatarId}:{color}` in `profiles.avatar_url` via `lib/party/avatar.ts`. |
 | `PartyLobbyScreen` | `screens/HostOnboarding.tsx` | `/party/room/[id]` when `phase=waiting` | `code`, `players`, `recentReactions`, `canStart`; `onSendReaction` → `POST /api/party/reaction`; `onStartGame` → unsubscribe reactions then `POST /api/party/start`. |
 | `LobbyReactions` | `lobby-reactions.tsx` | Inside lobby only | `recentReactions` (max 20 / 5s); Realtime on `party_reactions` until phase change. |
-| `MobileGame` | `screens/MobileGame.tsx` | Room when `caption` / `voting` / `reveal` | Split into phase views wired to `submissions`, `phaseEndsAt`, `template.textBoxes`. Swipe vote UX kept; SKIP optional. |
-| `ShareCard` | `screens/ShareCard.tsx` | `phase=finished` | Winner handle, round meme, scores from snapshot. |
-| `ErrorStates` | `screens/ErrorStates.tsx` | Error boundaries / API codes | Map `room_full`, `bad_code`, disconnect, etc. |
-| `Tutorial` | `screens/Tutorial.tsx` | First visit optional | Static; update slide 1 code format to 6-char. |
+| `MobileGame` | `mobile/*` + `screens/MobileGame.tsx` | Room when `caption` / `voting` / `reveal` | **Prod:** `PartyMobileCaption`, `PartyMobileVoting`, `PartyMobileReveal` wired to `PartySnapshot`. **Design preview:** same components in `PhoneFrame` with `embedded` on `/party/design`. |
+| `ShareCard` | `screens/ShareCard.tsx` | `phase=finished` | Winner handle, round meme, scores from snapshot. Copy link, Twitter intent, PNG download. |
+| `ErrorStates` | `party-error-state.tsx` + `screens/ErrorStates.tsx` | Join/room errors | **Prod:** `PartyErrorState` + `lib/party/copy-de.ts` for `room_full`, `bad_code`, `disconnected`, debounced `everyone_left`. **Design preview only:** `banned`, `no_submissions` in ErrorStates grid. |
+| `Tutorial` | `party-tutorial-overlay.tsx` + `screens/Tutorial.tsx` | First visit on `/party` | **Prod:** overlay, `localStorage` key `memefight_party_tutorial_v1`; blocked when `?error=` present. **Design preview:** static `Tutorial` screen on `/party/design`. |
 
 ### Deferred (in repo, not P1)
 
@@ -732,17 +732,35 @@ assets/party-templates/            ← seed images + LICENSE
 
 ### Integration notes
 
-- **`MemeFrame`:** emoji placeholders until `party_templates` URLs wired; replace with `<img>` + text overlay from `text_boxes`.
-- **Caption UX:** design uses top/bottom inputs; backend stores single `caption` (120 chars) — merge with `\|` or pick one field for v1.
+- **Templates:** `PartyTemplateFrame` loads Storage WebP URLs from `party_templates` (`placeholder-*.webp`). Generate/upload via `scripts/generate-party-templates.mjs` then `scripts/upload-party-templates.mjs`.
+- **DE copy:** Production strings in `lib/party/copy-de.ts`. `/party/design` preview screens remain EN by design.
+- **Caption UX:** Single `caption` field (120 chars); pipe `\|` for two lines in UI.
+- **Nav:** Header link **PARTY** in `components/site-header.tsx`. Footer **Party** + **Credits** in `components/site-footer.tsx`.
 - **Design preview:** `JoinScreen` alias passes `designPreview` (public lobbies visible); production uses `PartyJoinScreen` without it.
 
 ---
 
 ## Open Items
 
-- Wire `MobileGame` phone frames to live `PartySnapshot` per phase
-- Avatar: preset SVG ids (`AvatarId`) map to `profiles.avatar_url` or stored preset key
-- Final DE copy pass on ported screens
+### Done (P1 polish, 2026-05-31)
+
+- MobileGame layouts wired to live `PartySnapshot` (caption / voting / reveal)
+- DE copy pass on production party screens
+- Avatar preset mapping (`party:{id}:{color}` in `profiles.avatar_url`)
+- ErrorStates wired to API and client signals (incl. debounced `everyone_left`)
+- Tutorial overlay on first `/party` visit
+- WebP placeholder template pipeline
+
+### Done (P1.9 quick wins, 2026-06-04)
+
+- ShareCard **PNG** export (`html-to-image`, 1200×675)
+- Footer **Party** link + `/credits` attribution page
+- Licensed meme template images (import pipeline + Supabase Storage)
+- Server-side analytics funnel (`party_analytics_events`, SQL views, `npm run party:analytics`)
+
+### Still open / deferred
+
+- Phase 3: public lobbies, user-uploaded templates, spectator mode, premium bundle
 
 ---
 
@@ -757,5 +775,6 @@ assets/party-templates/            ← seed images + LICENSE
 | P1.5 lobby quick reactions | Added 2026-06-03 |
 | P1.5 thundering herd, rate-limit column, snapshot window | Revised per review 2026-06-03 |
 | UI port + Section L integration map | Done 2026-06-03 |
+| P1 polish doc sync | Done 2026-05-31 |
 
-**Next step after spec approval:** invoke **writing-plans** skill → implementation plan for P0 then P1.
+**Next step:** P1 + P1.9 shipped; Phase 3 features per Open Items above.

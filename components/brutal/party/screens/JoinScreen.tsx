@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Play, Plus, Users, Flame, ArrowRight, Globe } from "lucide-react";
 import { PARTY_MIN_PLAYERS } from "@/lib/party/constants";
+import { PARTY_COPY } from "@/lib/party/copy-de";
 import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
 
 const publicLobbies = [
@@ -61,7 +62,7 @@ export function PartyJoinScreen({
 
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-center">
             <div>
-              <Meta color="#CCFF00">━━ THE PARTY GAME OF BAD TAKES</Meta>
+              <Meta color="#CCFF00">━━ {PARTY_COPY.joinHeroTag}</Meta>
               <h1
                 className="mt-4 text-white"
                 style={{
@@ -71,21 +72,20 @@ export function PartyJoinScreen({
                   lineHeight: 0.82,
                 }}
               >
-                Worst takes
+                {PARTY_COPY.joinHeroTitle1}
                 <br />
-                <span className="italic text-[#CCFF00]">win</span>
+                <span className="italic text-[#CCFF00]">{PARTY_COPY.joinHeroTitle2}</span>
                 <span className="text-[#FF2D87]">.</span>
               </h1>
               <p className="mt-6 max-w-md text-white/60" style={{ fontSize: 17, lineHeight: 1.5 }}>
-                Everyone gets the same meme. You write captions. The group votes. Funniest gets points.
-                {PARTY_MIN_PLAYERS}–8 players. Free forever.
-                {designPreview ? " No login." : " Login required."}
+                {PARTY_COPY.joinHeroBody(PARTY_MIN_PLAYERS)}
+                {designPreview ? " Kein Login." : " Login nötig."}
               </p>
             </div>
 
             <div className="border border-white/10 bg-black p-5">
               <div className="mb-4">
-                <Meta>HAVE A CODE?</Meta>
+                <Meta>{PARTY_COPY.joinHaveCode}</Meta>
                 <div className="mt-2 flex gap-2">
                   <input
                     value={code}
@@ -108,7 +108,7 @@ export function PartyJoinScreen({
                     className="flex items-center gap-2 bg-[#CCFF00] px-5 text-black transition hover:bg-white"
                     style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.18em" }}
                   >
-                    JOIN <ArrowRight className="h-4 w-4" />
+                    {PARTY_COPY.joinButton} <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -116,14 +116,14 @@ export function PartyJoinScreen({
               <div className="my-5 flex items-center gap-3">
                 <div className="h-px flex-1 bg-white/10" />
                 <span className="text-white/30" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.22em" }}>
-                  OR
+                  {PARTY_COPY.joinOr}
                 </span>
                 <div className="h-px flex-1 bg-white/10" />
               </div>
 
               {onRoundCountChange ? (
                 <div className="mb-4">
-                  <Meta>ROUNDS</Meta>
+                  <Meta>{PARTY_COPY.joinRounds}</Meta>
                   <div className="mt-2 flex gap-2">
                     {([3, 5, 7] as const).map((n) => (
                       <button
@@ -152,10 +152,10 @@ export function PartyJoinScreen({
               >
                 <div className="text-left">
                   <div className="flex items-center gap-2 text-white" style={{ fontWeight: 900, fontSize: 16 }}>
-                    <Plus className="h-4 w-4" strokeWidth={3} /> CREATE NEW LOBBY
+                    <Plus className="h-4 w-4" strokeWidth={3} /> {PARTY_COPY.joinCreateTitle}
                   </div>
                   <div className="mt-0.5 text-white/40" style={{ fontSize: 11 }}>
-                    Be the host. Invite friends with a 6-char code.
+                    {PARTY_COPY.joinCreateSub}
                   </div>
                 </div>
                 <div className="bg-[#FF2D87] p-2 text-white transition group-hover:translate-x-1">

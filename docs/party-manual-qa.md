@@ -1,12 +1,12 @@
 # MemeFight Party — Manual QA Checklist
 
-Use this checklist before enabling `PARTY_ENABLED` on production. Run against a preview or local dev with `PARTY_ENABLED=true` and at least three logged-in test accounts (three browsers or profiles).
+Use this checklist before enabling `PARTY_ENABLED` on production. Run against a preview or local dev with `PARTY_ENABLED=true` and at least **two** logged-in test accounts (two browsers or profiles; a third is optional for 3+ player flows).
 
 Prerequisites:
 
 - `npm run typecheck` and `npm run test:party-handle` pass
-- Supabase migrations applied (including `party_leave_room`, template seed, RPC hardening)
-- Party templates uploaded: `node scripts/upload-party-templates.mjs` (requires `.env.local` service role)
+- Supabase migrations applied (including `party_leave_room`, template seed, RPC hardening, `party_retract_*`, `party_min_players_2`, `party_analytics_events`)
+- Party templates: `node scripts/generate-party-templates.mjs` then `node scripts/upload-party-templates.mjs` (8× `meme-*.svg` in `assets/party-templates/`) (requires `.env.local` service role)
 
 ---
 
@@ -14,8 +14,8 @@ Prerequisites:
 
 - [ ] **Create lobby** — `/party` → choose 3/5/7 rounds → Create → lands in room with 6-char code
 - [ ] **Join lobby** — second browser: enter code or open `/party/join/CODE` → player appears on host without full page reload (Realtime or poll within ~3s)
-- [ ] **Third player** — third browser joins; host sees 3+ players
-- [ ] **Start game** — host Start Game → phase `caption`, template image visible
+- [ ] **Second player (min start)** — host + one guest → host can start game (2-player minimum)
+- [ ] **Start game** — host Start Game → phase `caption`, template image visible (WebP placeholder, not broken)
 - [ ] **Caption phase** — each player submits; locked state after submit; timer advances phase when expired
 - [ ] **Voting phase** — all submissions visible; **self-vote allowed** (own caption in pool)
 - [ ] **Reveal** — vote counts shown; scores update on players
@@ -25,8 +25,12 @@ Prerequisites:
 
 ## Full game
 
+- [ ] **2-player game** — full round flow with exactly 2 players (regression after min-players change)
 - [ ] **5-round game** — play through all rounds; templates vary (8 placeholders; pool resets after exhaustion per `party_pick_template`)
 - [ ] **Leave lobby** — non-host leaves before start → returns to `/party`; host leaves → next player becomes host; last player leaves → room abandoned
+- [ ] **Retract caption** — after submit, unlock/edit caption before phase ends
+- [ ] **Retract vote** — after vote, change vote before phase ends
+- [ ] **Early advance** — when all players ready in caption/vote, phase advances without waiting for full timer
 
 ---
 
@@ -45,10 +49,24 @@ Prerequisites:
 
 ---
 
+## Polish & errors
+
+- [ ] **Tutorial** — first `/party` visit shows overlay; reload or after dismiss (`memefight_party_tutorial_v1`) → no overlay
+- [ ] **Tutorial vs error** — `/party?error=bad_code` shows error card only, **no** tutorial overlay
+- [ ] **Error join** — full room → `room_full`; invalid code → `bad_code`
+- [ ] **Error solo** — all others leave mid-game → `everyone_left` only after ~2s debounce (no flash on reconnect)
+- [ ] **Header nav** — **PARTY** in site header links to `/party`
+- [ ] **Mobile layout** — caption/vote/reveal: bottom CTA, meme fills screen on phone width
+
+---
+
 ## Share & polish
 
 - [ ] **ShareCard copy link** — clipboard contains `…/party/join/CODE`
 - [ ] **ShareCard Twitter** — intent URL includes room code and join URL
+- [ ] **ShareCard PNG** — Download PNG saves `memefight-party-CODE.png` with meme + winner text (1200×675)
+- [ ] **Footer nav** — **Party** in site footer PRODUCT column; **Credits** link in footer bar → `/credits`
+- [ ] **Credits page** — `/credits` lists Party meme template attribution
 - [ ] **Party disabled** — `PARTY_ENABLED=false` → party API returns **503**
 
 ---
@@ -57,4 +75,6 @@ Prerequisites:
 
 Record room IDs, browser versions, and any console/network errors when filing bugs.
 
-Spec reference: [`docs/superpowers/specs/2026-06-03-meme-party-live-design.md`](superpowers/specs/2026-06-03-meme-party-live-design.md)
+Spec reference: [`docs/superpowers/specs/2026-06-03-meme-party-live-design.md`](superpowers/specs/2026-06-03-meme-party-live-design.md) — Open Items in Section L.
+
+Analytics report (service role): `npm run party:analytics` (optional `-- 30` for 30-day window).

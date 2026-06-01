@@ -1,0 +1,79 @@
+{
+  "provider": "Memes templates -HD- (user-provided pack, 2026-06-01)",
+  "templates": [
+    {
+      "file": "meme-01-sleep-real-shit.jpg",
+      "storage_name": "meme-01-sleep-real-shit.jpg",
+      "sort_order": 1,
+      "text_boxes": [
+        { "id": "top", "x": 0.05, "y": 0.03, "w": 0.9, "h": 0.2, "align": "center", "maxLines": 2 },
+        { "id": "bottom", "x": 0.05, "y": 0.53, "w": 0.9, "h": 0.2, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-02-distracted-boyfriend.jpg",
+      "storage_name": "meme-02-distracted-boyfriend.jpg",
+      "sort_order": 2,
+      "text_boxes": [
+        { "id": "left", "x": 0.03, "y": 0.68, "w": 0.28, "h": 0.28, "align": "center", "maxLines": 2 },
+        { "id": "mid", "x": 0.36, "y": 0.68, "w": 0.28, "h": 0.28, "align": "center", "maxLines": 2 },
+        { "id": "right", "x": 0.69, "y": 0.68, "w": 0.28, "h": 0.28, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-03-expanding-brain.jpg",
+      "storage_name": "meme-03-expanding-brain.jpg",
+      "sort_order": 3,
+      "text_boxes": [
+        { "id": "q1", "x": 0.02, "y": 0.02, "w": 0.58, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "q2", "x": 0.02, "y": 0.27, "w": 0.58, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "q3", "x": 0.02, "y": 0.52, "w": 0.58, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "q4", "x": 0.02, "y": 0.77, "w": 0.58, "h": 0.2, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-04-gta-ah-shit.png",
+      "storage_name": "meme-04-gta-ah-shit.png",
+      "sort_order": 4,
+      "text_boxes": [
+        { "id": "top", "x": 0.05, "y": 0.04, "w": 0.9, "h": 0.18, "align": "center", "maxLines": 2 },
+        { "id": "bottom", "x": 0.05, "y": 0.78, "w": 0.9, "h": 0.18, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-05-two-guys-bus.jpg",
+      "storage_name": "meme-05-two-guys-bus.jpg",
+      "sort_order": 5,
+      "text_boxes": [
+        { "id": "left", "x": 0.04, "y": 0.72, "w": 0.42, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "right", "x": 0.54, "y": 0.72, "w": 0.42, "h": 0.22, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-06-gru-presentation.png",
+      "storage_name": "meme-06-gru-presentation.png",
+      "sort_order": 6,
+      "text_boxes": [
+        { "id": "sign", "x": 0.18, "y": 0.32, "w": 0.64, "h": 0.34, "align": "center", "maxLines": 3 }
+      ]
+    },
+    {
+      "file": "meme-07-this-is-fine.jpg",
+      "storage_name": "meme-07-this-is-fine.jpg",
+      "sort_order": 7,
+      "text_boxes": [
+        { "id": "top", "x": 0.05, "y": 0.05, "w": 0.9, "h": 0.2, "align": "center", "maxLines": 2 },
+        { "id": "bottom", "x": 0.05, "y": 0.75, "w": 0.9, "h": 0.2, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-08-omni-man-blank.jpg",
+      "storage_name": "meme-08-omni-man-blank.jpg",
+      "sort_order": 8,
+      "text_boxes": [
+        { "id": "left", "x": 0.02, "y": 0.72, "w": 0.38, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "right", "x": 0.42, "y": 0.72, "w": 0.56, "h": 0.22, "align": "center", "maxLines": 2 }
+      ]
+    }
+  ]
+}

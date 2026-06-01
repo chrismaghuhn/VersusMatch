@@ -35,6 +35,13 @@ export function SiteHeader() {
             >
               FEED
             </Link>
+            <Link
+              href="/party"
+              className="px-3 py-1.5 text-white/50 transition hover:bg-white/5 hover:text-white"
+              style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em" }}
+            >
+              PARTY
+            </Link>
             <HeaderNavAuth />
           </nav>
         </div>

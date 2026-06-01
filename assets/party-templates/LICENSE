@@ -1,10 +1,13 @@
-MemeFight Party — placeholder template images
+MemeFight Party — meme template images
 
-The SVG files in public/party/placeholders/ (and copies uploaded to the
-party-templates storage bucket) are simple generated placeholders created
-for MemeFight Party development and testing.
+Files in this directory (meme-*.svg) are original meme-FORMAT illustrations
+created for MemeFight Party. They evoke familiar meme layouts (two-panel,
+three-panel, sign, etc.) using CC0 emoji and simple shapes — not copyrighted
+photo memes.
 
 These assets are dedicated to the public domain under CC0 1.0 where
 applicable. You may use, copy, and modify them without attribution.
 
 https://creativecommons.org/publicdomain/zero/1.0/
+
+Manifest: templates.json (maps files to text overlay boxes in the DB).

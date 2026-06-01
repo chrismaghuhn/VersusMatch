@@ -1,8 +1,8 @@
 # MemeFight Party — Live Private Rooms Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
-**Goal:** Ship P0 profiles + P1 private live party game (Same Meme, 3–8 players) + P1.5 lobby reactions on `/party`.
+**Goal:** Ship P0 profiles + P1 private live party game (Same Meme, 2–8 players) + P1.5 lobby reactions on `/party`.
 
 **Architecture:** Server-authoritative Postgres RPCs for all gameplay transitions; Supabase Realtime for room sync (never `party_votes`); thin Next.js API routes return `PartySnapshot` JSON; brutalist UI in `components/brutal/party/` already ported. Phase advances via `pg_cron` every 15s + idempotent client calls.
 
@@ -45,9 +45,9 @@
 - Create: `supabase/migrations/20260603150000_profiles.sql`
 - Modify: `lib/database.types.ts`
 
-- [ ] Add migration (spec Section D `profiles`)
-- [ ] Add `profiles` to `Database["public"]["Tables"]`
-- [ ] Run `npm run typecheck`
+- [x] Add migration (spec Section D `profiles`)
+- [x] Add `profiles` to `Database["public"]["Tables"]`
+- [x] Run `npm run typecheck`
 
 ### Task P0-2: Profile API + onboarding
 
@@ -58,9 +58,9 @@
 - Create: `app/(site)/onboarding/page.tsx`
 - Modify: `middleware.ts` matcher → include `/party`, `/onboarding`
 
-- [ ] POST validates handle `^[a-z0-9_]{3,20}$`, stores `avatar_url` as `party:{id}:{color}`
-- [ ] Onboarding redirects to `returnTo` query param after save
-- [ ] `/party` redirects unauthenticated → login; no profile → `/onboarding?returnTo=...`
+- [x] POST validates handle `^[a-z0-9_]{3,20}$`, stores `avatar_url` as `party:{id}:{color}`
+- [x] Onboarding redirects to `returnTo` query param after save
+- [x] `/party` redirects unauthenticated → login; no profile → `/onboarding?returnTo=...`
 
 ---
 
@@ -68,32 +68,32 @@
 
 ### Task P1-1: Schema migration
 
-- [ ] `party_templates`, `party_rooms`, `party_players`, `party_submissions`, `party_votes`, `party_round_results`, `party_reactions`
-- [ ] `party_is_member`, RLS policies per spec
-- [ ] Realtime publication (not `party_votes`)
+- [x] `party_templates`, `party_rooms`, `party_players`, `party_submissions`, `party_votes`, `party_round_results`, `party_reactions`
+- [x] `party_is_member`, RLS policies per spec
+- [x] Realtime publication (not `party_votes`)
 
 ### Task P1-2: RPC migration
 
-- [ ] `party_create_room`, `party_join_room`, `party_start_game`, `party_submit_caption`, `party_cast_vote`, `party_send_reaction`, `party_heartbeat`, `party_advance_phase`, `party_advance_stale_rooms`, `party_leave_room`
-- [ ] Host migration inside `party_advance_phase` step 1
-- [ ] pg_cron `*/15 * * * * *` → `party_advance_stale_rooms()`
+- [x] `party_create_room`, `party_join_room`, `party_start_game`, `party_submit_caption`, `party_cast_vote`, `party_send_reaction`, `party_heartbeat`, `party_advance_phase`, `party_advance_stale_rooms`, `party_leave_room`
+- [x] Host migration inside `party_advance_phase` step 1
+- [x] pg_cron `*/15 * * * * *` → `party_advance_stale_rooms()`
 
 ### Task P1-3: Snapshot + API routes
 
-- [ ] `lib/party/snapshot.ts` + `GET /api/party/rooms/[id]`
-- [ ] POST routes: rooms, join, start, submit, vote, reaction, heartbeat
-- [ ] `PARTY_ENABLED=false` → 503 on party API
+- [x] `lib/party/snapshot.ts` + `GET /api/party/rooms/[id]`
+- [x] POST routes: rooms, join, start, submit, vote, reaction, heartbeat
+- [x] `PARTY_ENABLED=false` → 503 on party API
 
 ### Task P1-4: Room client + pages
 
-- [ ] `party-room-client.tsx`: Realtime per spec (no submissions sub during caption; unsub reactions on phase change)
-- [ ] Phase UI: lobby → caption → vote → reveal → finished
-- [ ] Host: unsub reactions before `POST /api/party/start`
+- [x] `party-room-client.tsx`: Realtime per spec (no submissions sub during caption; unsub reactions on phase change)
+- [x] Phase UI: lobby → caption → vote → reveal → finished
+- [x] Host: unsub reactions before `POST /api/party/start`
 
 ### Task P1-5: Seed templates
 
-- [ ] Storage bucket `party-templates`, ~5–10 placeholder WebP + SQL seed rows
-- [ ] `MemeFrame` or new `PartyTemplateImage` uses real URLs
+- [x] Storage bucket `party-templates`, ~5–10 placeholder WebP + SQL seed rows
+- [x] `MemeFrame` or new `PartyTemplateImage` uses real URLs
 
 ---
 
@@ -101,16 +101,38 @@
 
 Covered in P1-2 (`party_send_reaction`) + P1-4 (`LobbyReactions` wired). Verify:
 
-- [ ] Rate limit via `last_reaction_at`
-- [ ] Snapshot query: last 20 / 5 seconds
-- [ ] DELETE reactions on start; client unsub first
+- [x] Rate limit via `last_reaction_at`
+- [x] Snapshot query: last 20 / 5 seconds
+- [x] DELETE reactions on start; client unsub first
+
+---
+
+## Polish (2026-05-31)
+
+- [x] `PartyErrorState` wired to API/client codes (`room_full`, `bad_code`, `disconnected`, debounced `everyone_left`)
+- [x] DE copy pass via `lib/party/copy-de.ts`
+- [x] `MobileGame` layouts live (`components/brutal/party/mobile/*`)
+- [x] Tutorial overlay on first `/party` visit (`memefight_party_tutorial_v1`)
+- [x] Header link to `/party`
+- [x] WebP template placeholders (`scripts/generate-party-templates.mjs`)
+- Open Items (done vs deferred): see [Spec Section L](../specs/2026-06-03-meme-party-live-design.md#open-items) (synced 2026-05-31)
+
+---
+
+## P1.9 Quick Wins (2026-06-04)
+
+- [x] ShareCard PNG download (`lib/party/share-card-png.ts`, `html-to-image`)
+- [x] Footer **Party** link + **Credits** → `/credits`
+- [x] Credits page + `lib/party/template-credits.ts`
+- [x] Analytics funnel: `party_analytics_events` migration + RPC hooks + `npm run party:analytics`
+- Open Items: see [Spec Section L](../specs/2026-06-03-meme-party-live-design.md#open-items)
 
 ---
 
 ## Testing
 
-- [ ] `scripts/test-party-handle.mjs` — handle normalize/validate (`npm run test:party-handle`)
-- [ ] Manual checklist: [`docs/party-manual-qa.md`](../../party-manual-qa.md)
+- [x] `scripts/test-party-handle.mjs` — handle normalize/validate (`npm run test:party-handle`)
+- [x] Manual checklist: [`docs/party-manual-qa.md`](../../party-manual-qa.md)
 
 ---
 
@@ -119,3 +141,4 @@ Covered in P1-2 (`party_send_reaction`) + P1-4 (`LobbyReactions` wired). Verify:
 1. P0-1 → P0-2 (this session)
 2. P1-1 → P1-2 → P1-3 → P1-4 → P1-5
 3. Enable `PARTY_ENABLED=true` on preview deploy only
+4. Polish batch (ErrorStates, DE, MobileGame, Tutorial, Nav, WebP)

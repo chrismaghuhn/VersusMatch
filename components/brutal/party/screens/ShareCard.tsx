@@ -1,7 +1,7 @@
 "use client";
 
-import { Twitter, Copy, Check } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Twitter, Copy, Check, Download } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import { Meta, Shell } from "@/components/brutal/party/shared/Shell";
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
@@ -10,6 +10,7 @@ import {
   buildShareTweetText,
   type ShareCardData,
 } from "@/lib/party/share-card-data";
+import { captureShareCardPng } from "@/lib/party/share-card-png";
 import type { PartySnapshot } from "@/lib/party/types";
 import { getAppUrl } from "@/lib/utils";
 
@@ -52,6 +53,8 @@ export function ShareCard({ snapshot, embedded = false }: ShareCardProps) {
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedTweet, setCopiedTweet] = useState(false);
+  const [pngState, setPngState] = useState<"idle" | "generating" | "done" | "error">("idle");
+  const previewRef = useRef<HTMLDivElement>(null);
 
   const primaryWinner = data.gameWinners[0];
   const headline =
@@ -87,6 +90,21 @@ export function ShareCard({ snapshot, embedded = false }: ShareCardProps) {
     }
   }
 
+  async function downloadPng() {
+    if (!previewRef.current || pngState === "generating") {
+      return;
+    }
+    setPngState("generating");
+    try {
+      await captureShareCardPng(previewRef.current, data.roomCode);
+      setPngState("done");
+      setTimeout(() => setPngState("idle"), 1500);
+    } catch {
+      setPngState("error");
+      setTimeout(() => setPngState("idle"), 2500);
+    }
+  }
+
   const inner = (
     <div className={embedded ? "mt-10 border-t border-white/10 pt-10" : ""}>
       {!embedded ? (
@@ -114,6 +132,8 @@ export function ShareCard({ snapshot, embedded = false }: ShareCardProps) {
         <div>
           <Meta>PREVIEW</Meta>
           <div
+            ref={previewRef}
+            data-share-card-preview=""
             className="relative mt-2 overflow-hidden border border-white/10 bg-[#0a0a0a]"
             style={{ aspectRatio: embedded ? "16/10" : "1200/675" }}
           >
@@ -134,6 +154,7 @@ export function ShareCard({ snapshot, embedded = false }: ShareCardProps) {
                       imageUrl={data.template?.imageUrl}
                       textBoxes={data.template?.textBoxes}
                       mini={embedded}
+                      crossOrigin="anonymous"
                     />
                   ) : (
                     <div className="flex aspect-square items-center justify-center border border-white/20 bg-black text-white/40" style={{ fontSize: 11, fontWeight: 800 }}>
@@ -246,7 +267,28 @@ export function ShareCard({ snapshot, embedded = false }: ShareCardProps) {
           <Twitter className="h-4 w-4 fill-current" /> POST TO TWITTER
         </a>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <button
+            type="button"
+            onClick={() => void downloadPng()}
+            disabled={pngState === "generating"}
+            className="flex items-center justify-center gap-2 border border-white/20 py-3 text-white hover:border-[#CCFF00] hover:text-[#CCFF00] disabled:opacity-50"
+            style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em" }}
+          >
+            {pngState === "generating" ? (
+              <>GENERATING…</>
+            ) : pngState === "done" ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-[#CCFF00]" /> SAVED
+              </>
+            ) : pngState === "error" ? (
+              <>PNG FAILED</>
+            ) : (
+              <>
+                <Download className="h-3.5 w-3.5" /> DOWNLOAD PNG
+              </>
+            )}
+          </button>
           <button
             type="button"
             onClick={() => void copyTweet()}

@@ -1,0 +1,14 @@
+{
+  "provider": "YOUR_PROVIDER_NAME — link to license terms",
+  "templates": [
+    {
+      "file": "example-drake.webp",
+      "storage_name": "licensed-drake.webp",
+      "sort_order": 1,
+      "text_boxes": [
+        { "id": "top", "x": 0.05, "y": 0.03, "w": 0.9, "h": 0.2, "align": "center", "maxLines": 2 },
+        { "id": "bottom", "x": 0.05, "y": 0.53, "w": 0.9, "h": 0.2, "align": "center", "maxLines": 2 }
+      ]
+    }
+  ]
+}

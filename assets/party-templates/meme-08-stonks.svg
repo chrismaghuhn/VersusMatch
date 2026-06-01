@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#1e3a5f"/>
+  <polyline points="40,420 140,340 220,360 320,180 480,80" fill="none" stroke="#4ade80" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <polygon points="480,80 440,100 460,120" fill="#4ade80"/>
+  <text x="256" y="460" text-anchor="middle" font-size="88">=È</text>
+  <text x="400" y="140" font-size="72">=ÿ</text>
+</svg>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PARTY_COPY } from "@/lib/party/copy-de";
 
 export function usePhaseCountdown(phaseEndsAt: string | null): string | null {
   const [label, setLabel] = useState<string | null>(null);
@@ -56,7 +57,7 @@ export function PartyPhaseTimer({
           letterSpacing: "0.1em",
         }}
       >
-        ALL IN — STARTING…
+        {PARTY_COPY.timerAllReady}
       </span>
     );
   }

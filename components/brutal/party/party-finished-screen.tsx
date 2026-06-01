@@ -5,6 +5,7 @@ import { Crown } from "lucide-react";
 import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { decodePartyAvatar } from "@/lib/party/avatar";
+import { PARTY_COPY } from "@/lib/party/copy-de";
 import type { PartySnapshot } from "@/lib/party/types";
 import { ShareCard } from "@/components/brutal/party/screens/ShareCard";
 
@@ -20,7 +21,7 @@ export function PartyFinishedScreen({ snapshot }: PartyFinishedScreenProps) {
   return (
     <Shell>
       <div className="mx-auto max-w-lg px-6 py-12">
-        <Meta color="#CCFF00">━━ GAME OVER</Meta>
+        <Meta color="#CCFF00">━━ {PARTY_COPY.finishedGameOver}</Meta>
         <h1
           className="mt-3 text-white"
           style={{
@@ -31,19 +32,15 @@ export function PartyFinishedScreen({ snapshot }: PartyFinishedScreenProps) {
           }}
         >
           {winners.length === 1 ? (
-            <>
-              <span className="italic text-[#CCFF00]">@{winners[0]!.handle}</span> wins.
-            </>
+            <span className="italic text-[#CCFF00]">{PARTY_COPY.finishedWinner(winners[0]!.handle)}</span>
           ) : winners.length > 1 ? (
-            <>
-              <span className="italic text-[#CCFF00]">{winners.length}-way tie</span> 🏆
-            </>
+            <span className="italic text-[#CCFF00]">{PARTY_COPY.finishedTie(winners.length)}</span>
           ) : (
-            "Final scores."
+            PARTY_COPY.finishedScores
           )}
         </h1>
         <p className="mt-2 text-white/50" style={{ fontSize: 14 }}>
-          Room {snapshot.room.code} · {snapshot.room.roundCount} rounds
+          {PARTY_COPY.finishedRoom(snapshot.room.code, snapshot.room.roundCount)}
         </p>
 
         <ol className="mt-8 space-y-2">
@@ -68,7 +65,7 @@ export function PartyFinishedScreen({ snapshot }: PartyFinishedScreenProps) {
                   </span>
                   <Avatar id={avatar.id} color={avatar.color} size={32} />
                   <span className="text-white" style={{ fontWeight: 800, fontSize: 14 }}>
-                    {player.isYou ? "you" : `@${player.handle}`}
+                    {player.isYou ? "du" : `@${player.handle}`}
                     {player.isHost ? (
                       <Crown className="ml-1 inline h-3 w-3 text-[#FFB800]" />
                     ) : null}
@@ -92,7 +89,7 @@ export function PartyFinishedScreen({ snapshot }: PartyFinishedScreenProps) {
           className="mt-8 flex w-full items-center justify-center bg-[#CCFF00] py-4 text-black transition hover:bg-white"
           style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.18em" }}
         >
-          PLAY AGAIN →
+          {PARTY_COPY.finishedPlayAgain}
         </Link>
       </div>
     </Shell>

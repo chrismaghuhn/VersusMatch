@@ -3,6 +3,7 @@
 import { Send } from "lucide-react";
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import type { TextBox } from "@/lib/party/types";
+import { PARTY_COPY } from "@/lib/party/copy-de";
 import {
   CAPTION_MAX_LENGTH,
   CAPTION_PLACEHOLDER,
@@ -61,7 +62,7 @@ export function PartyCaptionInput({
           className="text-white/40"
           style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.22em" }}
         >
-          CAPTION · USE | FOR TWO LINES
+          {PARTY_COPY.captionLabel}
         </label>
         <input
           id="party-caption"
@@ -85,7 +86,7 @@ export function PartyCaptionInput({
           }}
         />
         <div className="mt-1 flex justify-between text-white/40" style={{ fontSize: 11 }}>
-          <span>Example: HAVING A LIFE | MAKING THIS MEME</span>
+          <span>{PARTY_COPY.captionExample}</span>
           <span className={remaining < 20 ? "text-[#FF2D87]" : undefined}>{remaining}</span>
         </div>
       </div>
@@ -99,7 +100,7 @@ export function PartyCaptionInput({
           style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.18em" }}
         >
           <Send className="h-3.5 w-3.5" />
-          {submitting ? "LOCKING IN…" : "LOCK IN"}
+          {submitting ? PARTY_COPY.lockInSending : PARTY_COPY.lockIn}
         </button>
       ) : onUnlock ? (
         <button
@@ -109,7 +110,7 @@ export function PartyCaptionInput({
           className="flex w-full items-center justify-center border border-white/20 py-3.5 text-white/70 transition hover:border-[#CCFF00] hover:text-[#CCFF00] disabled:cursor-not-allowed disabled:opacity-40"
           style={{ fontWeight: 800, fontSize: 12, letterSpacing: "0.18em" }}
         >
-          {unlocking ? "UNLOCKING…" : "UNLOCK / EDIT"}
+          {unlocking ? PARTY_COPY.unlockCaptionBusy : PARTY_COPY.unlockCaption}
         </button>
       ) : null}
     </div>
