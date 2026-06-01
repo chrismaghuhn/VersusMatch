@@ -27,6 +27,8 @@ export function validateCaptionDocumentV3(
   for (const box of doc.boxes) {
     const err = validateBoxLayout(box);
     if (err) return { ok: false, error: err };
+    const styleErr = validateBoxStyle(box);
+    if (styleErr) return { ok: false, error: styleErr };
   }
 
   const len = plainTextLengthFromBoxes(doc.boxes);
@@ -39,5 +41,17 @@ function validateBoxLayout(box: CaptionBox): string | null {
   const l = clampLayout(box.layout);
   if (l.w < LAYOUT_MIN_W || l.h < LAYOUT_MIN_H) return "invalid_caption";
   if (l.x + l.w > 1.001 || l.y + l.h > 1.001) return "invalid_caption";
+  return null;
+}
+
+function validateBoxStyle(box: CaptionBox): string | null {
+  const fill = box.style?.fill;
+  if (fill != null && fill !== "white" && fill !== "black") return "invalid_caption";
+  const pill = box.style?.pill;
+  if (pill != null && typeof pill !== "boolean") return "invalid_caption";
+  for (const seg of box.segments) {
+    const segFill = seg.style?.fill;
+    if (segFill != null && segFill !== "white" && segFill !== "black") return "invalid_caption";
+  }
   return null;
 }

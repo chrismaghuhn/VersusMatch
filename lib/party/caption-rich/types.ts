@@ -1,8 +1,14 @@
+export type BoxVisualStyle = {
+  fill?: "white" | "black";
+  pill?: boolean;
+};
+
 export type CaptionSegmentStyle = {
   caps?: boolean;
   slant?: number;
   scale?: number;
   italic?: boolean;
+  fill?: "white" | "black";
 };
 
 export type CaptionSegment = {
@@ -24,6 +30,7 @@ export type CaptionBox = {
   templateIndex?: number;
   segments: CaptionSegment[];
   layout: BoxLayout;
+  style?: BoxVisualStyle;
 };
 
 export type CaptionDocumentV2 = { v: 2; boxes: CaptionSegment[][] };

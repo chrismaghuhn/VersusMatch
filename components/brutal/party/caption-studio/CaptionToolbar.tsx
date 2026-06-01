@@ -2,6 +2,7 @@
 
 import { Minus, Plus, Type } from "lucide-react";
 import type { ToolbarAction } from "@/lib/party/caption-rich/segment-toolbar";
+import { PARTY_COPY } from "@/lib/party/copy";
 
 type CaptionToolbarProps = {
   disabled?: boolean;
@@ -64,6 +65,26 @@ export function CaptionToolbar({ disabled = false, mobile = false, onAction }: C
       >
         <Type className={mobile ? "h-4 w-4" : "h-3.5 w-3.5"} />
         CAPS
+      </button>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onAction("fillWhite")}
+        className={`${btnBase} ${sizeClass}`}
+        style={{ fontWeight: 800, fontSize, color: "#fff" }}
+        title={PARTY_COPY.canvasTextWhite}
+      >
+        W
+      </button>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onAction("fillBlack")}
+        className={`${btnBase} ${sizeClass}`}
+        style={{ fontWeight: 800, fontSize, color: "#000", background: "#fff" }}
+        title={PARTY_COPY.canvasTextBlack}
+      >
+        B
       </button>
     </div>
   );

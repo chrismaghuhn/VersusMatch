@@ -163,7 +163,11 @@ export function PartyTemplateFrame({
                 style={positionedBoxStyle(layout, align)}
               >
                 <div style={memeBoxContainerStyle(align)}>
-                  <CaptionSegments segments={segments} baseFontSize={fittedSize} />
+                  <CaptionSegments
+                    segments={segments}
+                    baseFontSize={fittedSize}
+                    boxStyle={box.style}
+                  />
                 </div>
               </div>
             );

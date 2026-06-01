@@ -1,6 +1,12 @@
 import type { CaptionSegment, CaptionSegmentStyle } from "./types.ts";
 
-export type ToolbarAction = "slant" | "scaleUp" | "scaleDown" | "caps";
+export type ToolbarAction =
+  | "slant"
+  | "scaleUp"
+  | "scaleDown"
+  | "caps"
+  | "fillWhite"
+  | "fillBlack";
 
 export type TextSelection = { start: number; end: number };
 
@@ -163,6 +169,18 @@ export function applyToolbarToSegments(
       const lower = middleCapsOff(middle);
       styledMiddle = mapMiddleSegments(middle, (style) =>
         lower ? mergeStyle(style, { caps: undefined }) : mergeStyle(style, { caps: false })
+      );
+      break;
+    }
+    case "fillWhite": {
+      styledMiddle = mapMiddleSegments(middle, (style) =>
+        mergeStyle(style, { fill: "white" })
+      );
+      break;
+    }
+    case "fillBlack": {
+      styledMiddle = mapMiddleSegments(middle, (style) =>
+        mergeStyle(style, { fill: "black" })
       );
       break;
     }

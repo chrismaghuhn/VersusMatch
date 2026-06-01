@@ -113,6 +113,19 @@ Branch `feat/party-meme-canvas-p25` — `npm run typecheck`, `test:caption-field
 
 ---
 
+## P2.6a Canvas readability (fill + pill)
+
+Branch `feat/p2.6a-canvas-readability` — `node --experimental-strip-types --test scripts/test-caption-rich.mjs scripts/test-caption-layout.mjs scripts/test-caption-fields.mjs` pass.
+
+- [ ] **Black text on light meme** — canvas on: active box **B** → black fill readable on bright template area in editor
+- [ ] **Pill background** — **Pill** toggle → semi-transparent bar behind text in editor preview
+- [ ] **Selection W/B** — highlight word in field → CaptionToolbar **W** / **B** overrides box default for that run only
+- [ ] **WYSIWYG colors** — submit with black fill and/or pill → desktop voting, reveal, and ShareCard PNG match editor
+- [ ] **Legacy v3 without style** — old submission with no `box.style` still renders white text
+- [ ] **Undo/redo fill/pill** — box **W** / **B** / **Pill** changes undo/redo; unchanged keystrokes after debounce do not stack duplicate undo entries
+
+---
+
 ## Notes
 
 Record room IDs, browser versions, and any console/network errors when filing bugs.

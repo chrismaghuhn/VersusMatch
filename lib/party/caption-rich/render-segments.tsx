@@ -1,15 +1,14 @@
 "use client";
 
-import type { CaptionSegment } from "@/lib/party/caption-rich/types";
+import type { BoxVisualStyle, CaptionSegment } from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
+import {
+  PILL_BOX_STYLE,
+  resolveSegmentFill,
+  strokeStylesForFill,
+} from "./fill";
 
-export const MEME_STROKE_STYLES: React.CSSProperties = {
-  color: "#fff",
-  fontFamily: "Impact, 'Arial Black', sans-serif",
-  textShadow:
-    "2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000",
-  WebkitTextStroke: "1.5px #000",
-};
+export const MEME_STROKE_STYLES = strokeStylesForFill("white");
 
 export function memeBoxContainerStyle(align: TextBox["align"]): React.CSSProperties {
   return {
@@ -32,14 +31,17 @@ export function CaptionSegments({
   segments,
   baseFontSize,
   defaultCaps = true,
+  boxStyle,
 }: {
   segments: CaptionSegment[];
   baseFontSize: number;
   defaultCaps?: boolean;
+  boxStyle?: BoxVisualStyle;
 }) {
-  return (
+  const inner = (
     <>
       {segments.map((seg, i) => {
+        const fill = resolveSegmentFill(seg, boxStyle);
         const slant = seg.style?.slant;
         const caps = seg.style?.caps ?? defaultCaps;
         const scale = seg.style?.scale ?? 1;
@@ -56,7 +58,8 @@ export function CaptionSegments({
               textTransform: caps ? "uppercase" : "none",
               fontStyle: seg.style?.italic ? "italic" : "normal",
               whiteSpace: "pre-wrap",
-              ...MEME_STROKE_STYLES,
+              fontFamily: "Impact, 'Arial Black', sans-serif",
+              ...strokeStylesForFill(fill),
             }}
           >
             {seg.text}
@@ -65,4 +68,9 @@ export function CaptionSegments({
       })}
     </>
   );
+
+  if (boxStyle?.pill) {
+    return <span style={PILL_BOX_STYLE}>{inner}</span>;
+  }
+  return inner;
 }

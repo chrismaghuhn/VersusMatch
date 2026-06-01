@@ -106,3 +106,17 @@ test("validateCaptionDocumentV3 rejects >2 custom boxes", () => {
 test("boxPlainText joins segment texts", () => {
   assert.equal(boxPlainText([{ text: "hel" }, { text: "lo" }]), "hello");
 });
+
+test("validateCaptionDocumentV3 rejects invalid style.fill", () => {
+  const doc = makeV3Doc();
+  doc.boxes[0].style = { fill: "red" };
+  const result = validateCaptionDocumentV3(doc, TEMPLATE_BOXES, 1);
+  assert.equal(result.ok, false);
+});
+
+test("validateCaptionDocumentV3 accepts black fill and pill", () => {
+  const doc = makeV3Doc();
+  doc.boxes[0].style = { fill: "black", pill: true };
+  const result = validateCaptionDocumentV3(doc, TEMPLATE_BOXES, 1);
+  assert.equal(result.ok, true);
+});
