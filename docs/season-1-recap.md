@@ -19,6 +19,7 @@ Diese Datei fasst alles zusammen, was in Season 1 (Brutalist-Launch → Stabiliz
 | MemeFight Party P1 + P1.9 + P1.10 | ✅ Live auf Production |
 | Party Arena Design (Desktop lg+) | ✅ Live, Smoke OK |
 | Party P2 Caption Studio (Spaces, Styling) | ✅ Live auf Production — [`2026-06-02-party-caption-studio`](superpowers/plans/2026-06-02-party-caption-studio.md) |
+| Party P2.5 Meme Canvas Editor | ✅ Shipped on branch `feat/party-meme-canvas-p25` — pending merge + deploy |
 | Party Phase 3 (Public Lobbies, Spectator, …) | ⏳ Nicht gestartet |
 
 ---
@@ -175,7 +176,25 @@ Spec: [`docs/superpowers/specs/2026-06-02-party-caption-studio-design.md`](super
 
 ---
 
-### 8. Ops & Trust (Vor-Season-Basis)
+### 8. Party P2.5 Meme Canvas Editor
+
+Optional host toggle at room create turns the caption phase into a drag/resize meme canvas (90s timer) with CaptionDocument v3, custom text boxes (+2 max), reroll confirmation, undo/redo, and `layout_revision` submit security.
+
+| Deliverable | Detail |
+|-------------|--------|
+| P2.5a | v3 types, layout helpers, DB migration `20260608120000_party_canvas_editor`, canvas toggle, draft sync, template drag/resize, `density="card"` voting fit |
+| P2.5b | Custom boxes, `RerollConfirmDialog`, undo/redo stack (depth 10), manual QA checklist in [`party-manual-qa.md`](party-manual-qa.md) |
+
+**Branch:** `feat/party-meme-canvas-p25` (HEAD `043fde1`) — **not merged to `main` yet**; Vercel production deploy follows merge.
+
+**Supabase:** Migration applied to VersusApp (`srimmoqxrbwxlyyfgdhs`) — `party_canvas_editor` + RPC follow-ups.
+
+Plan: [`docs/superpowers/plans/2026-06-03-party-meme-canvas-editor.md`](superpowers/plans/2026-06-03-party-meme-canvas-editor.md)  
+Spec: [`docs/superpowers/specs/2026-06-03-party-meme-canvas-editor-design.md`](superpowers/specs/2026-06-03-party-meme-canvas-editor-design.md)
+
+---
+
+### 9. Ops & Trust (Vor-Season-Basis)
 
 - Sentry Integration
 - Admin Reports + Resend-Alerts
@@ -312,6 +331,7 @@ Aus Design-Spec Non-Goals (weiterhin out of scope):
 | [`superpowers/specs/2026-06-02-fight-streak-battle-pass-design.md`](superpowers/specs/2026-06-02-fight-streak-battle-pass-design.md) | Battle Pass Season 1 |
 | [`superpowers/specs/2026-05-31-stabilization-audit-design.md`](superpowers/specs/2026-05-31-stabilization-audit-design.md) | Performance Closeout |
 | [`superpowers/specs/2026-06-02-party-caption-studio-design.md`](superpowers/specs/2026-06-02-party-caption-studio-design.md) | P2 Caption Studio (Spaces, Toolbar, Syntax) |
+| [`superpowers/specs/2026-06-03-party-meme-canvas-editor-design.md`](superpowers/specs/2026-06-03-party-meme-canvas-editor-design.md) | P2.5 Meme Canvas Editor (v3 layout, canvas mode) |
 
 ---
 

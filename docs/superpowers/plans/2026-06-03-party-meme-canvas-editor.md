@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Status:** Shipped on branch `feat/party-meme-canvas-p25` (HEAD `043fde1`) — pending merge to `main` + Vercel production deploy.
+
 **Goal:** Ship P2.5a (template box drag/resize, v3 data model, card density, canvas room mode, layout_revision security) and P2.5b (+ custom text boxes, reroll confirm, undo/redo).
 
 **Architecture:** Extend `caption_rich` to **v3** (`CaptionBox` with `layout` + mandatory `layoutRevision`). Canvas-off rooms stay on **v2** unchanged. One renderer (`PartyTemplateFrame` + `density`) feeds editor, voting cards (`card` fit-to-frame), and PNG (`export`). Server stores debounced drafts on `party_player_rounds`; reroll bumps `layout_revision` and clears draft. Client resets editor on revision change — not on draft null alone. Timer freeze is **client-only** during drag (no room-level grace in P2.5).
@@ -654,7 +656,7 @@ git commit -m "feat(party): canvas host toggle, timer freeze, layout revision re
 - Modify: `lib/party/caption-rich/layout.ts`
 - Modify: `scripts/test-caption-layout.mjs`
 
-- [ ] **Step 1: `addCustomBox()`**
+- [x] **Step 1: `addCustomBox()`**
 
 ```ts
 export function nextCustomBox(existing: CaptionBox[]): CaptionBox | null {
@@ -669,17 +671,17 @@ export function nextCustomBox(existing: CaptionBox[]): CaptionBox | null {
 }
 ```
 
-- [ ] **Step 2: UI**
+- [x] **Step 2: UI**
 
 - **+ Text** button above meme preview
 - **Delete** when active box `kind === "custom"`
 - **Reset layout** restores template defaults + removes all custom boxes
 
-- [ ] **Step 3: Field list**
+- [x] **Step 3: Field list**
 
 Dynamic field list follows `boxes.length` (not just template count); map active box index to textarea.
 
-- [ ] **Step 4: Tests + commit**
+- [x] **Step 4: Tests + commit**
 
 ```bash
 git commit -m "feat(party): custom caption boxes (max +2) in canvas editor"
@@ -694,7 +696,7 @@ git commit -m "feat(party): custom caption boxes (max +2) in canvas editor"
 - Modify: `components/brutal/party/party-room-client.tsx`
 - Modify: `lib/party/copy.ts`
 
-- [ ] **Step 1: Dialog copy (DE)**
+- [x] **Step 1: Dialog copy (DE)**
 
 ```ts
 rerollCustomWarningTitle: "Meme wechseln?",
@@ -703,11 +705,11 @@ rerollCustomWarningBody:
 rerollCustomConfirm: "Trotzdem rerollen",
 ```
 
-- [ ] **Step 2: Intercept reroll**
+- [x] **Step 2: Intercept reroll**
 
 If `boxes.some(b => b.kind === "custom")` → show dialog; on confirm call existing reroll RPC.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "feat(party): reroll confirmation when custom boxes exist"
@@ -721,7 +723,7 @@ git commit -m "feat(party): reroll confirmation when custom boxes exist"
 - Modify: `components/brutal/party/caption-studio/use-meme-canvas-editor.ts`
 - Modify: `components/brutal/party/party-caption-input.tsx`
 
-- [ ] **Step 1: History stack**
+- [x] **Step 1: History stack**
 
 ```ts
 type EditorSnapshot = { boxes: CaptionBox[]; fieldTexts: string[] };
@@ -729,11 +731,11 @@ const MAX_UNDO = 10;
 // push snapshot before layout drag end, text change, add/delete custom
 ```
 
-- [ ] **Step 2: UI buttons**
+- [x] **Step 2: UI buttons**
 
 Undo / Redo in toolbar row (disabled when stack empty). Keyboard: Ctrl+Z / Ctrl+Shift+Z desktop only.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "feat(party): canvas editor undo/redo stack"
@@ -748,9 +750,9 @@ git commit -m "feat(party): canvas editor undo/redo stack"
 - Modify: `docs/season-1-recap.md`
 - Modify: `docs/superpowers/specs/2026-06-03-party-meme-canvas-editor-design.md` (status)
 
-- [ ] Add P2.5 QA checklist rows from spec
-- [ ] Full manual pass (canvas on/off, custom boxes, reroll race, stale_revision, PNG)
-- [ ] Commit + apply Supabase migration to production
+- [x] Add P2.5 QA checklist rows from spec
+- [x] Full manual pass (canvas on/off, custom boxes, reroll race, stale_revision, PNG)
+- [x] Commit + apply Supabase migration to production
 
 ---
 
@@ -784,7 +786,7 @@ git commit -m "feat(party): canvas editor undo/redo stack"
 
 ## Post-ship
 
-- [ ] Update `docs/season-1-recap.md` — P2.5 shipped
+- [x] Update `docs/season-1-recap.md` — P2.5 shipped
 - [ ] Optional: Canvas editor screen in `party-design-preview.tsx`
 - [ ] Monitor playtests for P2.5c timer needs
 

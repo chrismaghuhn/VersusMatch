@@ -7,7 +7,7 @@ Use this checklist when changing party RPCs, Realtime, or UI. Run with at least 
 ## Prerequisites
 
 - `npm run typecheck` and `npm run test:party-handle` pass
-- Supabase migrations applied through **`20260606220000_party_rpc_plpgsql_type_fixes`**
+- Supabase migrations applied through **`20260608120000_party_canvas_editor`** (production VersusApp)
 - **20** licensed templates in Supabase Storage (`node scripts/extract-party-templates.mjs` → `node scripts/upload-party-templates.mjs`; see `assets/party-templates/import/LICENSE`)
 - UI copy: `lib/party/copy.ts` (English)
 
@@ -92,16 +92,24 @@ Verified on Production **2026-06-01** — full round with styled captions.
 
 ---
 
-## P2.5a Meme Canvas Editor (template boxes)
+## P2.5 Meme Canvas Editor
 
-Branch `feat/party-meme-canvas-p25` — automated tests pass; manual verification pending.
+Branch `feat/party-meme-canvas-p25` — `npm run typecheck`, `test:caption-fields`, `test:caption-rich`, `test:caption-layout` pass; manual verification pending before merge/deploy.
 
-- [ ] **Canvas off** — create room without Canvas Editor toggle → caption phase 60s, fixed template boxes, v2 submit path unchanged (identical to P2 Caption Studio)
-- [ ] **Canvas on** — create room with Canvas Editor enabled → caption phase **90s** timer
+- [ ] **Canvas off** — create room without Canvas Editor toggle → caption phase **60s**, fixed template boxes, v2 submit path unchanged (identical to P2 Caption Studio)
+- [ ] **Canvas on** — create room with Canvas Editor enabled → caption phase **90s** timer; overlay handles visible on meme
 - [ ] **Drag template box** — canvas on: drag a template text box within bounds; preview updates live
-- [ ] **Resize template box** — canvas on: resize via handle; layout clamped to image bounds
-- [ ] **Vote card readable** — submit offset/resized layout → voting card at ~230px shows text without clipping (`density="card"`)
-- [ ] **Reroll reset** — canvas on with rerolls: reroll clears layout + draft; client resets on `layout_revision` bump
+- [ ] **Resize template box** — canvas on: resize via handle; layout clamped to image bounds (no overflow past edges)
+- [ ] **Card density** — submit offset/resized layout → voting card at ~230px shows text without clipping (`density="card"`); reveal matches
+- [ ] **Custom boxes** — **+ Text** adds custom box (max 2); 3rd add rejected in UI; delete removes active custom box only
+- [ ] **Reset layout** — restores template box defaults and removes all custom boxes
+- [ ] **Reroll dialog** — canvas on with custom boxes + rerolls: reroll shows confirmation; confirm → new meme, custom boxes gone, layout reset
+- [ ] **Reroll revision** — after reroll, `layout_revision` bumps; editor state resets immediately (draft cleared server-side)
+- [ ] **Undo / redo** — Ctrl+Z / Ctrl+Shift+Z (desktop) or toolbar buttons restore layout + text (stack depth 10)
+- [ ] **Timer freeze** — countdown display pauses during drag/resize; phase still advances on server when timer expires
+- [ ] **stale_revision** — submit with outdated `layoutRevision` (e.g. after reroll in another tab) → API/RPC error `stale_revision`
+- [ ] **ShareCard PNG** — finished/download PNG matches editor layout (`density="export"`)
+- [ ] **Legacy v2 replay** — canvas-off room or old v2 `caption_rich` submissions display unchanged in voting/reveal
 
 ---
 

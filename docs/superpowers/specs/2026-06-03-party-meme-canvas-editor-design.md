@@ -1,7 +1,7 @@
 # MemeFight Party — Meme Canvas Editor (P2.5)
 
 **Date:** 2026-06-03  
-**Status:** P2.5a shipped on branch `feat/party-meme-canvas-p25` (not production yet)  
+**Status:** Shipped on branch `feat/party-meme-canvas-p25` — pending production deploy + migration  
 **Phase:** P2.5 — post–Caption Studio (P2)  
 **Depends on:** P2 Caption Studio (`caption_rich` v2, shared renderer, Arena caption UI)  
 **Parent spec:** [`2026-06-03-meme-party-live-design.md`](2026-06-03-meme-party-live-design.md)  
