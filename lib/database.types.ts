@@ -301,7 +301,9 @@ export type Database = {
       };
       party_rooms: {
         Row: {
+          canvas_editor_enabled: boolean;
           caption_count: number;
+          caption_duration_seconds: number;
           code: string;
           created_at: string;
           current_round: number;
@@ -318,7 +320,9 @@ export type Database = {
           votes_cast_count: number;
         };
         Insert: {
+          canvas_editor_enabled?: boolean;
           caption_count?: number;
+          caption_duration_seconds?: number;
           code: string;
           created_at?: string;
           current_round?: number;
@@ -335,7 +339,9 @@ export type Database = {
           votes_cast_count?: number;
         };
         Update: {
+          canvas_editor_enabled?: boolean;
           caption_count?: number;
+          caption_duration_seconds?: number;
           code?: string;
           created_at?: string;
           current_round?: number;
@@ -355,18 +361,24 @@ export type Database = {
       };
       party_player_rounds: {
         Row: {
+          caption_draft: Json | null;
+          layout_revision: number;
           room_id: string;
           round: number;
           template_id: string;
           user_id: string;
         };
         Insert: {
+          caption_draft?: Json | null;
+          layout_revision?: number;
           room_id: string;
           round: number;
           template_id: string;
           user_id: string;
         };
         Update: {
+          caption_draft?: Json | null;
+          layout_revision?: number;
           room_id?: string;
           round?: number;
           template_id?: string;
@@ -682,7 +694,19 @@ export type Database = {
         Returns: Record<string, unknown>;
       };
       party_create_room: {
-        Args: { p_round_count?: number; p_rerolls_per_player?: number };
+        Args: {
+          p_round_count?: number;
+          p_rerolls_per_player?: number;
+          p_canvas_editor_enabled?: boolean;
+        };
+        Returns: Record<string, unknown>;
+      };
+      party_sync_caption_draft: {
+        Args: {
+          p_room_id: string;
+          p_draft: Json;
+          p_layout_revision: number;
+        };
         Returns: Record<string, unknown>;
       };
       party_get_my_vote: {
