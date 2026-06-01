@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { MemeFrame } from "@/components/brutal/party/shared/MemeFrame";
 import { fitMemeFontSize } from "@/lib/party/meme-text-fit";
+import {
+  CaptionSegments,
+  memeBoxContainerStyle,
+} from "@/lib/party/caption-rich/render-segments";
 import type { CaptionDocument } from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
 
@@ -30,8 +34,8 @@ function captionParts(caption?: string): string[] {
   return [caption.trim()];
 }
 
-function richBoxTexts(doc: CaptionDocument): string[] {
-  return doc.boxes.map((box) => box.map((s) => s.text).join(""));
+function boxPlainText(segments: CaptionDocument["boxes"][number]): string {
+  return segments.map((s) => s.text).join("");
 }
 
 type PartyTemplateFrameProps = {
@@ -69,7 +73,7 @@ export function PartyTemplateFrame({
     );
   }
 
-  const parts = captionRich ? richBoxTexts(captionRich) : captionParts(caption);
+  const legacyParts = captionRich ? null : captionParts(caption);
 
   return (
     <div
@@ -88,8 +92,13 @@ export function PartyTemplateFrame({
       />
 
       {textBoxes.map((box, index) => {
-        const text = parts[index] ?? (index === 0 ? parts[0] : "");
+        const segments = captionRich?.boxes[index];
+        const text = captionRich
+          ? boxPlainText(segments ?? [])
+          : (legacyParts?.[index] ?? (index === 0 ? legacyParts?.[0] : "")) ?? "";
         if (!text) return null;
+
+        const fittedSize = fitMemeFontSize(text, fontSize, box.maxLines);
 
         return (
           <div
@@ -108,14 +117,16 @@ export function PartyTemplateFrame({
                     : "center",
             }}
           >
-            <div
-              style={memeTextStyle(
-                fitMemeFontSize(text, fontSize, box.maxLines),
-                box.align
-              )}
-            >
-              {text}
-            </div>
+            {captionRich ? (
+              <div style={memeBoxContainerStyle(box.align)}>
+                <CaptionSegments
+                  segments={segments ?? []}
+                  baseFontSize={fittedSize}
+                />
+              </div>
+            ) : (
+              <div style={memeTextStyle(fittedSize, box.align)}>{text}</div>
+            )}
           </div>
         );
       })}

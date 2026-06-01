@@ -339,10 +339,11 @@ export function SubmissionCard({
       }}
     >
       <PartyTemplateFrame
-        caption={"legacy" in frame ? frame.legacy : caption}
-        captionRich={"rich" in frame ? frame.rich : null}
         imageUrl={imageUrl}
         textBoxes={textBoxes}
+        {...("rich" in frame
+          ? { captionRich: frame.rich }
+          : { caption: frame.legacy })}
       />
       <div
         className="flex items-center justify-between gap-2 px-3 py-2"
