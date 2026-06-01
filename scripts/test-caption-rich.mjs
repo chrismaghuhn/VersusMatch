@@ -12,6 +12,7 @@ import {
   serializeCaptionPlain,
 } from "../lib/party/caption-rich/plain-text.ts";
 import { resolveSegmentFill, strokeStylesForFill } from "../lib/party/caption-rich/fill.ts";
+import { applyToolbarToSegments } from "../lib/party/caption-rich/segment-toolbar.ts";
 
 test("serializeCaptionPlain uses newline between boxes not pipe", () => {
   const doc = { v: 2, boxes: [[{ text: "TOP" }], [{ text: "BOT" }]] };
@@ -119,4 +120,14 @@ test("strokeStylesForFill inverts outline for black fill", () => {
   const styles = strokeStylesForFill("black");
   assert.equal(styles.color, "#000");
   assert.match(String(styles.WebkitTextStroke), /#fff/i);
+});
+
+test("fillBlack applies to selection range only", () => {
+  const segments = [{ text: "hello world" }];
+  const next = applyToolbarToSegments(segments, { start: 0, end: 5 }, "fillBlack");
+  assert.equal(next.length, 2);
+  assert.equal(next[0].text, "hello");
+  assert.equal(next[0].style?.fill, "black");
+  assert.equal(next[1].text, " world");
+  assert.equal(next[1].style?.fill, undefined);
 });
