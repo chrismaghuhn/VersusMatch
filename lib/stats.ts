@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 
 export const MIN_VOTES_FOR_STAT = 50;
 export const MIN_VOTES_TODAY_FOR_STAT = 10;
@@ -10,8 +10,14 @@ export type SiteStats = {
   votesLast24h: number;
 };
 
+const emptyStats: SiteStats = { activeBattles: 0, totalVotes: 0, votesLast24h: 0 };
+
 export async function getSiteStats(): Promise<SiteStats> {
-  const supabase = createAdminClient();
+  const supabase = tryCreateAdminClient();
+  if (!supabase) {
+    return emptyStats;
+  }
+
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   const [activeResult, totalResult, recentResult] = await Promise.all([
