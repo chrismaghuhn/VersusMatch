@@ -79,6 +79,8 @@ export type CaptionDocumentV2 = { v: 2; boxes: CaptionSegment[][] };
 export type CaptionDocumentV3 = {
   v: 3;
   layoutRevision: number;
+  /** Per-box raw field text — required for draft sync/restore; submit uses finalized segments in boxes */
+  rawTexts: string[];
   boxes: CaptionBox[];
 };
 export type CaptionDocument = CaptionDocumentV2 | CaptionDocumentV3;
@@ -115,10 +117,7 @@ export function clampLayout(layout: BoxLayout): BoxLayout {
   return { ...layout, x, y, w, h };
 }
 
-export function defaultTemplateBoxes(
-  textBoxes: TextBox[],
-  layoutRevision: number
-): CaptionBox[] {
+export function defaultTemplateBoxes(textBoxes: TextBox[]): CaptionBox[] {
   return textBoxes.map((tb, i) => ({
     id: tb.id,
     kind: "template" as const,
@@ -169,13 +168,12 @@ import type { CaptionDocumentV3, CaptionBox } from "./types";
 import type { TextBox } from "@/lib/party/types";
 import { plainTextLengthFromBoxes } from "./plain-text";
 
+/** Client + server shape validation for canvas-on submit. Caller must only invoke when room.canvasEditorEnabled — server rejects v3 on canvas-off rooms independently. */
 export function validateCaptionDocumentV3(
   doc: CaptionDocumentV3,
   templateBoxes: TextBox[],
-  expectedRevision: number,
-  canvasEnabled: boolean
+  expectedRevision: number
 ): { ok: true } | { ok: false; error: string } {
-  if (!canvasEnabled) return { ok: false, error: "canvas_disabled" };
   if (doc.layoutRevision !== expectedRevision) return { ok: false, error: "stale_revision" };
 
   const templateCount = templateBoxes.length;
@@ -494,6 +492,7 @@ export function finalizeCaptionDocumentV3(draft: {
   return {
     v: 3,
     layoutRevision: draft.layoutRevision,
+    rawTexts: draft.rawTexts,
     boxes: draft.boxes.map((box, i) => ({
       ...box,
       segments: draft.segmentOverrides?.[i]
@@ -509,29 +508,47 @@ export function finalizeCaptionDocumentV3(draft: {
 Inputs: `value`, `onChange`, `textBoxes`, `canvasEnabled`, `layoutRevision`, `captionDraft`, `roomId`, `onLayoutRevisionChange`.
 
 State:
-- `boxes: CaptionBox[]` initialized from `defaultTemplateBoxes(textBoxes, layoutRevision)` merged with draft
+- `boxes: CaptionBox[]` initialized from `defaultTemplateBoxes(textBoxes)` merged with draft
 - `activeBoxId: string`
 - `layoutFrozen: boolean` (true while pointer down on handle)
-- `localLayoutRevision: number`
+- `layoutRevisionRef: useRef<number>` — tracks last applied server revision (**not state** — avoids double effect runs)
 
 **Revision reset (mandatory):**
 
 ```ts
+const layoutRevisionRef = useRef(layoutRevision);
+
 useEffect(() => {
-  if (layoutRevision !== localLayoutRevision) {
-    setLocalLayoutRevision(layoutRevision);
-    setBoxes(
-      captionDraft?.v === 3
-        ? captionDraft.boxes
-        : defaultTemplateBoxes(textBoxes, layoutRevision)
-    );
-    setSegmentOverrides(emptyOverrides(textBoxes.length));
-    setActiveBoxId(textBoxes[0]?.id ?? "box-0");
-  }
-}, [layoutRevision, captionDraft, textBoxes, localLayoutRevision]);
+  if (layoutRevision === layoutRevisionRef.current) return;
+
+  layoutRevisionRef.current = layoutRevision;
+
+  setBoxes(
+    captionDraft?.v === 3
+      ? captionDraft.boxes
+      : defaultTemplateBoxes(textBoxes)
+  );
+  setFieldTexts(
+    captionDraft?.v === 3
+      ? captionDraft.rawTexts
+      : emptyFieldTexts(textBoxes.length)
+  );
+  setSegmentOverrides(emptyOverrides(textBoxes.length));
+  setActiveBoxId(textBoxes[0]?.id ?? "box-0");
+}, [layoutRevision, captionDraft, textBoxes]);
 ```
 
-**Debounced draft sync (2s):** POST `/api/party/sync-draft` with finalized structural doc (segments from raw text, layouts from state).
+No `localLayoutRevision` state in deps — effect runs **once per server revision change** (StrictMode-safe).
+
+**Draft sync (chained debounce — not independent of syntax preview):**
+
+1. User edits → `previewDoc` updates after **500ms** syntax debounce (reuse P2 pattern).
+2. When `previewDoc` or `boxes` (layout) changes, start **2s** draft-sync timer.
+3. Payload = `finalizeCaptionDocumentV3({ boxes, layoutRevision: layoutRevisionRef.current, rawTexts, segmentOverrides })` — segments match preview; **`rawTexts` preserved for restore**.
+
+On restore from `captionDraft`: textarea state from `rawTexts`; layouts from `boxes[].layout`; preview from parsed segments (same as P2).
+
+Immediate sync after reroll response (revision bump), before poll.
 
 When `!canvasEnabled`: delegate to existing `useCaptionStudio` (v2 path).
 
@@ -547,7 +564,7 @@ When `!canvasEnabled`: delegate to existing `useCaptionStudio` (v2 path).
 
 - Pass `previewDoc` as v3 when canvas on
 - Overlay absolutely positioned over `PartyTemplateFrame` (`density="editor"`)
-- Submit uses `finalizeCaptionDocumentV3` + `validateCaptionDocumentV3`
+- Submit uses `finalizeCaptionDocumentV3` + `validateCaptionDocumentV3(doc, templateBoxes, layoutRevisionRef.current)` — **only when `canvasEnabled`** (guard at call site; no `canvas_disabled` in validator)
 
 - [ ] **Step 5: Commit**
 
@@ -595,15 +612,17 @@ Wire to create room API.
 On reroll RPC success, immediately:
 
 ```ts
-setLayoutRevision(data.layout_revision);
+layoutRevisionRef.current = data.layout_revision;
 resetCanvasFromRevision(data.layout_revision, null);
 ```
+
+(Do not mirror revision in React state — ref + reset is enough; snapshot poll uses same effect deps.)
 
 Before waiting for next snapshot poll.
 
 - [ ] **Step 4: Snapshot poll**
 
-When `snapshot.layoutRevision !== localLayoutRevision`, hook reset fires (Task P2.5a-5).
+When `snapshot.layoutRevision !== layoutRevisionRef.current`, parent passes new `layoutRevision` prop → hook effect resets (Task P2.5a-5).
 
 - [ ] **Step 5: Commit**
 
@@ -768,3 +787,14 @@ git commit -m "feat(party): canvas editor undo/redo stack"
 - [ ] Update `docs/season-1-recap.md` — P2.5 shipped
 - [ ] Optional: Canvas editor screen in `party-design-preview.tsx`
 - [ ] Monitor playtests for P2.5c timer needs
+
+---
+
+## Plan revision log
+
+| Date | Change |
+|------|--------|
+| 2026-06-03 | Initial plan |
+| 2026-06-03 | Review: `layoutRevisionRef` not state; remove unused `defaultTemplateBoxes` param |
+| 2026-06-03 | Review: draft sync chained after 500ms preview debounce; v3 `rawTexts` for restore |
+| 2026-06-03 | Review: drop `canvasEnabled` from `validateCaptionDocumentV3`; guard at call site |

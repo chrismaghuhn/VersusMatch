@@ -124,6 +124,7 @@ type CaptionBox = {
 type CaptionDocument = {
   v: 3;
   layoutRevision: number;  // must match party_player_rounds.layout_revision at submit
+  rawTexts: string[];        // per-box field text for draft restore; submit uses finalized segments in boxes
   boxes: CaptionBox[];
 };
 ```
