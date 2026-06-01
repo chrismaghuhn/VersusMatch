@@ -752,7 +752,7 @@ assets/party-templates/            ← seed images + LICENSE
 ### Done (P1 polish, 2026-05-31)
 
 - MobileGame layouts wired to live `PartySnapshot` (caption / voting / reveal)
-- DE copy pass on production party screens
+- English copy on party screens (`lib/party/copy.ts`; replaced DE pass 2026-06-01)
 - Avatar preset mapping (`party:{id}:{color}` in `profiles.avatar_url`)
 - ErrorStates wired to API and client signals (incl. debounced `everyone_left`)
 - Tutorial overlay on first `/party` visit
@@ -764,6 +764,13 @@ assets/party-templates/            ← seed images + LICENSE
 - Footer **Party** link + `/credits` attribution page
 - Licensed meme template images (import pipeline + Supabase Storage)
 - Server-side analytics funnel (`party_analytics_events`, SQL views, `npm run party:analytics`)
+
+### Done (production launch, 2026-06-01)
+
+- English UI copy (`lib/party/copy.ts`)
+- Template pool **20** memes + Meme Archive License v1.0 on `/credits`
+- RPC hardening: PL/pgSQL integer/smallint fixes for create, join, start, advance, leave, cron
+- **`PARTY_ENABLED=true`** on memefight.lol; core round flow verified manually
 
 ### Still open / deferred
 
@@ -784,4 +791,4 @@ assets/party-templates/            ← seed images + LICENSE
 | UI port + Section L integration map | Done 2026-06-03 |
 | P1 polish doc sync | Done 2026-05-31 |
 
-**Next step:** P1 + P1.9 shipped; Phase 3 features per Open Items above.
+**Next step:** P1 + P1.9 live on production; optional QA edge cases in [`docs/party-manual-qa.md`](../../party-manual-qa.md); Phase 3 features per Open Items above.

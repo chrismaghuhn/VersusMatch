@@ -33,7 +33,8 @@
 | `app/(site)/party/room/[id]/page.tsx` | Room shell + phase router |
 | `components/brutal/party/party-room-client.tsx` | Realtime + snapshot wiring |
 | `components/brutal/party/party-onboarding-form.tsx` | Wired AvatarPicker |
-| `assets/party-templates/` | Seed templates + LICENSE |
+| `lib/party/copy.ts` | English UI copy + error code normalization |
+| `assets/party-templates/` | 20 licensed templates + Meme Archive LICENSE |
 
 ---
 
@@ -110,7 +111,7 @@ Covered in P1-2 (`party_send_reaction`) + P1-4 (`LobbyReactions` wired). Verify:
 ## Polish (2026-05-31)
 
 - [x] `PartyErrorState` wired to API/client codes (`room_full`, `bad_code`, `disconnected`, debounced `everyone_left`)
-- [x] DE copy pass via `lib/party/copy-de.ts`
+- [x] English copy via `lib/party/copy.ts` (migrated from `copy-de.ts`, 2026-06-01)
 - [x] `MobileGame` layouts live (`components/brutal/party/mobile/*`)
 - [x] Tutorial overlay on first `/party` visit (`memefight_party_tutorial_v1`)
 - [x] Header link to `/party`
@@ -129,16 +130,27 @@ Covered in P1-2 (`party_send_reaction`) + P1-4 (`LobbyReactions` wired). Verify:
 
 ---
 
+## Post-launch (2026-06-01)
+
+- [x] Template pool expanded to **20** licensed memes (`20260606120000_party_templates_expand.sql`, import pipeline)
+- [x] Meme Archive License v1.0 at repo root + credits page
+- [x] Fix PL/pgSQL RPC type mismatches (`party_log_event`, `party_assign_player_templates`) — migrations through `20260606220000`
+- [x] Stable API transport error codes (`lib/party/rpc-response.ts`)
+- [x] **`PARTY_ENABLED=true` on production** — core round flow smoke-tested
+- [x] Manual checklist: [`docs/party-manual-qa.md`](../../party-manual-qa.md) (core flow checked; edge cases remain)
+
+---
+
 ## Testing
 
 - [x] `scripts/test-party-handle.mjs` — handle normalize/validate (`npm run test:party-handle`)
-- [x] Manual checklist: [`docs/party-manual-qa.md`](../../party-manual-qa.md)
+- [x] Production smoke test — create → join → start → caption → vote → reveal (2026-06-01)
 
 ---
 
 ## Execution order
 
-1. P0-1 → P0-2 (this session)
+1. P0-1 → P0-2
 2. P1-1 → P1-2 → P1-3 → P1-4 → P1-5
-3. Enable `PARTY_ENABLED=true` on preview deploy only
-4. Polish batch (ErrorStates, DE, MobileGame, Tutorial, Nav, WebP)
+3. ~~Enable `PARTY_ENABLED=true` on preview deploy only~~ → **production enabled** (2026-06-01)
+4. Polish batch (ErrorStates, MobileGame, Tutorial, Nav, templates)
