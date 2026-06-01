@@ -182,8 +182,6 @@ export const PARTY_COPY = {
   joinHeroTag: "DAS PARTY-SPIEL FÜR SCHLECHTE TAKES",
   joinHeroTitle1: "Schlechteste",
   joinHeroTitle2: "gewinnt",
-  joinHeroBody: (min: number) =>
-    `Jeder bekommt ein eigenes Meme. Zwei Zeilen Caption, optional Reroll. ${min}–8 Spieler. Kostenlos.`,
   joinHaveCode: "CODE DA?",
   joinOr: "ODER",
   joinRounds: "RUNDEN",

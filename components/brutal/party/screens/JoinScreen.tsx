@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Play, Plus, Users, Flame, ArrowRight, Globe } from "lucide-react";
-import { PARTY_MIN_PLAYERS } from "@/lib/party/constants";
 import { PARTY_COPY } from "@/lib/party/copy-de";
 import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
 
@@ -81,10 +80,6 @@ export function PartyJoinScreen({
                 <span className="italic text-[#CCFF00]">{PARTY_COPY.joinHeroTitle2}</span>
                 <span className="text-[#FF2D87]">.</span>
               </h1>
-              <p className="mt-6 max-w-md text-white/60" style={{ fontSize: 17, lineHeight: 1.5 }}>
-                {PARTY_COPY.joinHeroBody(PARTY_MIN_PLAYERS)}
-                {designPreview ? " Kein Login." : " Login nötig."}
-              </p>
             </div>
 
             <div className="border border-white/10 bg-black p-5">
