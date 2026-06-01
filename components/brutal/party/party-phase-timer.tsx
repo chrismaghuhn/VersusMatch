@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PARTY_COPY } from "@/lib/party/copy-de";
+import { PARTY_COPY } from "@/lib/party/copy";
 
 export function usePhaseCountdown(phaseEndsAt: string | null): string | null {
   const [label, setLabel] = useState<string | null>(null);

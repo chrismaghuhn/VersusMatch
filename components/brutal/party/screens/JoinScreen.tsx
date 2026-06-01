@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Play, Plus, Users, Flame, ArrowRight, Globe } from "lucide-react";
-import { PARTY_COPY } from "@/lib/party/copy-de";
+import { PARTY_COPY } from "@/lib/party/copy";
 import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
 
 const publicLobbies = [

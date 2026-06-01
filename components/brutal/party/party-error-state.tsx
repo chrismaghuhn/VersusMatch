@@ -6,7 +6,7 @@ import { Shell } from "@/components/brutal/party/shared/Shell";
 import {
   normalizePartyErrorCode,
   PARTY_ERROR_DEFINITIONS,
-} from "@/lib/party/copy-de";
+} from "@/lib/party/copy";
 
 type PartyErrorStateProps = {
   code: string;

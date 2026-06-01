@@ -5,9 +5,9 @@ import { isAvatarId } from "@/lib/party/avatar-ids";
 import { createClient } from "@/lib/supabase/server";
 
 const ERROR_MESSAGES: Record<string, string> = {
-  unauthorized: "Bitte erneut einloggen.",
-  invalid_handle: "Handle ungültig (3–20 Zeichen, a-z, 0-9, _).",
-  handle_taken: "Handle ist schon vergeben — wähle einen anderen.",
+  unauthorized: "Please log in again.",
+  invalid_handle: "Invalid handle (3–20 characters: a-z, 0-9, _).",
+  handle_taken: "Handle is already taken — pick another one.",
 };
 
 export async function GET() {

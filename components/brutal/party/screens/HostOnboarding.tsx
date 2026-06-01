@@ -6,7 +6,7 @@ import { LobbyReactionBar, type LobbyReactionFeedItem } from "@/components/bruta
 import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
 import { Avatar, type AvatarId } from "@/components/brutal/party/shared/Avatar";
 import { PARTY_MAX_PLAYERS, PARTY_MIN_PLAYERS } from "@/lib/party/constants";
-import { PARTY_COPY } from "@/lib/party/copy-de";
+import { PARTY_COPY } from "@/lib/party/copy";
 import type { PartyReactionKey } from "@/lib/party/types";
 
 export type PartyLobbyPlayer = {
@@ -99,7 +99,7 @@ export function PartyLobbyScreen({
             )}
           </h1>
           <p className="mt-3 max-w-2xl text-white/60" style={{ fontSize: 15, lineHeight: 1.5 }}>
-            {PARTY_COPY.lobbyShare} {minPlayers}+ Spielern.
+            {PARTY_COPY.lobbyShare(minPlayers)}
           </p>
         </div>
 

@@ -4,7 +4,7 @@ import { PartyMobileShell } from "@/components/brutal/party/mobile/PartyMobileSh
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { decodePartyAvatar } from "@/lib/party/avatar";
-import { PARTY_COPY } from "@/lib/party/copy-de";
+import { PARTY_COPY } from "@/lib/party/copy";
 import type { PartySnapshot } from "@/lib/party/types";
 
 type PartyMobileRevealProps = {
@@ -88,7 +88,7 @@ export function PartyMobileReveal({ snapshot, embedded = false }: PartyMobileRev
               <div className="flex items-center gap-2">
                 <Avatar id={avatar.id} color={avatar.color} size={20} />
                 <span style={{ fontWeight: 700 }}>
-                  #{i + 1} {player.isYou ? "du" : `@${player.handle}`}
+                  #{i + 1} {player.isYou ? "you" : `@${player.handle}`}
                 </span>
               </div>
               <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 800 }}>

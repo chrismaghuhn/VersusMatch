@@ -39,12 +39,12 @@ const mockVotingSnapshot: PartySnapshot = {
     {
       id: "s1",
       userId: "1",
-      caption: "MEIN PRODUKTIVITÄTS-APP|TWITTER 47× ÖFFNEN",
+      caption: "MY PRODUCTIVITY APP|OPENING TWITTER 47 TIMES",
     },
     {
       id: "s2",
       userId: "2",
-      caption: "EIN LEBEN HABEN|DIESES MEME MACHEN",
+      caption: "HAVING A LIFE|MAKING THIS MEME",
     },
   ],
   captionCount: 2,
@@ -101,7 +101,7 @@ export function MobileGame() {
               allReady={false}
               captionCount={1}
               playerCount={4}
-              value="EIN LEBEN HABEN"
+              value="HAVING A LIFE"
               onChange={() => {}}
               onSubmit={() => {}}
               template={null}

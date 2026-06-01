@@ -4,7 +4,7 @@ import { PartyErrorState } from "@/components/brutal/party/party-error-state";
 import {
   PARTY_ERROR_DEFINITIONS,
   PARTY_ERROR_PREVIEW_DEFINITIONS,
-} from "@/lib/party/copy-de";
+} from "@/lib/party/copy";
 
 const wiredCodes = Object.values(PARTY_ERROR_DEFINITIONS);
 

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { PartyErrorState } from "@/components/brutal/party/party-error-state";
 import { PartyTutorialOverlay } from "@/components/brutal/party/party-tutorial-overlay";
 import { PartyJoinScreen } from "@/components/brutal/party/screens/JoinScreen";
-import { PARTY_COPY } from "@/lib/party/copy-de";
+import { PARTY_COPY } from "@/lib/party/copy";
 
 const TUTORIAL_STORAGE_KEY = "memefight_party_tutorial_v1";
 
@@ -127,7 +127,7 @@ function PartyPageClientInner() {
         onCreate={handleCreate}
       />
       <p className="border-t border-white/10 bg-black py-4 text-center text-white/40" style={{ fontSize: 12 }}>
-        Meme-Vorlagen —{" "}
+        Meme templates —{" "}
         <Link href="/credits" className="text-[#CCFF00] transition hover:text-white">
           Credits
         </Link>

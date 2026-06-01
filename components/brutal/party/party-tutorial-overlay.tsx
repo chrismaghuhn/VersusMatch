@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { MemeFrame } from "@/components/brutal/party/shared/MemeFrame";
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { Meta } from "@/components/brutal/party/shared/Shell";
-import { PARTY_COPY, PARTY_TUTORIAL_SLIDES } from "@/lib/party/copy-de";
+import { PARTY_COPY, PARTY_TUTORIAL_SLIDES } from "@/lib/party/copy";
 
 type PartyTutorialOverlayProps = {
   onDismiss: () => void;
@@ -17,7 +17,7 @@ function TutorialVisual({ index }: { index: number }) {
       <div className="flex h-full items-center justify-center">
         <div className="border-2 border-[#CCFF00] bg-black p-6 text-center">
           <div className="text-white/40" style={{ fontSize: 10, letterSpacing: "0.2em", fontWeight: 800 }}>
-            RAUMCODE
+            ROOM CODE
           </div>
           <div className="mt-2 flex gap-1">
             {"ABC123".split("").map((c, i) => (
@@ -38,10 +38,10 @@ function TutorialVisual({ index }: { index: number }) {
     return (
       <div className="flex h-full flex-col gap-2">
         <div className="flex-1">
-          <MemeFrame template="drake" caption="MEIN PRODUKTIVITÄTS-APP|TWITTER 47× ÖFFNEN" />
+          <MemeFrame template="drake" caption="MY PRODUCTIVITY APP|OPENING TWITTER 47 TIMES" />
         </div>
         <input
-          defaultValue="EIN LEBEN HABEN"
+          defaultValue="HAVING A LIFE"
           className="border border-[#FF2D87] bg-black px-3 py-2 text-white"
           style={{ fontFamily: "ui-monospace, monospace", fontSize: 12 }}
           readOnly
@@ -62,7 +62,7 @@ function TutorialVisual({ index }: { index: number }) {
           </div>
         </div>
         <div className="border border-white/10 opacity-50">
-          <MemeFrame template="drake" caption="ANDERE|ENTRY" mini />
+          <MemeFrame template="drake" caption="OTHER|ENTRY" mini />
         </div>
       </div>
     );

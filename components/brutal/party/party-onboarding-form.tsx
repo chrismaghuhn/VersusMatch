@@ -50,8 +50,8 @@ export function PartyOnboardingForm() {
       setError(
         data?.error ??
           (res.status === 401
-            ? "Session abgelaufen — bitte neu einloggen."
-            : `Speichern fehlgeschlagen (${res.status})`)
+            ? "Session expired — please log in again."
+            : `Save failed (${res.status})`)
       );
       setLoading(false);
       return;
@@ -65,7 +65,7 @@ export function PartyOnboardingForm() {
     <Shell>
       <div className="mx-auto max-w-[1100px] px-6 py-16">
         <div className="mb-10 text-center">
-          <Meta color="#CCFF00">━━ DEIN PROFIL</Meta>
+          <Meta color="#CCFF00">━━ YOUR PROFILE</Meta>
           <h1
             className="mt-3 text-white"
             style={{
@@ -75,10 +75,10 @@ export function PartyOnboardingForm() {
               lineHeight: 0.9,
             }}
           >
-            Wer bist du, <span className="italic text-[#CCFF00]">wirklich</span>?
+            Who are you, <span className="italic text-[#CCFF00]">really</span>?
           </h1>
           <p className="mt-3 text-white/50" style={{ fontSize: 15 }}>
-            Handle + Avatar — benötigt für MemeFight Party.
+            Handle + avatar — required for MemeFight Party.
           </p>
         </div>
 
@@ -102,7 +102,7 @@ export function PartyOnboardingForm() {
               className="mt-6 flex w-full items-center justify-center gap-2 border border-white/20 py-3 text-white transition hover:border-[#CCFF00] hover:text-[#CCFF00]"
               style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.18em" }}
             >
-              <Shuffle className="h-3.5 w-3.5" /> WÜRFELN
+              <Shuffle className="h-3.5 w-3.5" /> RANDOMIZE
             </button>
           </div>
 
@@ -112,12 +112,12 @@ export function PartyOnboardingForm() {
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value.slice(0, 20))}
-                placeholder="dein_name"
+                placeholder="your_name"
                 className="mt-2 w-full border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white outline-none transition focus:border-[#CCFF00]"
                 style={{ fontFamily: "ui-monospace, monospace", fontSize: 18, fontWeight: 700 }}
               />
               <p className="mt-2 text-white/40" style={{ fontSize: 11 }}>
-                Wird zu: <span className="text-[#CCFF00]">{normalizeHandle(name) || "…"}</span>
+                Becomes: <span className="text-[#CCFF00]">{normalizeHandle(name) || "…"}</span>
               </p>
               <div className="mt-2 flex flex-wrap gap-1">
                 {SUGGEST.map((s) => (
@@ -154,7 +154,7 @@ export function PartyOnboardingForm() {
             </div>
 
             <div className="border border-white/10 bg-black p-5">
-              <Meta>FARBE</Meta>
+              <Meta>COLOR</Meta>
               <div className="mt-3 grid grid-cols-6 gap-2">
                 {COLORS.map((c) => (
                   <button
@@ -190,7 +190,7 @@ export function PartyOnboardingForm() {
               className="group flex items-center justify-center gap-3 bg-[#CCFF00] py-5 text-black transition hover:bg-white disabled:opacity-50"
             >
               <span style={{ fontWeight: 900, fontSize: 14, letterSpacing: "0.2em" }}>
-                {loading ? "SPEICHERN…" : "WEITER →"}
+                {loading ? "SAVING…" : "CONTINUE →"}
               </span>
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" strokeWidth={3} />
             </button>

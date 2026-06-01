@@ -117,7 +117,7 @@ export function LoginForm() {
         <CardTitle className="text-white">Login</CardTitle>
         <CardDescription>
           {isPartyJoinReturn
-            ? "Magic link per E-Mail — danach wirst du automatisch der Lobby beitreten. Link in Chrome öffnen, in dem du ihn angefordert hast."
+            ? "Magic link via email — after you're in, you'll join the lobby automatically. Open the link in the same browser where you requested it."
             : isBattleReturn
               ? "Magic link via email — log in to claim XP and streak rewards for your vote. Open the link in the same browser where you requested it."
               : "Magic link via email — only needed to create battles. Open the link in the same browser where you requested it."}
@@ -126,14 +126,14 @@ export function LoginForm() {
       <CardContent className="space-y-4">
         {sent && devLoginUrl && (
           <div className="space-y-2 border border-[#CCFF00]/40 bg-[#CCFF00]/10 px-4 py-3 text-sm text-white">
-            <p style={{ fontWeight: 700 }}>Lokal-Dev: Kein E-Mail-Versand aktiv.</p>
-            <p className="text-white/80">Direkt hier einloggen (bleibt auf localhost):</p>
+            <p style={{ fontWeight: 700 }}>Local dev: email delivery is disabled.</p>
+            <p className="text-white/80">Log in directly here (stays on localhost):</p>
             <a
               href={devLoginUrl}
               className="inline-block bg-[#CCFF00] px-4 py-2 text-black transition hover:bg-white"
               style={{ fontWeight: 800, fontSize: 12, letterSpacing: "0.12em" }}
             >
-              JETZT EINLOGGEN →
+              LOG IN NOW →
             </a>
           </div>
         )}

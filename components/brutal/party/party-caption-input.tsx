@@ -3,7 +3,7 @@
 import { RefreshCw, Send } from "lucide-react";
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import type { TextBox } from "@/lib/party/types";
-import { PARTY_COPY } from "@/lib/party/copy-de";
+import { PARTY_COPY } from "@/lib/party/copy";
 import {
   buildCaptionFromFields,
   captionFieldsTotalLength,

@@ -2,7 +2,7 @@ import { CAPTION_MAX_LENGTH } from "@/lib/party/caption";
 
 export const CAPTION_FIELD_COUNT = 2;
 
-export const CAPTION_FIELD_LABELS = ["Oben", "Unten"] as const;
+export const CAPTION_FIELD_LABELS = ["Top", "Bottom"] as const;
 
 export function splitCaptionToFields(caption: string): [string, string] {
   const parts = caption.split("|").map((p) => p.trim());

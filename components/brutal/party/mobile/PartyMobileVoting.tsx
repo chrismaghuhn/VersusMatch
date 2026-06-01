@@ -5,7 +5,7 @@ import { PartyMobileShell } from "@/components/brutal/party/mobile/PartyMobileSh
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { decodePartyAvatar } from "@/lib/party/avatar";
-import { PARTY_COPY } from "@/lib/party/copy-de";
+import { PARTY_COPY } from "@/lib/party/copy";
 import { isVotingPhaseReady } from "@/lib/party/phase-ready";
 import type { PartySnapshot } from "@/lib/party/types";
 

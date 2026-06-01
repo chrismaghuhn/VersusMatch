@@ -5,7 +5,7 @@ import { Crown } from "lucide-react";
 import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { decodePartyAvatar } from "@/lib/party/avatar";
-import { PARTY_COPY } from "@/lib/party/copy-de";
+import { PARTY_COPY } from "@/lib/party/copy";
 import type { PartySnapshot } from "@/lib/party/types";
 import { ShareCard } from "@/components/brutal/party/screens/ShareCard";
 
@@ -65,7 +65,7 @@ export function PartyFinishedScreen({ snapshot }: PartyFinishedScreenProps) {
                   </span>
                   <Avatar id={avatar.id} color={avatar.color} size={32} />
                   <span className="text-white" style={{ fontWeight: 800, fontSize: 14 }}>
-                    {player.isYou ? "du" : `@${player.handle}`}
+                    {player.isYou ? "you" : `@${player.handle}`}
                     {player.isHost ? (
                       <Crown className="ml-1 inline h-3 w-3 text-[#FFB800]" />
                     ) : null}
