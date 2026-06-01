@@ -107,7 +107,7 @@ export function Tutorial() {
                 <ArrowLeft className="h-3.5 w-3.5" /> BACK
               </button>
               <button onClick={() => last ? null : setI(i + 1)} className="flex items-center gap-2 px-5 py-3 text-black hover:bg-white" style={{ background: s.color, fontSize: 12, fontWeight: 900, letterSpacing: "0.18em" }}>
-                {last ? <><Check className="h-3.5 w-3.5" /> LET'S GO</> : <>NEXT <ArrowRight className="h-3.5 w-3.5" /></>}
+                {last ? <><Check className="h-3.5 w-3.5" /> LET{"'"}S GO</> : <>NEXT <ArrowRight className="h-3.5 w-3.5" /></>}
               </button>
             </div>
           </div>

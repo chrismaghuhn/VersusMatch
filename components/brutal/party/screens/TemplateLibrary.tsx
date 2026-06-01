@@ -94,7 +94,7 @@ export function TemplateLibrary() {
 
         {filtered.length === 0 && (
           <div className="border border-white/10 bg-[#0a0a0a] p-16 text-center text-white/40" style={{ fontSize: 14 }}>
-            Nothing matches "{q}". Try less specific.
+            {`Nothing matches "${q}". Try less specific.`}
           </div>
         )}
       </div>

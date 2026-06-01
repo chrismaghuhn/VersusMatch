@@ -10,7 +10,7 @@ import { PartyRevealScreen } from "@/components/brutal/party/party-reveal-screen
 import { PartyVotingScreen } from "@/components/brutal/party/party-voting-screen";
 import { PartyLobbyScreen } from "@/components/brutal/party/screens/HostOnboarding";
 import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
-import { PARTY_MAX_PLAYERS, PARTY_MIN_PLAYERS } from "@/lib/party/constants";
+import { PARTY_MIN_PLAYERS } from "@/lib/party/constants";
 import { decodePartyAvatar } from "@/lib/party/avatar";
 import { isCaptionPhaseReady, isVotingPhaseReady } from "@/lib/party/phase-ready";
 import { usePartyRealtime } from "@/lib/party/realtime";

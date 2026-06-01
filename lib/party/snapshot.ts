@@ -97,7 +97,7 @@ export async function buildPartySnapshot(
   const playersRows = (playersRaw ?? []) as PartyPlayerRow[];
   const playerIds = playersRows.map((p) => p.user_id);
 
-  let profilesByUser = new Map<string, ProfileRow>();
+  const profilesByUser = new Map<string, ProfileRow>();
   if (playerIds.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
@@ -147,7 +147,7 @@ export async function buildPartySnapshot(
     if (phase === "caption") {
       submissions = mine ? [{ id: mine.id, userId: mine.user_id, caption: mine.caption }] : [];
     } else {
-      let voteCounts = new Map<string, number>();
+      const voteCounts = new Map<string, number>();
       if (phase === "reveal" || phase === "finished") {
         const { data: results } = await (supabase as SupabaseClient)
           .from("party_round_results")

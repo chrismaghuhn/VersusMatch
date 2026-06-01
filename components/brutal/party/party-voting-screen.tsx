@@ -8,7 +8,7 @@ import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { decodePartyAvatar } from "@/lib/party/avatar";
 import type { PartySnapshot } from "@/lib/party/types";
 
-import { isCaptionPhaseReady, isVotingPhaseReady } from "@/lib/party/phase-ready";
+import { isVotingPhaseReady } from "@/lib/party/phase-ready";
 
 type PartyVotingScreenProps = {
   snapshot: PartySnapshot;

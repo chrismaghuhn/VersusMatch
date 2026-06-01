@@ -93,7 +93,7 @@ export function PremiumBundle() {
         </div>
 
         <p className="mt-8 text-center text-white/40" style={{ fontSize: 12 }}>
-          Cancel anytime. We won't email you. Lifetime is lifetime — promise on the homies.
+          {`Cancel anytime. We won't email you. Lifetime is lifetime — promise on the homies.`}
         </p>
       </div>
     </Shell>

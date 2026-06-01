@@ -51,7 +51,7 @@ export function ErrorStates() {
             When it <span className="italic text-[#FF3B3B]">breaks</span>.
           </h1>
           <p className="mt-3 max-w-2xl text-white/50" style={{ fontSize: 15 }}>
-            Same tone as the game — don't apologize, don't engineer-speak. Just say what happened and what to do.
+            {`Same tone as the game — don't apologize, don't engineer-speak. Just say what happened and what to do.`}
           </p>
         </div>
 

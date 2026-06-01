@@ -26,7 +26,7 @@ export function SpectatorMode() {
           <div>
             <Meta color="#00E1FF">━━ SPECTATOR MODE</Meta>
             <h1 className="mt-2 text-white" style={{ fontWeight: 900, fontSize: "clamp(36px, 5vw, 64px)", letterSpacing: "-0.04em", lineHeight: 0.95 }}>
-              You're watching <span className="italic text-[#00E1FF]">FIGHT-42K</span>.
+              You{"'"}re watching <span className="italic text-[#00E1FF]">FIGHT-42K</span>.
             </h1>
           </div>
           <div className="flex items-center gap-3 border border-white/10 bg-[#0a0a0a] px-4 py-2.5">
@@ -116,7 +116,7 @@ export function SpectatorMode() {
             <div className="border border-white/10 bg-[#0a0a0a] p-4">
               <Meta color="#CCFF00">━━ JOIN NEXT ROUND?</Meta>
               <p className="mt-2 text-white/60" style={{ fontSize: 12, lineHeight: 1.5 }}>
-                Host has to approve. You'll come in with 0 points but you can still win on caption skill alone.
+                {`Host has to approve. You'll come in with 0 points but you can still win on caption skill alone.`}
               </p>
               <button className="mt-3 flex w-full items-center justify-center gap-2 bg-[#CCFF00] py-2.5 text-black hover:bg-white" style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.18em" }}>
                 <Heart className="h-3 w-3 fill-current" /> ASK TO PLAY
