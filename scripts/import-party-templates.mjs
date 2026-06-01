@@ -99,20 +99,46 @@ for (const entry of manifest.templates) {
     }
     console.log("updated row", entry.id);
   } else if (entry.sort_order != null) {
-    const { error: updateError } = await supabase
+    const { data: existing, error: selectError } = await supabase
       .from("party_templates")
-      .update({
-        image_path: storageName,
-        text_boxes: entry.text_boxes,
-        active: entry.active !== false,
-      })
-      .eq("sort_order", entry.sort_order);
+      .select("id")
+      .eq("sort_order", entry.sort_order)
+      .maybeSingle();
 
-    if (updateError) {
-      console.error("db update failed sort_order", entry.sort_order, updateError.message);
+    if (selectError) {
+      console.error("db select failed sort_order", entry.sort_order, selectError.message);
       process.exit(1);
     }
-    console.log("updated sort_order", entry.sort_order);
+
+    if (existing) {
+      const { error: updateError } = await supabase
+        .from("party_templates")
+        .update({
+          image_path: storageName,
+          text_boxes: entry.text_boxes,
+          active: entry.active !== false,
+        })
+        .eq("sort_order", entry.sort_order);
+
+      if (updateError) {
+        console.error("db update failed sort_order", entry.sort_order, updateError.message);
+        process.exit(1);
+      }
+      console.log("updated sort_order", entry.sort_order);
+    } else {
+      const { error: insertError } = await supabase.from("party_templates").insert({
+        image_path: storageName,
+        text_boxes: entry.text_boxes,
+        sort_order: entry.sort_order,
+        active: entry.active !== false,
+      });
+
+      if (insertError) {
+        console.error("db insert failed sort_order", entry.sort_order, insertError.message);
+        process.exit(1);
+      }
+      console.log("inserted sort_order", entry.sort_order);
+    }
   } else {
     const { error: insertError } = await supabase.from("party_templates").insert({
       image_path: storageName,

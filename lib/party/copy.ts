@@ -6,6 +6,7 @@ export type PartyErrorCode =
   | "bad_code"
   | "not_found"
   | "join_failed"
+  | "create_failed"
   | "disconnected"
   | "everyone_left"
   | "network_error"
@@ -57,6 +58,15 @@ export const PARTY_ERROR_DEFINITIONS: Record<PartyErrorCode, PartyErrorDefinitio
     color: "#FF2D87",
     title: "Couldn't join the room.",
     body: "Try the code again or ask the host.",
+    cta: "TRY AGAIN",
+  },
+  create_failed: {
+    code: "create_failed",
+    label: "CREATE FAILED",
+    icon: AlertTriangle,
+    color: "#FF2D87",
+    title: "Couldn't create the lobby.",
+    body: "Something broke on our end — try again in a moment.",
     cta: "TRY AGAIN",
   },
   disconnected: {
@@ -127,7 +137,8 @@ export function normalizePartyErrorCode(raw: string | null | undefined): PartyEr
     return key as PartyErrorCode;
   }
   if (key === "could_not_join" || key === "invalid_response") return "unknown";
-  if (key === "could_not_load_room" || key === "could_not_join_room" || key === "could_not_create_room") {
+  if (key === "could_not_create_room") return "create_failed";
+  if (key === "could_not_load_room" || key === "could_not_join_room") {
     return key === "could_not_load_room" ? "not_found" : "unknown";
   }
   return "unknown";

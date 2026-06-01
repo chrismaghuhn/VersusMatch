@@ -27,7 +27,11 @@ export async function POST(request: Request) {
 
   const { data, error } = await partyCreateRoomRpc(auth.supabase, roundCount, rerollsPerPlayer);
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("party_create_room rpc failed:", error.message);
+    const msg = error.message.toLowerCase();
+    const code =
+      msg.includes("could not choose") || msg.includes("function") ? "could_not_create_room" : error.message;
+    return NextResponse.json({ error: code }, { status: 500 });
   }
 
   const result = parsePartyRpc(data);

@@ -51,14 +51,22 @@ export default function CreditsPage() {
           <p className="mt-2 text-white/50" style={{ fontSize: 13, lineHeight: 1.6 }}>
             Imported {credits.importedAt}. {credits.usageNote}
           </p>
+          <p className="mt-3 text-white/50" style={{ fontSize: 13, lineHeight: 1.6 }}>
+            License:{" "}
+            <span className="text-white">
+              {credits.licenseName} v{credits.licenseVersion}
+            </span>{" "}
+            (purchased {credits.purchaseDate}, {credits.licenseHolder}). Governing law:{" "}
+            {credits.governingLaw}.
+          </p>
           {credits.attributionRequired && credits.attributionText ? (
             <p className="mt-4 border-l-2 border-[#CCFF00] pl-4 text-white/80" style={{ fontSize: 13 }}>
               {credits.attributionText}
             </p>
           ) : (
             <p className="mt-4 text-white/40" style={{ fontSize: 12 }}>
-              Full commercial license terms are documented in the project asset bundle. Contact us if
-              you need attribution details for a specific template.
+              No attribution to the pack seller is required. Some templates may depict third-party
+              characters or brands — use remains subject to applicable trademark and copyright law.
             </p>
           )}
 

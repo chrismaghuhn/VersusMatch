@@ -74,6 +74,114 @@
         { "id": "left", "x": 0.02, "y": 0.72, "w": 0.38, "h": 0.22, "align": "center", "maxLines": 2 },
         { "id": "right", "x": 0.42, "y": 0.72, "w": 0.56, "h": 0.22, "align": "center", "maxLines": 2 }
       ]
+    },
+    {
+      "file": "meme-09-adios-wormhole.png",
+      "storage_name": "meme-09-adios-wormhole.png",
+      "sort_order": 9,
+      "text_boxes": [
+        { "id": "left", "x": 0.02, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "right", "x": 0.52, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-10-press-f.jpg",
+      "storage_name": "meme-10-press-f.jpg",
+      "sort_order": 10,
+      "text_boxes": [
+        { "id": "top", "x": 0.05, "y": 0.04, "w": 0.9, "h": 0.12, "align": "center", "maxLines": 2 },
+        { "id": "bottom", "x": 0.05, "y": 0.78, "w": 0.9, "h": 0.18, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-11-soyjak-chad.jpg",
+      "storage_name": "meme-11-soyjak-chad.jpg",
+      "sort_order": 11,
+      "text_boxes": [
+        { "id": "left", "x": 0.02, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "right", "x": 0.52, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-12-pepe-wojak.jpg",
+      "storage_name": "meme-12-pepe-wojak.jpg",
+      "sort_order": 12,
+      "text_boxes": [
+        { "id": "left", "x": 0.02, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "right", "x": 0.52, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-13-swole-cheems.jpg",
+      "storage_name": "meme-13-swole-cheems.jpg",
+      "sort_order": 13,
+      "text_boxes": [
+        { "id": "left", "x": 0.02, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "right", "x": 0.52, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-14-indiana-jones.jpg",
+      "storage_name": "meme-14-indiana-jones.jpg",
+      "sort_order": 14,
+      "text_boxes": [
+        { "id": "left", "x": 0.02, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "right", "x": 0.52, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-15-dune-box.jpg",
+      "storage_name": "meme-15-dune-box.jpg",
+      "sort_order": 15,
+      "text_boxes": [
+        { "id": "top", "x": 0.05, "y": 0.04, "w": 0.9, "h": 0.12, "align": "center", "maxLines": 2 },
+        { "id": "bottom", "x": 0.05, "y": 0.78, "w": 0.9, "h": 0.18, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-16-swallow-pills.jpg",
+      "storage_name": "meme-16-swallow-pills.jpg",
+      "sort_order": 16,
+      "text_boxes": [
+        { "id": "left", "x": 0.04, "y": 0.12, "w": 0.42, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "right", "x": 0.52, "y": 0.12, "w": 0.44, "h": 0.35, "align": "center", "maxLines": 3 }
+      ]
+    },
+    {
+      "file": "meme-17-infinity-stones.png",
+      "storage_name": "meme-17-infinity-stones.png",
+      "sort_order": 17,
+      "text_boxes": [
+        { "id": "top", "x": 0.05, "y": 0.04, "w": 0.9, "h": 0.14, "align": "center", "maxLines": 2 },
+        { "id": "bottom", "x": 0.05, "y": 0.82, "w": 0.9, "h": 0.14, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-18-windows-xp.jpg",
+      "storage_name": "meme-18-windows-xp.jpg",
+      "sort_order": 18,
+      "text_boxes": [
+        { "id": "title", "x": 0.08, "y": 0.08, "w": 0.84, "h": 0.18, "align": "center", "maxLines": 2 },
+        { "id": "body", "x": 0.12, "y": 0.38, "w": 0.76, "h": 0.28, "align": "center", "maxLines": 3 }
+      ]
+    },
+    {
+      "file": "meme-19-guess-ill-die.jpg",
+      "storage_name": "meme-19-guess-ill-die.jpg",
+      "sort_order": 19,
+      "text_boxes": [
+        { "id": "top", "x": 0.05, "y": 0.03, "w": 0.9, "h": 0.2, "align": "center", "maxLines": 2 },
+        { "id": "bottom", "x": 0.05, "y": 0.53, "w": 0.9, "h": 0.2, "align": "center", "maxLines": 2 }
+      ]
+    },
+    {
+      "file": "meme-20-fire-rescue.jpg",
+      "storage_name": "meme-20-fire-rescue.jpg",
+      "sort_order": 20,
+      "text_boxes": [
+        { "id": "left", "x": 0.02, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 },
+        { "id": "right", "x": 0.52, "y": 0.72, "w": 0.46, "h": 0.22, "align": "center", "maxLines": 2 }
+      ]
     }
   ]
 }

@@ -4,11 +4,11 @@ Drop provider assets here when ready.
 
 ## Checklist (license)
 
-- [ ] Commercial use allowed (MemeFight is free but public)
-- [ ] Modification / text overlay on images allowed
-- [ ] No exclusive “editorial only” restriction for UGC caption game
-- [ ] Attribution requirements documented (if any → add to app credits)
-- [ ] Copy full license into `LICENSE` in this folder
+- [x] Commercial use allowed (MemeFight is free but public) — Meme Archive License v1.0
+- [x] Modification / text overlay on images allowed
+- [x] No attribution required to pack seller
+- [ ] Third-party trademark/copyright review per template (see license §6)
+- [x] Full license in repo root `LICENSE.txt` and `import/LICENSE`
 
 ## What the provider should give you
 
@@ -22,12 +22,13 @@ If the API only gives images, you can calibrate `text_boxes` manually in [templa
 
 ## Import steps
 
-1. Put images in `files/`
-2. Copy `templates.example.json` → `templates.json` and fill all entries
-3. Add `LICENSE` (provider text)
-4. Run: `node scripts/import-party-templates.mjs`
+1. Extract the provider ZIP to `extracted/` (or run picks via `node scripts/extract-party-templates.mjs`)
+2. Put images in `files/` (extract script copies curated blank/empty templates)
+3. Copy `templates.example.json` → `templates.json` and fill all entries
+4. Add `LICENSE` (provider text)
+5. Run: `node scripts/import-party-templates.mjs`
 
-Updates rows by `sort_order` (1–8 replaces current pool) or by `id` if you UUID them from Supabase.
+Updates rows by `sort_order` when present, inserts new rows for new sort orders.
 
 ## Caption format (unchanged)
 
