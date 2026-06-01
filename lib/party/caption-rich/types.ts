@@ -31,6 +31,8 @@ export type CaptionBox = {
   segments: CaptionSegment[];
   layout: BoxLayout;
   style?: BoxVisualStyle;
+  /** Render / hit-test order; default array index at create */
+  z?: number;
 };
 
 export type CaptionDocumentV2 = { v: 2; boxes: CaptionSegment[][] };

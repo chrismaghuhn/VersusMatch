@@ -30,6 +30,7 @@ type PartyDesktopCaptionProps = {
   rerolling?: boolean;
   rerollsRemaining?: number;
   showRerollDraftHint?: boolean;
+  rerollError?: string | null;
   statusMessage?: string | null;
   template?: { imageUrl: string; textBoxes: TextBox[] } | null;
   canvasEnabled?: boolean;
@@ -62,6 +63,7 @@ export function PartyDesktopCaption({
   rerolling = false,
   rerollsRemaining = 0,
   showRerollDraftHint = false,
+  rerollError = null,
   statusMessage,
   template = null,
   canvasEnabled = false,
@@ -119,6 +121,7 @@ export function PartyDesktopCaption({
                 rerolling={rerolling}
                 rerollsRemaining={rerollsRemaining}
                 showRerollDraftHint={showRerollDraftHint}
+                rerollError={rerollError}
                 template={template}
                 canvasEnabled={canvasEnabled}
                 layoutRevision={layoutRevision}
@@ -134,10 +137,6 @@ export function PartyDesktopCaption({
                   style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.1em" }}
                 >
                   {statusMessage}
-                </p>
-              ) : allReady && locked ? (
-                <p className="mt-4 text-center text-[#CCFF00]" style={{ fontSize: 12, fontWeight: 800 }}>
-                  {PARTY_COPY.captionAllReady}
                 </p>
               ) : null}
             </div>

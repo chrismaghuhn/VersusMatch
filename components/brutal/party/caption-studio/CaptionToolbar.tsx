@@ -29,7 +29,7 @@ export function CaptionToolbar({ disabled = false, mobile = false, onAction }: C
         onClick={() => onAction("slant")}
         className={`${btnBase} ${sizeClass}`}
         style={{ fontWeight: 800, fontSize, letterSpacing: "0.06em" }}
-        title="Schräg"
+        title={PARTY_COPY.captionToolbarSlant}
       >
         SCH
       </button>
