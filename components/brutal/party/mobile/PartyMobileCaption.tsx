@@ -5,13 +5,17 @@ import { PartyMobileShell } from "@/components/brutal/party/mobile/PartyMobileSh
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import { PARTY_COPY } from "@/lib/party/copy";
 import {
-  buildCaptionFromFields,
-  buildCaptionFromFieldsForSubmit,
-  captionFieldsTotalLength,
-  clampCaptionFields,
-  splitCaptionToFields,
+  buildCaptionFromFieldTexts,
+  captionFieldLabels,
+  captionFieldTextsTotalLength,
+  clampCaptionFieldTexts,
+  defaultCaptionTextBoxes,
+  splitCaptionToFieldTexts,
 } from "@/lib/party/caption-fields";
-import { CAPTION_MAX_LENGTH, normalizeCaption } from "@/lib/party/caption";
+import { CAPTION_MAX_LENGTH } from "@/lib/party/caption";
+import { structuralDocumentFromFieldTexts } from "@/lib/party/caption-rich/document";
+import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
+import { prepareCaptionSubmit } from "@/lib/party/caption-submit";
 import type { TextBox } from "@/lib/party/types";
 
 type PartyMobileCaptionProps = {
@@ -23,7 +27,7 @@ type PartyMobileCaptionProps = {
   playerCount: number;
   value: string;
   onChange: (value: string) => void;
-  onSubmit: () => void;
+  onSubmit: (payload: CaptionSubmitPayload) => void;
   onUnlock?: () => void;
   onReroll?: () => void;
   locked?: boolean;
@@ -62,22 +66,26 @@ export function PartyMobileCaption({
   embedded = false,
 }: PartyMobileCaptionProps) {
   const inputDisabled = locked || submitting || unlocking || rerolling;
-  const [topField, bottomField] = splitCaptionToFields(value);
-  const previewCaption = buildCaptionFromFields(topField, bottomField);
-  const submitCaption = normalizeCaption(
-    buildCaptionFromFieldsForSubmit(topField, bottomField)
-  );
-  const remaining = CAPTION_MAX_LENGTH - captionFieldsTotalLength(topField, bottomField);
+  const textBoxes = template?.textBoxes ?? defaultCaptionTextBoxes(2);
+  const boxCount = Math.max(1, Math.min(4, textBoxes.length));
+  const fieldTexts = splitCaptionToFieldTexts(value, boxCount);
+  const labels = captionFieldLabels(textBoxes, boxCount);
+  const previewDoc = structuralDocumentFromFieldTexts(fieldTexts);
+  const submitPayload = prepareCaptionSubmit(fieldTexts, boxCount);
+  const remaining = CAPTION_MAX_LENGTH - captionFieldTextsTotalLength(fieldTexts);
   const canReroll = Boolean(onReroll) && !locked && rerollsRemaining > 0;
+  const lastFieldIndex = boxCount - 1;
 
-  function updateFields(nextTop: string, nextBottom: string) {
-    const [t, b] = clampCaptionFields(nextTop, nextBottom);
-    onChange(buildCaptionFromFields(t, b));
+  function updateField(index: number, nextValue: string) {
+    const next = [...fieldTexts];
+    next[index] = nextValue;
+    const clamped = clampCaptionFieldTexts(next);
+    onChange(buildCaptionFromFieldTexts(clamped));
   }
 
   function handleSubmit() {
-    if (inputDisabled || !submitCaption) return;
-    onSubmit();
+    if (inputDisabled || !submitPayload) return;
+    onSubmit(submitPayload);
   }
 
   const footer = !locked ? (
@@ -97,7 +105,7 @@ export function PartyMobileCaption({
       ) : null}
       <button
         type="button"
-        disabled={inputDisabled || !submitCaption}
+        disabled={inputDisabled || !submitPayload}
         onClick={handleSubmit}
         className="flex w-full items-center justify-center gap-2 bg-[#FF2D87] py-3.5 text-white transition hover:bg-[#CCFF00] hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
         style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.18em" }}
@@ -132,7 +140,7 @@ export function PartyMobileCaption({
       <div className="flex flex-1 flex-col p-3">
         <div className="p-1">
           <PartyTemplateFrame
-            caption={previewCaption || undefined}
+            captionRich={previewDoc}
             imageUrl={template?.imageUrl}
             textBoxes={template?.textBoxes}
           />
@@ -146,40 +154,37 @@ export function PartyMobileCaption({
           </p>
         ) : null}
         <div className="mt-3 flex-1 space-y-3 px-1">
-          {([PARTY_COPY.captionFieldTop, PARTY_COPY.captionFieldBottom] as const).map(
-            (label, index) => {
-              const fieldValue = index === 0 ? topField : bottomField;
-              const inputId = index === 0 ? "party-caption-top" : "party-caption-bottom";
-              return (
-                <div key={label}>
-                  <label
-                    htmlFor={inputId}
-                    className="text-white/40"
-                    style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em" }}
-                  >
-                    {label.toUpperCase()}
-                  </label>
-                  <textarea
-                    id={inputId}
-                    rows={2}
-                    value={fieldValue}
-                    disabled={inputDisabled}
-                    placeholder={label}
-                    onChange={(e) => {
-                      const next = e.target.value;
-                      if (index === 0) {
-                        updateFields(next, bottomField);
-                      } else {
-                        updateFields(topField, next);
-                      }
-                    }}
-                    className="mt-2 w-full resize-none border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-white outline-none focus:border-[#CCFF00] disabled:opacity-50"
-                    style={{ fontSize: 13, fontFamily: "ui-monospace, monospace" }}
-                  />
-                </div>
-              );
-            }
-          )}
+          {labels.map((label, index) => {
+            const fieldValue = fieldTexts[index] ?? "";
+            const inputId = `party-caption-mobile-${index}`;
+            return (
+              <div key={inputId}>
+                <label
+                  htmlFor={inputId}
+                  className="text-white/40"
+                  style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em" }}
+                >
+                  {label.toUpperCase()}
+                </label>
+                <textarea
+                  id={inputId}
+                  rows={2}
+                  value={fieldValue}
+                  disabled={inputDisabled}
+                  placeholder={label}
+                  onChange={(e) => updateField(index, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && index === lastFieldIndex) {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                  className="mt-2 w-full resize-none border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-white outline-none focus:border-[#CCFF00] disabled:opacity-50"
+                  style={{ fontSize: 13, fontFamily: "ui-monospace, monospace" }}
+                />
+              </div>
+            );
+          })}
           <div className="flex justify-between text-white/40" style={{ fontSize: 11 }}>
             <span>{PARTY_COPY.captionExample}</span>
             <span className={remaining < 20 ? "text-[#FF2D87]" : undefined}>{remaining}</span>

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { structuralDocumentFromFieldTexts } from "../lib/party/caption-rich/document.ts";
+import { captionForFrame } from "../lib/party/caption-rich/legacy-read.ts";
 import {
   plainTextLength,
   serializeCaptionPlain,
@@ -24,4 +25,17 @@ test("structuralDocumentFromFieldTexts", () => {
   assert.equal(doc.v, 2);
   assert.deepEqual(doc.boxes, [[{ text: "TOP" }], [{ text: "BOT" }]]);
   assert.equal(serializeCaptionPlain(doc), "TOP\nBOT");
+});
+
+test("captionForFrame prefers rich over legacy pipe", () => {
+  const doc = structuralDocumentFromFieldTexts(["A", "B", "C"]);
+  const frame = captionForFrame({ caption: "legacy|pipe", captionRich: doc });
+  assert.ok("rich" in frame);
+  assert.equal(frame.rich.v, 2);
+});
+
+test("captionForFrame falls back to legacy caption", () => {
+  const frame = captionForFrame({ caption: "top|bottom" });
+  assert.ok("legacy" in frame);
+  assert.equal(frame.legacy, "top|bottom");
 });

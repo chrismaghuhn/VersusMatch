@@ -6,6 +6,7 @@ import { HeadCluster } from "@/components/brutal/party/shared/PartyPrimitives";
 import { Shell } from "@/components/brutal/party/shared/Shell";
 import { PARTY_COPY } from "@/lib/party/copy";
 import { PARTY_DESIGN } from "@/lib/party/design";
+import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
 import type { TextBox } from "@/lib/party/types";
 
 type PartyDesktopCaptionProps = {
@@ -17,7 +18,7 @@ type PartyDesktopCaptionProps = {
   playerCount: number;
   value: string;
   onChange: (value: string) => void;
-  onSubmit: () => void;
+  onSubmit: (payload: CaptionSubmitPayload) => void;
   onUnlock?: () => void;
   onReroll?: () => void;
   locked?: boolean;

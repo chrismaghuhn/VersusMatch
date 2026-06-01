@@ -1,3 +1,5 @@
+import type { CaptionDocument } from "@/lib/party/caption-rich/types";
+
 export type PartyPhase = "waiting" | "caption" | "voting" | "reveal" | "finished";
 
 export type PartyRoomStatus = "open" | "in_progress" | "finished" | "abandoned";
@@ -21,6 +23,8 @@ export type TextBox = {
   align: "left" | "center" | "right";
   maxLines: number;
 };
+
+export type { CaptionDocument };
 
 export type PartyTemplateView = {
   id: string;
@@ -53,12 +57,13 @@ export type PartySnapshot = {
     id: string;
     userId: string;
     caption: string;
+    captionRich?: CaptionDocument | null;
     voteCount?: number;
     template?: PartyTemplateView;
   }>;
   captionCount: number;
   votesCastCount: number;
-  mySubmission: { id: string; caption: string } | null;
+  mySubmission: { id: string; caption: string; captionRich?: CaptionDocument | null } | null;
   myVote: { submissionId: string } | null;
   myTemplate: PartyTemplateView | null;
   myRerollsRemaining: number;

@@ -21,10 +21,10 @@ import { useEveryoneLeft } from "@/lib/party/use-everyone-left";
 import { tryAdvancePhase, type AdvancePhaseGuards } from "@/lib/party/try-advance-phase";
 import type { PartySnapshot, PartyReactionKey } from "@/lib/party/types";
 import {
-  buildCaptionFromFieldsForSubmit,
-  splitCaptionToFields,
+  buildCaptionFromFieldTexts,
+  fieldTextsFromSubmission,
 } from "@/lib/party/caption-fields";
-import { normalizeCaption } from "@/lib/party/caption";
+import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
 import { getAppUrl } from "@/lib/utils";
 
 type PartyRoomClientProps = {
@@ -104,7 +104,12 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
       setError(null);
 
       if (data.snapshot.mySubmission) {
-        setCaptionDraft((prev) => prev || data.snapshot.mySubmission!.caption);
+        const sub = data.snapshot.mySubmission;
+        const boxCount = data.snapshot.myTemplate?.textBoxes.length ?? 2;
+        setCaptionDraft((prev) => {
+          if (prev) return prev;
+          return buildCaptionFromFieldTexts(fieldTextsFromSubmission(sub, boxCount));
+        });
       }
 
       if (data.snapshot.room.phase === "waiting") {
@@ -299,15 +304,17 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     setShowRerollDraftHint(false);
   }
 
-  async function handleSubmitCaption() {
-    const [top, bottom] = splitCaptionToFields(captionDraft);
-    const caption = normalizeCaption(buildCaptionFromFieldsForSubmit(top, bottom));
+  async function handleSubmitCaption(payload: CaptionSubmitPayload) {
     setSubmitting(true);
     try {
       const res = await fetch("/api/party/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId, caption }),
+        body: JSON.stringify({
+          roomId,
+          caption: payload.caption,
+          ...(payload.captionRich ? { captionRich: payload.captionRich } : {}),
+        }),
       });
       const data = (await res.json()) as { snapshot?: PartySnapshot; error?: string };
       if (data.snapshot) {
@@ -323,8 +330,13 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
 
   async function handleRetractCaption() {
     if (!snapshot) return;
-    if (!captionDraft && snapshot.mySubmission?.caption) {
-      setCaptionDraft(snapshot.mySubmission.caption);
+    if (!captionDraft && snapshot.mySubmission) {
+      const boxCount = snapshot.myTemplate?.textBoxes.length ?? 2;
+      setCaptionDraft(
+        buildCaptionFromFieldTexts(
+          fieldTextsFromSubmission(snapshot.mySubmission, boxCount)
+        )
+      );
     }
 
     setUnlocking(true);
@@ -491,7 +503,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         playerCount={snapshot.players.length}
         value={captionDraft}
         onChange={handleCaptionChange}
-        onSubmit={() => void handleSubmitCaption()}
+        onSubmit={(payload) => void handleSubmitCaption(payload)}
         onReroll={() => void handleReroll()}
         onUnlock={() => void handleRetractCaption()}
         locked={locked}
@@ -514,7 +526,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         playerCount={snapshot.players.length}
         value={captionDraft}
         onChange={handleCaptionChange}
-        onSubmit={() => void handleSubmitCaption()}
+        onSubmit={(payload) => void handleSubmitCaption(payload)}
         onReroll={() => void handleReroll()}
         onUnlock={() => void handleRetractCaption()}
         locked={locked}

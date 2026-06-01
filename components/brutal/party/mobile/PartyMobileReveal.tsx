@@ -5,6 +5,7 @@ import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTempla
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { decodePartyAvatar } from "@/lib/party/avatar";
 import { PARTY_COPY } from "@/lib/party/copy";
+import { captionForFrame } from "@/lib/party/caption-rich/legacy-read";
 import type { PartySnapshot } from "@/lib/party/types";
 
 type PartyMobileRevealProps = {
@@ -21,6 +22,7 @@ export function PartyMobileReveal({ snapshot, embedded = false }: PartyMobileRev
     ? snapshot.players.find((p) => p.userId === winner.userId)
     : undefined;
   const winnerAvatar = decodePartyAvatar(winnerPlayer?.avatarUrl);
+  const winnerFrame = winner ? captionForFrame(winner) : null;
 
   const rankedPlayers = [...snapshot.players].sort((a, b) => b.score - a.score);
 
@@ -45,7 +47,8 @@ export function PartyMobileReveal({ snapshot, embedded = false }: PartyMobileRev
           </div>
           <div className="p-3">
             <PartyTemplateFrame
-              caption={winner.caption}
+              caption={winnerFrame && "legacy" in winnerFrame ? winnerFrame.legacy : winner.caption}
+              captionRich={winnerFrame && "rich" in winnerFrame ? winnerFrame.rich : null}
               imageUrl={winner.template?.imageUrl}
               textBoxes={winner.template?.textBoxes}
             />

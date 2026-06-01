@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MemeFrame } from "@/components/brutal/party/shared/MemeFrame";
 import { fitMemeFontSize } from "@/lib/party/meme-text-fit";
+import type { CaptionDocument } from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
 
 const memeTextStyle = (fontSize: number, align: TextBox["align"]): React.CSSProperties => ({
@@ -29,8 +30,13 @@ function captionParts(caption?: string): string[] {
   return [caption.trim()];
 }
 
+function richBoxTexts(doc: CaptionDocument): string[] {
+  return doc.boxes.map((box) => box.map((s) => s.text).join(""));
+}
+
 type PartyTemplateFrameProps = {
   caption?: string;
+  captionRich?: CaptionDocument | null;
   imageUrl?: string | null;
   textBoxes?: TextBox[];
   big?: boolean;
@@ -41,6 +47,7 @@ type PartyTemplateFrameProps = {
 
 export function PartyTemplateFrame({
   caption,
+  captionRich = null,
   imageUrl,
   textBoxes = [],
   big = false,
@@ -62,7 +69,7 @@ export function PartyTemplateFrame({
     );
   }
 
-  const parts = captionParts(caption);
+  const parts = captionRich ? richBoxTexts(captionRich) : captionParts(caption);
 
   return (
     <div

@@ -6,6 +6,7 @@ import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTempla
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { decodePartyAvatar } from "@/lib/party/avatar";
 import { PARTY_COPY } from "@/lib/party/copy";
+import { captionForFrame } from "@/lib/party/caption-rich/legacy-read";
 import { isVotingPhaseReady } from "@/lib/party/phase-ready";
 import type { PartySnapshot } from "@/lib/party/types";
 
@@ -38,6 +39,7 @@ export function PartyMobileVoting({
     ? snapshot.players.find((p) => p.userId === current.userId)
     : undefined;
   const avatar = decodePartyAvatar(author?.avatarUrl);
+  const frame = current ? captionForFrame(current) : null;
   const allReady = isVotingPhaseReady(snapshot);
 
   async function handleVote() {
@@ -136,7 +138,8 @@ export function PartyMobileVoting({
             <div className="absolute inset-0 translate-x-1 translate-y-1 border-2 border-white/20" />
             <div className="relative h-full min-h-[280px]">
               <PartyTemplateFrame
-                caption={current.caption}
+                caption={frame && "legacy" in frame ? frame.legacy : current.caption}
+                captionRich={frame && "rich" in frame ? frame.rich : null}
                 imageUrl={current.template?.imageUrl}
                 textBoxes={current.template?.textBoxes}
               />
