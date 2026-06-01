@@ -1,7 +1,7 @@
 # MemeFight Party — Caption Studio (P2)
 
 **Date:** 2026-06-02  
-**Status:** Draft — revised per review 2026-06-02  
+**Status:** Shipped — Production 2026-06-01 (`66077af`), manual QA passed  
 **Phase:** P2 — post–Season 1 polish  
 **Depends on:** P1.10 own-meme mode, Arena desktop/mobile caption UI  
 **Parent spec:** [`2026-06-03-meme-party-live-design.md`](2026-06-03-meme-party-live-design.md)
@@ -336,14 +336,16 @@ No backfill required. `caption` column always populated for analytics/Twitter.
 
 ## QA Checklist Additions
 
-- [ ] Type `" hello "` with leading/trailing spaces → renders correctly after submit
-- [ ] Two spaces in the middle of a word line preserved
-- [ ] Multi-line box (Shift+Enter) wraps in preview
-- [ ] 4-panel meme shows 4 fields; all render in voting
-- [ ] Toolbar Schräg matches `~text~` syntax
-- [ ] Submit `~hello` without waiting for debounce → stored segment has slant, not literal tildes
-- [ ] ShareCard PNG shows same skew as voting card (P2.2 — PNG re-enabled)
-- [ ] Legacy `top|bottom` room replay still works
+Verified Production **2026-06-01**.
+
+- [x] Type `" hello "` with leading/trailing spaces → renders correctly after submit
+- [x] Two spaces in the middle of a word line preserved
+- [x] Multi-line box (Shift+Enter) wraps in preview
+- [x] 4-panel meme shows 4 fields; all render in voting
+- [x] Toolbar Schräg matches `~text~` syntax
+- [x] Submit `~hello` without waiting for debounce → stored segment has slant, not literal tildes
+- [x] ShareCard PNG shows same skew as voting card (P2.2 — PNG re-enabled)
+- [x] Legacy `top|bottom` room replay still works
 
 ---
 
@@ -368,6 +370,7 @@ No backfill required. `caption` column always populated for analytics/Twitter.
 |------|--------|
 | 2026-06-02 | Initial draft; Option C toolbar + syntax |
 | 2026-06-02 | Review: canonical plain `\n` join; drop `\x1e`; PNG in P2.2; sync submit parse; inline-flex skew |
+| 2026-06-01 | Shipped to Production (`66077af`); Supabase migration applied; manual QA passed |
 
 ---
 
@@ -377,6 +380,6 @@ No backfill required. `caption` column always populated for analytics/Twitter.
 |---------|--------|
 | P2.0 text fix scope | Approved (implicit — bugfix) |
 | P2.1 template fields | Approved — revised (JSON v2 only for 3+) |
-| P2.2 toolbar + syntax (Option C) | Approved — revised (PNG + sync parse) |
+| P2.2 toolbar + syntax (Option C) | Shipped — QA passed 2026-06-01 |
 
-**Next step:** Execute [`docs/superpowers/plans/2026-06-02-party-caption-studio.md`](../plans/2026-06-02-party-caption-studio.md) — P2.0 → P2.1 → P2.2.
+**Shipped:** Production [`66077af`](https://memefight.lol) — see [`docs/season-1-recap.md`](../../season-1-recap.md).

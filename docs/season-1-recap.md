@@ -1,7 +1,7 @@
 # MemeFight — Season 1 Recap
 
 **Zeitraum:** 31. Mai – 1. Juni 2026  
-**Stand:** 1. Juni 2026 (nach Commit `7c48be4`)  
+**Stand:** 1. Juni 2026 (nach Commit `66077af`)  
 **Production:** [memefight.lol](https://memefight.lol) — `PARTY_ENABLED=true`
 
 Diese Datei fasst alles zusammen, was in Season 1 (Brutalist-Launch → Stabilization → Growth → Battle Pass → Party) umgesetzt wurde — und was noch offen ist.
@@ -17,9 +17,9 @@ Diese Datei fasst alles zusammen, was in Season 1 (Brutalist-Launch → Stabiliz
 | Growth (SEO, OG, Embed, Trending) | ✅ Live |
 | Fight Streak + Battle Pass (Season 1) | ✅ Live |
 | MemeFight Party P1 + P1.9 + P1.10 | ✅ Live auf Production |
-| Party Arena Design (Desktop lg+) | ✅ Gepusht, QA teilweise offen |
+| Party Arena Design (Desktop lg+) | ✅ Live, Smoke OK |
+| Party P2 Caption Studio (Spaces, Styling) | ✅ Live auf Production — [`2026-06-02-party-caption-studio`](superpowers/plans/2026-06-02-party-caption-studio.md) |
 | Party Phase 3 (Public Lobbies, Spectator, …) | ⏳ Nicht gestartet |
-| Party P2 Caption Studio (Spaces, Styling) | 🚢 Shipped on branch `feat/party-caption-studio-p2` — [`2026-06-02-party-caption-studio`](superpowers/plans/2026-06-02-party-caption-studio.md) |
 
 ---
 
@@ -159,7 +159,23 @@ Neue Dateien:
 
 ---
 
-### 7. Ops & Trust (Vor-Season-Basis)
+### 7. Party P2 Caption Studio
+
+Spaces, Multi-Box-Templates (1–4 Panels), Toolbar + Syntax (Schräg, Größe, CAPS), shared Renderer, ShareCard PNG für rich captions.
+
+| Deliverable | Detail |
+|-------------|--------|
+| P2.0 | Spaces beim Tippen, Textarea, `pre-wrap`, Auto-Fit |
+| P2.1 | Dynamische Felder, JSON v2 (`caption_rich`), RPC + Migration |
+| P2.2 | Markup-Parser, Caption Studio UI, `CaptionSegments`, PNG-Parität |
+
+**Commits:** `74ae4fc` … `66077af` (PR #1 + #2)  
+Plan: [`docs/superpowers/plans/2026-06-02-party-caption-studio.md`](superpowers/plans/2026-06-02-party-caption-studio.md)  
+Spec: [`docs/superpowers/specs/2026-06-02-party-caption-studio-design.md`](superpowers/specs/2026-06-02-party-caption-studio-design.md)
+
+---
+
+### 8. Ops & Trust (Vor-Season-Basis)
 
 - Sentry Integration
 - Admin Reports + Resend-Alerts
@@ -172,7 +188,7 @@ Neue Dateien:
 
 ## Production Smoke-Test (bestätigt)
 
-Datum: **2026-06-01**
+### P1 Core (2026-06-01)
 
 - [x] Party Lobby erstellen (Rounds + Rerolls)
 - [x] Zweiter Spieler joint per Code
@@ -180,6 +196,12 @@ Datum: **2026-06-01**
 - [x] Caption-Phase (unterschiedliche Templates pro Spieler)
 - [x] Voting + Reveal
 - [x] 2-Spieler-Vollrunde
+
+### P2 Caption Studio (2026-06-01)
+
+- [x] Styled Captions (Toolbar / Syntax) — Preview, Voting, Reveal konsistent
+- [x] Spaces + Multi-Line in Caption-Feldern
+- [x] Volle Runde auf Production — alles OK
 
 Quelle: [`docs/party-manual-qa.md`](party-manual-qa.md)
 
@@ -218,7 +240,7 @@ Aus [`docs/party-manual-qa.md`](party-manual-qa.md) — noch nicht manuell verif
 - [ ] **Error States** — `room_full`, `bad_code`, debounced `everyone_left`
 - [ ] **Header Nav** — PARTY-Link
 - [ ] **Mobile Layout** — Swipe-UI unter lg
-- [ ] **Desktop Layout (lg+)** — Arena, Glow, Voting-Grid (neu, noch nicht smoke-getestet)
+- [x] **Desktop Layout (lg+)** — Arena, Glow, Voting-Grid (Smoke 2026-06-01)
 
 #### Share & Footer
 - [ ] **ShareCard Copy Link / Twitter / PNG**
@@ -274,10 +296,9 @@ Aus Design-Spec Non-Goals (weiterhin out of scope):
 
 ## Nächste sinnvolle Schritte
 
-1. **Party QA durchgehen** — Checkliste in [`party-manual-qa.md`](party-manual-qa.md) abhaken (2 Browser, Desktop + Mobile)
-2. **Desktop Arena smoke-testen** — 1280px: Lobby, Voting-Grid, Glow, kein Layout-Flash
-3. **Reroll + Finished + ShareCard** — fehlende Core-Flow-Items verifizieren
-4. **Phase 3 planen** — Public Lobbies vs. Spectator priorisieren (eigene Spec nötig)
+1. **Party P1 Edge-Case QA** — Reroll, Finished, ShareCard, Leave/Retract (Checkliste in [`party-manual-qa.md`](party-manual-qa.md))
+2. **Vercel Preview Env** — Supabase-Variablen für Preview-Deploys setzen (Production unberührt)
+3. **Phase 3 planen** — Public Lobbies vs. Spectator priorisieren (eigene Spec nötig)
 
 ---
 
@@ -297,6 +318,8 @@ Aus Design-Spec Non-Goals (weiterhin out of scope):
 ## Commit-Timeline (Auszug)
 
 ```
+66077af  Party P2 Caption Studio (merge PR #2)
+6556902  Vercel preview build fallback (admin client)
 7c48be4  Party Arena Design (Desktop lg+)
 c5e72e8  Party Docs Sync + Production QA
 6b2f585  Party RPC PL/pgSQL Fixes

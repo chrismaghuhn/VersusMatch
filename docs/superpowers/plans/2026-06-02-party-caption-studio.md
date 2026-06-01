@@ -1,8 +1,10 @@
 # Party Caption Studio (P2) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Ship P2.0 text fixes, P2.1 template-aware multi-box captions (JSON v2 for 3+ boxes), and P2.2 rich styling (toolbar + syntax + shared renderer + ShareCard PNG parity).
+
+**Status:** ✅ Shipped — Production `66077af` (2026-06-01), manual QA passed. Supabase migration `20260607120000_party_caption_rich` applied.
 
 **Architecture:** Pure caption logic lives in `lib/party/caption-fields.ts` (legacy pipe) and `lib/party/caption-rich/*` (v2 JSON). One renderer (`render-segments.tsx`) feeds preview, voting, reveal, and PNG export. Postgres stores `caption` (canonical plain) + optional `caption_rich` jsonb; RPC validates integrity via `\n`-joined plain text, never pipe join for rich writes.
 
@@ -53,7 +55,7 @@
 - Modify: `lib/party/caption.ts`
 - Modify: `package.json`
 
-- [ ] **Step 1: Add test script**
+- [x] **Step 1: Add test script**
 
 Create `scripts/test-caption-fields.mjs`:
 
@@ -89,11 +91,11 @@ Add to `package.json` scripts:
 "test:caption-fields": "node scripts/test-caption-fields.mjs"
 ```
 
-- [ ] **Step 2: Run test — expect partial pass or adjust assertions after implementation**
+- [x] **Step 2: Run test — expect partial pass or adjust assertions after implementation**
 
 Run: `npm run test:caption-fields`
 
-- [ ] **Step 3: Refactor `lib/party/caption-fields.ts`**
+- [x] **Step 3: Refactor `lib/party/caption-fields.ts`**
 
 ```ts
 export function buildCaptionFromFields(top: string, bottom: string): string {
@@ -112,15 +114,15 @@ export function buildCaptionFromFieldsForSubmit(top: string, bottom: string): st
 
 Update `normalizeCaption` in `lib/party/caption.ts` — keep trim for submit path only (document in comment).
 
-- [ ] **Step 4: Wire submit in `party-room-client.tsx`**
+- [x] **Step 4: Wire submit in `party-room-client.tsx`**
 
 In `handleSubmitCaption`, use `buildCaptionFromFieldsForSubmit` / `normalizeCaption` instead of trimming on every draft change.
 
-- [ ] **Step 5: Update test script to import from built TS**
+- [x] **Step 5: Update test script to import from built TS**
 
 Either duplicate logic in `.mjs` with matching assertions, or add a small `lib/party/caption-fields.export.mjs` re-export pattern used elsewhere. Run: `npm run test:caption-fields` — PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add lib/party/caption-fields.ts lib/party/caption.ts scripts/test-caption-fields.mjs package.json components/brutal/party/party-room-client.tsx
@@ -137,7 +139,7 @@ git commit -m "fix(party): preserve caption spaces while typing; trim on submit 
 - Modify: `components/brutal/party/shared/PartyTemplateFrame.tsx`
 - Create: `lib/party/meme-text-fit.ts`
 
-- [ ] **Step 1: Add auto-fit helper**
+- [x] **Step 1: Add auto-fit helper**
 
 Create `lib/party/meme-text-fit.ts`:
 
@@ -157,24 +159,24 @@ export function fitMemeFontSize(
 }
 ```
 
-- [ ] **Step 2: Update `memeTextStyle` in `PartyTemplateFrame.tsx`**
+- [x] **Step 2: Update `memeTextStyle` in `PartyTemplateFrame.tsx`**
 
 - Add `whiteSpace: "pre-wrap"`, `wordBreak: "break-word"`.
 - Remove `-webkit-line-clamp` / `-webkit-box` (use auto-fit font instead).
 - Apply `fitMemeFontSize(text, fontSize, box.maxLines)` per box.
 
-- [ ] **Step 3: Replace `<input>` with `<textarea rows={2}>`** in `party-caption-input.tsx` and `PartyMobileCaption.tsx`.
+- [x] **Step 3: Replace `<input>` with `<textarea rows={2}>`** in `party-caption-input.tsx` and `PartyMobileCaption.tsx`.
 
 - `onKeyDown`: last field — `Enter` without Shift → submit; Shift+Enter → newline.
 - Preserve monospace styling.
 
-- [ ] **Step 4: Manual smoke**
+- [x] **Step 4: Manual smoke**
 
 Run: `npm run typecheck`
 
 Desktop + mobile width: type `" hello  world"`, Shift+Enter, verify preview shows spaces and line break.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -m "fix(party): textarea captions with pre-wrap render and auto-fit meme text"
@@ -193,7 +195,7 @@ git commit -m "fix(party): textarea captions with pre-wrap render and auto-fit m
 - Create: `scripts/test-caption-rich.mjs`
 - Modify: `package.json`
 
-- [ ] **Step 1: Types**
+- [x] **Step 1: Types**
 
 ```ts
 // lib/party/caption-rich/types.ts
@@ -212,7 +214,7 @@ export type CaptionDocument = {
 };
 ```
 
-- [ ] **Step 2: Plain serializer**
+- [x] **Step 2: Plain serializer**
 
 ```ts
 // lib/party/caption-rich/plain-text.ts
@@ -225,7 +227,7 @@ export function plainTextLength(doc: CaptionDocument): number {
 }
 ```
 
-- [ ] **Step 3: Structural document builder (no styling yet)**
+- [x] **Step 3: Structural document builder (no styling yet)**
 
 ```ts
 // lib/party/caption-rich/document.ts
@@ -237,7 +239,7 @@ export function structuralDocumentFromFieldTexts(texts: string[]): CaptionDocume
 }
 ```
 
-- [ ] **Step 4: Tests in `scripts/test-caption-rich.mjs`**
+- [x] **Step 4: Tests in `scripts/test-caption-rich.mjs`**
 
 ```js
 test("serializeCaptionPlain uses newline between boxes not pipe", () => {
@@ -248,7 +250,7 @@ test("serializeCaptionPlain uses newline between boxes not pipe", () => {
 
 Run: `npm run test:caption-rich` — PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -m "feat(party): caption rich v2 types and canonical plain serializer"
@@ -262,7 +264,7 @@ git commit -m "feat(party): caption rich v2 types and canonical plain serializer
 - Create: `supabase/migrations/20260607120000_party_caption_rich.sql`
 - Modify: `lib/database.types.ts` (regenerate or hand-add `caption_rich`)
 
-- [ ] **Step 1: Migration SQL**
+- [x] **Step 1: Migration SQL**
 
 ```sql
 alter table public.party_submissions
@@ -295,11 +297,11 @@ $$;
 
 Copy body from latest `party_submit_caption` in `20260605120000_party_own_meme_mode.sql` and extend — do not duplicate entire file in plan; implement in migration.
 
-- [ ] **Step 2: Apply migration locally / staging**
+- [x] **Step 2: Apply migration locally / staging**
 
 Run: `supabase db push` or project workflow from `DEPLOY.md`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "feat(party): caption_rich column and submit RPC validation"
@@ -319,7 +321,7 @@ git commit -m "feat(party): caption_rich column and submit RPC validation"
 - Modify: `components/brutal/party/mobile/PartyMobileCaption.tsx`
 - Modify: `lib/party/snapshot.ts` — stop `limitTextBoxes` in `toTemplateView` for caption phase (or pass full boxes to caption components only)
 
-- [ ] **Step 1: Extend types**
+- [x] **Step 1: Extend types**
 
 ```ts
 // submissions in PartySnapshot
@@ -329,11 +331,11 @@ captionRich?: CaptionDocument | null;
 
 Template view for caption UI: use full `textBoxes` array (1–4).
 
-- [ ] **Step 2: Snapshot selects `caption_rich`**
+- [x] **Step 2: Snapshot selects `caption_rich`**
 
 Update submission query + mapping; parse JSON into `CaptionDocument`.
 
-- [ ] **Step 3: API route**
+- [x] **Step 3: API route**
 
 ```ts
 const body = await request.json() as {
@@ -345,7 +347,7 @@ const body = await request.json() as {
 await partySubmitCaptionRpc(supabase, roomId, plain, captionRich);
 ```
 
-- [ ] **Step 4: Dynamic fields in caption input**
+- [x] **Step 4: Dynamic fields in caption input**
 
 ```tsx
 const boxes = template?.textBoxes ?? DEFAULT_TWO_BOXES;
@@ -358,7 +360,7 @@ await submit({ caption: plain, captionRich: doc });
 // on submit for boxCount === 2 (until P2.2): legacy pipe OR structural doc — prefer structural if migration ready
 ```
 
-- [ ] **Step 5: Legacy read path**
+- [x] **Step 5: Legacy read path**
 
 Create `lib/party/caption-rich/legacy-read.ts`:
 
@@ -371,7 +373,7 @@ export function captionForFrame(sub: { caption: string; captionRich?: CaptionDoc
 
 Update `PartyTemplateFrame` to accept optional `captionRich` prop; when set, render boxes from `doc.boxes[i]` plain segment text (no styling yet).
 
-- [ ] **Step 6: Run checks**
+- [x] **Step 6: Run checks**
 
 ```bash
 npm run typecheck
@@ -381,7 +383,7 @@ npm run test:caption-rich
 
 Manual: force 4-panel template in dev — four fields appear, submit succeeds, voting shows all four texts.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git commit -m "feat(party): template-aware caption fields and JSON v2 submit for 3+ boxes"
@@ -398,19 +400,19 @@ git commit -m "feat(party): template-aware caption fields and JSON v2 submit for
 - Modify: `scripts/test-caption-rich.mjs`
 - Modify: `lib/party/caption-rich/document.ts`
 
-- [ ] **Step 1: Implement `parseMarkup(raw: string): CaptionSegment[]`**
+- [x] **Step 1: Implement `parseMarkup(raw: string): CaptionSegment[]`**
 
 Rules from spec: `~slant~`, `*italic*`, `^big^`, `,small,`, escapes, no nesting, unclosed → plain at finalize.
 
-- [ ] **Step 2: Implement `finalizeBox(raw: string): CaptionSegment[]`**
+- [x] **Step 2: Implement `finalizeBox(raw: string): CaptionSegment[]`**
 
 Always runs full parse synchronously.
 
-- [ ] **Step 3: `finalizeCaptionDocument(draft: { rawTexts: string[] })`**
+- [x] **Step 3: `finalizeCaptionDocument(draft: { rawTexts: string[] })`**
 
 Map each raw text through `finalizeBox`.
 
-- [ ] **Step 4: Tests**
+- [x] **Step 4: Tests**
 
 ```js
 test("immediate submit parses tilde markup", () => {
@@ -422,7 +424,7 @@ test("immediate submit parses tilde markup", () => {
 
 Run: `npm run test:caption-rich` — PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -m "feat(party): caption markup parser with sync finalize on submit"
@@ -437,7 +439,7 @@ git commit -m "feat(party): caption markup parser with sync finalize on submit"
 - Modify: `components/brutal/party/shared/PartyTemplateFrame.tsx`
 - Modify: `components/brutal/party/shared/PartyPrimitives.tsx` (`SubmissionCard`)
 
-- [ ] **Step 1: `CaptionSegments` component**
+- [x] **Step 1: `CaptionSegments` component**
 
 ```tsx
 export function CaptionSegments({
@@ -474,15 +476,15 @@ export function CaptionSegments({
 }
 ```
 
-- [ ] **Step 2: Wire `PartyTemplateFrame`**
+- [x] **Step 2: Wire `PartyTemplateFrame`**
 
 If `captionRich` prop: map each box index to `CaptionSegments`; else legacy pipe path unchanged.
 
-- [ ] **Step 3: Wire voting/reveal `SubmissionCard`**
+- [x] **Step 3: Wire voting/reveal `SubmissionCard`**
 
 Pass `captionRich` from snapshot submission through to frame.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git commit -m "feat(party): shared caption segment renderer for preview and voting"
@@ -500,22 +502,22 @@ git commit -m "feat(party): shared caption segment renderer for preview and voti
 - Modify: `components/brutal/party/mobile/PartyMobileCaption.tsx`
 - Modify: `lib/party/copy.ts` (syntax hint string)
 
-- [ ] **Step 1: Hook state**
+- [x] **Step 1: Hook state**
 
 ```ts
 // rawTexts per box + debounced preview doc (500ms) + finalizeCaptionDocument on submit
 export function useCaptionStudio(boxCount: number, initialCaption?: string) { ... }
 ```
 
-- [ ] **Step 2: Toolbar buttons**
+- [x] **Step 2: Toolbar buttons**
 
 Schräg toggle (±12), A+/A− scale step, CAPS toggle — apply to selection or whole box.
 
-- [ ] **Step 3: Mobile toolbar**
+- [x] **Step 3: Mobile toolbar**
 
 Horizontal scroll, min 44px touch targets.
 
-- [ ] **Step 4: Submit handler**
+- [x] **Step 4: Submit handler**
 
 ```ts
 const doc = finalizeCaptionDocument({ rawTexts, toolbarState });
@@ -523,9 +525,9 @@ const plain = serializeCaptionPlain(doc);
 onSubmit({ caption: plain, captionRich: doc });
 ```
 
-- [ ] **Step 5: All P2.2 clients submit JSON v2 even for 2-box memes**
+- [x] **Step 5: All P2.2 clients submit JSON v2 even for 2-box memes**
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git commit -m "feat(party): caption studio toolbar and syntax with live preview"
@@ -540,17 +542,17 @@ git commit -m "feat(party): caption studio toolbar and syntax with live preview"
 - Modify: `components/brutal/party/desktop/PartyDesktopFinished.tsx`
 - Modify: `docs/party-manual-qa.md`
 
-- [ ] **Step 1: ShareCard uses `CaptionSegments` / `PartyTemplateFrame` with `captionRich`**
+- [x] **Step 1: ShareCard uses `CaptionSegments` / `PartyTemplateFrame` with `captionRich`**
 
 Ensure PNG target DOM includes skew transforms (same component tree as voting).
 
-- [ ] **Step 2: Re-enable PNG on desktop finished**
+- [x] **Step 2: Re-enable PNG on desktop finished**
 
 `showPngDownload={true}` when winner submission has `captionRich` (or always in P2.2).
 
-- [ ] **Step 3: Update QA doc** — add spec checklist items (spaces, schräg, 4-panel, PNG parity, legacy pipe).
+- [x] **Step 3: Update QA doc** — add spec checklist items (spaces, schräg, 4-panel, PNG parity, legacy pipe).
 
-- [ ] **Step 4: Final verification**
+- [x] **Step 4: Final verification**
 
 ```bash
 npm run typecheck
@@ -560,7 +562,7 @@ npm run test:caption-rich
 
 Manual: full round with `~skewed~` caption → voting matches preview → finished PNG download matches.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -m "feat(party): ShareCard PNG parity for rich captions and QA doc updates"
@@ -597,5 +599,5 @@ No placeholders remain. Types consistent: `CaptionDocument`, `serializeCaptionPl
 
 ## Post-ship
 
-- Update [`docs/season-1-recap.md`](../season-1-recap.md) — mark P2 Caption Studio shipped
-- Optional: design preview entry for caption studio in `party-design-preview.tsx`
+- [x] Update [`docs/season-1-recap.md`](../season-1-recap.md) — mark P2 Caption Studio shipped
+- [ ] Optional: design preview entry for caption studio in `party-design-preview.tsx`
