@@ -11,6 +11,7 @@ import {
   plainTextLength,
   serializeCaptionPlain,
 } from "../lib/party/caption-rich/plain-text.ts";
+import { resolveSegmentFill, strokeStylesForFill } from "../lib/party/caption-rich/fill.ts";
 
 test("serializeCaptionPlain uses newline between boxes not pipe", () => {
   const doc = { v: 2, boxes: [[{ text: "TOP" }], [{ text: "BOT" }]] };
@@ -102,4 +103,20 @@ test("mixed plain and styled segments", () => {
   assert.equal(segs[1].text, "slant");
   assert.equal(segs[1].style?.slant, -12);
   assert.deepEqual(segs[2], { text: " more" });
+});
+
+test("resolveSegmentFill prefers segment override over box default", () => {
+  const seg = { text: "x", style: { fill: "black" } };
+  assert.equal(resolveSegmentFill(seg, { fill: "white" }), "black");
+});
+
+test("resolveSegmentFill defaults to white", () => {
+  assert.equal(resolveSegmentFill({ text: "x" }), "white");
+  assert.equal(resolveSegmentFill({ text: "x" }, undefined), "white");
+});
+
+test("strokeStylesForFill inverts outline for black fill", () => {
+  const styles = strokeStylesForFill("black");
+  assert.equal(styles.color, "#000");
+  assert.match(String(styles.WebkitTextStroke), /#fff/i);
 });
