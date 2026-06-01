@@ -13,6 +13,7 @@ import type {
   PartyTemplateView,
   PartyReactionKey,
   CaptionDocument,
+  CaptionDocumentV3,
 } from "@/lib/party/types";
 
 type PartyRoomRow = {
@@ -23,6 +24,8 @@ type PartyRoomRow = {
   current_round: number;
   round_count: number;
   rerolls_per_player: number;
+  canvas_editor_enabled: boolean;
+  caption_duration_seconds: number;
   phase_ends_at: string | null;
   template_id: string | null;
   phase_seed: number | null;
@@ -116,6 +119,11 @@ function parseCaptionRich(raw: unknown): CaptionDocument | null {
   return null;
 }
 
+function parseCaptionDraftV3(raw: unknown): CaptionDocumentV3 | null {
+  const doc = parseCaptionRich(raw);
+  return doc?.v === 3 ? doc : null;
+}
+
 async function loadTemplatesByIds(
   supabase: SupabaseClient,
   ids: string[],
@@ -145,7 +153,7 @@ export async function buildPartySnapshot(
   const { data: room, error: roomError } = await (supabase as SupabaseClient)
     .from("party_rooms")
     .select(
-      "id, code, status, phase, current_round, round_count, rerolls_per_player, phase_ends_at, template_id, phase_seed, caption_count, votes_cast_count"
+      "id, code, status, phase, current_round, round_count, rerolls_per_player, canvas_editor_enabled, caption_duration_seconds, phase_ends_at, template_id, phase_seed, caption_count, votes_cast_count"
     )
     .eq("id", roomId)
     .maybeSingle();
@@ -184,18 +192,24 @@ export async function buildPartySnapshot(
   }
 
   let myTemplate: PartyTemplateView | null = null;
+  let layoutRevision = 0;
+  let captionDraft: CaptionDocumentV3 | null = null;
   if (phase === "caption" && roomRow.current_round > 0) {
     const { data: roundRow } = await (supabase as SupabaseClient)
       .from("party_player_rounds")
-      .select("template_id")
+      .select("template_id, caption_draft, layout_revision")
       .eq("room_id", roomId)
       .eq("round", roomRow.current_round)
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (roundRow?.template_id) {
-      const templates = await loadTemplatesByIds(supabase, [roundRow.template_id], true);
-      myTemplate = templates.get(roundRow.template_id) ?? null;
+    if (roundRow) {
+      layoutRevision = roundRow.layout_revision ?? 0;
+      captionDraft = parseCaptionDraftV3(roundRow.caption_draft);
+      if (roundRow.template_id) {
+        const templates = await loadTemplatesByIds(supabase, [roundRow.template_id], true);
+        myTemplate = templates.get(roundRow.template_id) ?? null;
+      }
     }
   }
 
@@ -330,6 +344,8 @@ export async function buildPartySnapshot(
       roundCount: roomRow.round_count,
       rerollsPerPlayer: roomRow.rerolls_per_player,
       phaseEndsAt: roomRow.phase_ends_at,
+      canvasEditorEnabled: roomRow.canvas_editor_enabled,
+      captionDurationSeconds: roomRow.caption_duration_seconds,
       template: roomTemplate,
     },
     players: playersRows.map((p) => {
@@ -351,5 +367,7 @@ export async function buildPartySnapshot(
     myTemplate,
     myRerollsRemaining,
     recentReactions,
+    layoutRevision,
+    captionDraft,
   };
 }

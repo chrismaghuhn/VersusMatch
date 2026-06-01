@@ -9,8 +9,13 @@ export async function POST(request: Request) {
 
   let roundCount = 5;
   let rerollsPerPlayer = 0;
+  let canvasEditorEnabled = false;
   try {
-    const body = (await request.json()) as { roundCount?: number; rerollsPerPlayer?: number };
+    const body = (await request.json()) as {
+      roundCount?: number;
+      rerollsPerPlayer?: number;
+      canvasEditorEnabled?: boolean;
+    };
     if (body.roundCount === 3 || body.roundCount === 5 || body.roundCount === 7) {
       roundCount = body.roundCount;
     }
@@ -21,11 +26,19 @@ export async function POST(request: Request) {
     ) {
       rerollsPerPlayer = Math.min(body.rerollsPerPlayer, roundCount);
     }
+    if (typeof body.canvasEditorEnabled === "boolean") {
+      canvasEditorEnabled = body.canvasEditorEnabled;
+    }
   } catch {
     // default round count
   }
 
-  const { data, error } = await partyCreateRoomRpc(auth.supabase, roundCount, rerollsPerPlayer);
+  const { data, error } = await partyCreateRoomRpc(
+    auth.supabase,
+    roundCount,
+    rerollsPerPlayer,
+    canvasEditorEnabled
+  );
   if (error) {
     console.error("party_create_room rpc failed:", error.message);
     return NextResponse.json(

@@ -64,6 +64,8 @@ export function partyRpcStatus(error: string | undefined): number {
     case "no_rerolls_left":
     case "invalid_rerolls":
     case "no_template":
+    case "stale_revision":
+    case "invalid_draft":
       return 409;
     default:
       return 400;

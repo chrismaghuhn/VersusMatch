@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
-import type { CaptionDocument } from "@/lib/party/caption-rich/types";
+import type { CaptionDocument, CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
 import type { PartyReactionKey } from "@/lib/party/types";
 
 type RpcSupabase = Pick<SupabaseClient<Database>, "rpc">;
@@ -16,11 +16,26 @@ function callRpc(
 export function partyCreateRoomRpc(
   supabase: RpcSupabase,
   roundCount: number = 5,
-  rerollsPerPlayer: number = 0
+  rerollsPerPlayer: number = 0,
+  canvasEditorEnabled: boolean = false
 ) {
   return callRpc(supabase, "party_create_room", {
     p_round_count: roundCount,
     p_rerolls_per_player: rerollsPerPlayer,
+    p_canvas_editor_enabled: canvasEditorEnabled,
+  });
+}
+
+export function partySyncCaptionDraftRpc(
+  supabase: RpcSupabase,
+  roomId: string,
+  draft: CaptionDocumentV3,
+  layoutRevision: number
+) {
+  return callRpc(supabase, "party_sync_caption_draft", {
+    p_room_id: roomId,
+    p_draft: draft,
+    p_layout_revision: layoutRevision,
   });
 }
 

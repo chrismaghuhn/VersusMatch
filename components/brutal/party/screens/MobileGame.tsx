@@ -15,6 +15,8 @@ const mockVotingSnapshot: PartySnapshot = {
     roundCount: 7,
     rerollsPerPlayer: 2,
     phaseEndsAt: new Date(Date.now() + 22_000).toISOString(),
+    canvasEditorEnabled: false,
+    captionDurationSeconds: 60,
     template: null,
   },
   players: [
@@ -54,6 +56,8 @@ const mockVotingSnapshot: PartySnapshot = {
   myTemplate: null,
   myRerollsRemaining: 0,
   recentReactions: [],
+  layoutRevision: 0,
+  captionDraft: null,
 };
 
 const mockRevealSnapshot: PartySnapshot = {

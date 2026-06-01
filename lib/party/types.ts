@@ -1,4 +1,4 @@
-import type { CaptionDocument } from "@/lib/party/caption-rich/types";
+import type { CaptionDocument, CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
 
 export type PartyPhase = "waiting" | "caption" | "voting" | "reveal" | "finished";
 
@@ -24,7 +24,7 @@ export type TextBox = {
   maxLines: number;
 };
 
-export type { CaptionDocument };
+export type { CaptionDocument, CaptionDocumentV3 };
 
 export type PartyTemplateView = {
   id: string;
@@ -42,9 +42,15 @@ export type PartySnapshot = {
     roundCount: number;
     rerollsPerPlayer: number;
     phaseEndsAt: string | null;
+    canvasEditorEnabled: boolean;
+    captionDurationSeconds: number;
     /** @deprecated Use myTemplate (caption) or submission.template (vote/reveal) */
     template: PartyTemplateView | null;
   };
+  /** Caption phase, current user — server layout revision for draft sync */
+  layoutRevision: number;
+  /** Caption phase, current user only */
+  captionDraft: CaptionDocumentV3 | null;
   players: Array<{
     userId: string;
     handle: string;
