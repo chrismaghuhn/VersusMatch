@@ -15,6 +15,29 @@ export function parsePartyRpc(data: unknown): PartyRpcResponse {
   return { ok: false, error: "invalid_response" };
 }
 
+/** Map PostgREST/Postgres transport failures to stable client error codes. */
+export function partyRpcTransportError(
+  context: "create" | "join" | "start" | "leave",
+  message: string
+): string {
+  const msg = message.toLowerCase();
+  if (!msg.includes("could not choose") && !msg.includes("function public.party_")) {
+    return message;
+  }
+  switch (context) {
+    case "create":
+      return "could_not_create_room";
+    case "join":
+      return "could_not_join_room";
+    case "start":
+      return "could_not_start_game";
+    case "leave":
+      return "could_not_leave_room";
+    default:
+      return message;
+  }
+}
+
 export function partyRpcStatus(error: string | undefined): number {
   switch (error) {
     case "unauthorized":

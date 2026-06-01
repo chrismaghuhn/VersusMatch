@@ -138,9 +138,8 @@ export function normalizePartyErrorCode(raw: string | null | undefined): PartyEr
   }
   if (key === "could_not_join" || key === "invalid_response") return "unknown";
   if (key === "could_not_create_room") return "create_failed";
-  if (key === "could_not_load_room" || key === "could_not_join_room") {
-    return key === "could_not_load_room" ? "not_found" : "unknown";
-  }
+  if (key === "could_not_join_room") return "join_failed";
+  if (key === "could_not_load_room") return "not_found";
   return "unknown";
 }
 

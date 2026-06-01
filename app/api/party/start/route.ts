@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requirePartyApi } from "@/lib/party/api-auth";
-import { parsePartyRpc, partyRpcStatus } from "@/lib/party/rpc-response";
+import { parsePartyRpc, partyRpcStatus, partyRpcTransportError } from "@/lib/party/rpc-response";
 import { buildPartySnapshot } from "@/lib/party/snapshot";
 import { partyStartGameRpc } from "@/lib/supabase/party-rpc";
 
@@ -22,7 +22,11 @@ export async function POST(request: Request) {
 
   const { data, error } = await partyStartGameRpc(auth.supabase, roomId);
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("party_start_game rpc failed:", error.message);
+    return NextResponse.json(
+      { error: partyRpcTransportError("start", error.message) },
+      { status: 500 }
+    );
   }
 
   const result = parsePartyRpc(data);

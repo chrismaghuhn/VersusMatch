@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requirePartyApi } from "@/lib/party/api-auth";
-import { parsePartyRpc, partyRpcStatus } from "@/lib/party/rpc-response";
+import { parsePartyRpc, partyRpcStatus, partyRpcTransportError } from "@/lib/party/rpc-response";
 import { partyCreateRoomRpc } from "@/lib/supabase/party-rpc";
 
 export async function POST(request: Request) {
@@ -28,10 +28,10 @@ export async function POST(request: Request) {
   const { data, error } = await partyCreateRoomRpc(auth.supabase, roundCount, rerollsPerPlayer);
   if (error) {
     console.error("party_create_room rpc failed:", error.message);
-    const msg = error.message.toLowerCase();
-    const code =
-      msg.includes("could not choose") || msg.includes("function") ? "could_not_create_room" : error.message;
-    return NextResponse.json({ error: code }, { status: 500 });
+    return NextResponse.json(
+      { error: partyRpcTransportError("create", error.message) },
+      { status: 500 }
+    );
   }
 
   const result = parsePartyRpc(data);

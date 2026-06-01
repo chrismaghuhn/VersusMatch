@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requirePartyApi } from "@/lib/party/api-auth";
-import { parsePartyRpc, partyRpcStatus } from "@/lib/party/rpc-response";
+import { parsePartyRpc, partyRpcStatus, partyRpcTransportError } from "@/lib/party/rpc-response";
 import { partyJoinRoomRpc } from "@/lib/supabase/party-rpc";
 
 export async function POST(request: Request) {
@@ -21,7 +21,11 @@ export async function POST(request: Request) {
 
   const { data, error } = await partyJoinRoomRpc(auth.supabase, code);
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("party_join_room rpc failed:", error.message);
+    return NextResponse.json(
+      { error: partyRpcTransportError("join", error.message) },
+      { status: 500 }
+    );
   }
 
   const result = parsePartyRpc(data);
