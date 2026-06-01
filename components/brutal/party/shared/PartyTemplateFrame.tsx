@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MemeFrame } from "@/components/brutal/party/shared/MemeFrame";
+import { fitMemeFontSize } from "@/lib/party/meme-text-fit";
 import type { TextBox } from "@/lib/party/types";
 
 const memeTextStyle = (fontSize: number, align: TextBox["align"]): React.CSSProperties => ({
@@ -16,10 +17,8 @@ const memeTextStyle = (fontSize: number, align: TextBox["align"]): React.CSSProp
   WebkitTextStroke: "1.5px #000",
   fontSize,
   width: "100%",
-  overflow: "hidden",
-  display: "-webkit-box",
-  WebkitLineClamp: 3,
-  WebkitBoxOrient: "vertical",
+  whiteSpace: "pre-wrap",
+  wordBreak: "break-word",
 });
 
 function captionParts(caption?: string): string[] {
@@ -102,7 +101,14 @@ export function PartyTemplateFrame({
                     : "center",
             }}
           >
-            <div style={memeTextStyle(fontSize, box.align)}>{text}</div>
+            <div
+              style={memeTextStyle(
+                fitMemeFontSize(text, fontSize, box.maxLines),
+                box.align
+              )}
+            >
+              {text}
+            </div>
           </div>
         );
       })}

@@ -99,8 +99,9 @@ export function PartyCaptionInput({
                 >
                   {label.toUpperCase()}
                 </label>
-                <input
+                <textarea
                   id={inputId}
+                  rows={2}
                   value={fieldValue}
                   disabled={inputDisabled}
                   placeholder={label}
@@ -118,7 +119,7 @@ export function PartyCaptionInput({
                       handleSubmit();
                     }
                   }}
-                  className="mt-2 w-full border-2 border-white/10 bg-[#0a0a0a] px-4 py-4 text-white outline-none transition focus:border-[#CCFF00] disabled:opacity-50"
+                  className="mt-2 w-full resize-none border-2 border-white/10 bg-[#0a0a0a] px-4 py-4 text-white outline-none transition focus:border-[#CCFF00] disabled:opacity-50"
                   style={{
                     fontFamily: "ui-monospace, monospace",
                     fontSize: 15,

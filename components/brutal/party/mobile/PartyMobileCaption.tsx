@@ -159,8 +159,9 @@ export function PartyMobileCaption({
                   >
                     {label.toUpperCase()}
                   </label>
-                  <input
+                  <textarea
                     id={inputId}
+                    rows={2}
                     value={fieldValue}
                     disabled={inputDisabled}
                     placeholder={label}
@@ -172,13 +173,7 @@ export function PartyMobileCaption({
                         updateFields(topField, next);
                       }
                     }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey && index === 1) {
-                        e.preventDefault();
-                        handleSubmit();
-                      }
-                    }}
-                    className="mt-2 w-full border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-white outline-none focus:border-[#CCFF00] disabled:opacity-50"
+                    className="mt-2 w-full resize-none border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-white outline-none focus:border-[#CCFF00] disabled:opacity-50"
                     style={{ fontSize: 13, fontFamily: "ui-monospace, monospace" }}
                   />
                 </div>
