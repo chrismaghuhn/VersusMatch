@@ -46,8 +46,8 @@ export function PartyMobileReveal({ snapshot, embedded = false }: PartyMobileRev
           <div className="p-3">
             <PartyTemplateFrame
               caption={winner.caption}
-              imageUrl={snapshot.room.template?.imageUrl}
-              textBoxes={snapshot.room.template?.textBoxes}
+              imageUrl={winner.template?.imageUrl}
+              textBoxes={winner.template?.textBoxes}
             />
           </div>
           <div className="flex items-center gap-2 px-4 pb-3">

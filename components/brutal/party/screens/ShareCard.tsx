@@ -32,6 +32,7 @@ const MOCK_DATA: ShareCardData = {
     voteCount: 4,
     avatarId: "crown",
     avatarColor: "#FF2D87",
+    template: null,
   },
   template: null,
 };

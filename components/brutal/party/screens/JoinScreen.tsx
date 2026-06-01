@@ -17,6 +17,8 @@ export type PartyJoinScreenProps = {
   designPreview?: boolean;
   roundCount?: 3 | 5 | 7;
   onRoundCountChange?: (count: 3 | 5 | 7) => void;
+  rerollsPerPlayer?: number;
+  onRerollsPerPlayerChange?: (count: number) => void;
   onJoin?: (code: string) => void;
   onCreate?: () => void;
 };
@@ -25,6 +27,8 @@ export function PartyJoinScreen({
   designPreview = false,
   roundCount = 5,
   onRoundCountChange,
+  rerollsPerPlayer = 0,
+  onRerollsPerPlayerChange,
   onJoin,
   onCreate,
 }: PartyJoinScreenProps) {
@@ -134,6 +138,30 @@ export function PartyJoinScreen({
                           "flex-1 border-2 py-2.5 transition " +
                           (roundCount === n
                             ? "border-[#CCFF00] bg-[#CCFF00]/15 text-[#CCFF00]"
+                            : "border-white/10 text-white/50 hover:border-white/30 hover:text-white")
+                        }
+                        style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.12em" }}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {onRerollsPerPlayerChange ? (
+                <div className="mb-4">
+                  <Meta>{PARTY_COPY.joinRerolls}</Meta>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {Array.from({ length: roundCount + 1 }, (_, n) => n).map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => onRerollsPerPlayerChange(n)}
+                        className={
+                          "min-w-[2.5rem] flex-1 border-2 py-2.5 transition " +
+                          (rerollsPerPlayer === n
+                            ? "border-[#00E1FF] bg-[#00E1FF]/15 text-[#00E1FF]"
                             : "border-white/10 text-white/50 hover:border-white/30 hover:text-white")
                         }
                         style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.12em" }}

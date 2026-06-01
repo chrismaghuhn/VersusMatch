@@ -14,9 +14,13 @@ function callRpc(
 
 export function partyCreateRoomRpc(
   supabase: RpcSupabase,
-  roundCount: number = 5
+  roundCount: number = 5,
+  rerollsPerPlayer: number = 0
 ) {
-  return callRpc(supabase, "party_create_room", { p_round_count: roundCount });
+  return callRpc(supabase, "party_create_room", {
+    p_round_count: roundCount,
+    p_rerolls_per_player: rerollsPerPlayer,
+  });
 }
 
 export function partyJoinRoomRpc(supabase: RpcSupabase, code: string) {
@@ -82,4 +86,8 @@ export function partyRetractCaptionRpc(supabase: RpcSupabase, roomId: string) {
 
 export function partyRetractVoteRpc(supabase: RpcSupabase, roomId: string) {
   return callRpc(supabase, "party_retract_vote", { p_room_id: roomId });
+}
+
+export function partyRerollTemplateRpc(supabase: RpcSupabase, roomId: string) {
+  return callRpc(supabase, "party_reroll_template", { p_room_id: roomId });
 }

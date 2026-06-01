@@ -20,6 +20,7 @@ export type PartyLobbyScreenProps = {
   code?: string;
   players?: PartyLobbyPlayer[];
   roundCount?: 3 | 5 | 7;
+  rerollsPerPlayer?: number;
   minPlayers?: number;
   maxPlayers?: number;
   isHost?: boolean;
@@ -43,6 +44,7 @@ export function PartyLobbyScreen({
   code = "ABC123",
   players = DEFAULT_PLAYERS,
   roundCount = 5,
+  rerollsPerPlayer = 0,
   minPlayers = PARTY_MIN_PLAYERS,
   maxPlayers = PARTY_MAX_PLAYERS,
   isHost = true,
@@ -157,6 +159,7 @@ export function PartyLobbyScreen({
               <SettingRow icon={<Clock className="h-4 w-4" />} label={PARTY_COPY.lobbyVoteTimer} value="30s" />
               <SettingRow icon={<Users className="h-4 w-4" />} label={PARTY_COPY.lobbyPlayersSetting} value={`${minPlayers}–${maxPlayers}`} />
               <SettingRow icon={<Users className="h-4 w-4" />} label={PARTY_COPY.lobbyRoundsSetting} value={String(roundCount)} />
+              <SettingRow icon={<Users className="h-4 w-4" />} label={PARTY_COPY.lobbyRerollsSetting} value={String(rerollsPerPlayer)} />
             </div>
             {designPreview && (
               <p className="mt-4 text-white/40" style={{ fontSize: 11, lineHeight: 1.5 }}>

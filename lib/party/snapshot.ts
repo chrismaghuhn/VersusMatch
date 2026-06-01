@@ -2,10 +2,11 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
+import { limitTextBoxes } from "@/lib/party/limit-text-boxes";
 import { seededShuffle } from "@/lib/party/shuffle";
 import { partyGetMyVoteRpc } from "@/lib/supabase/party-rpc";
 import { getPartyTemplateUrl } from "@/lib/party/template-url";
-import type { PartySnapshot, PartyPhase, TextBox, PartyReactionKey } from "@/lib/party/types";
+import type { PartySnapshot, PartyPhase, TextBox, PartyTemplateView, PartyReactionKey } from "@/lib/party/types";
 
 type PartyRoomRow = {
   id: string;
@@ -14,6 +15,7 @@ type PartyRoomRow = {
   phase: string;
   current_round: number;
   round_count: number;
+  rerolls_per_player: number;
   phase_ends_at: string | null;
   template_id: string | null;
   phase_seed: number | null;
@@ -25,12 +27,14 @@ type PartyPlayerRow = {
   user_id: string;
   score: number;
   is_host: boolean;
+  rerolls_used: number;
 };
 
 type PartySubmissionRow = {
   id: string;
   user_id: string;
   caption: string;
+  template_id: string | null;
 };
 
 type PartyRoundResultRow = {
@@ -68,6 +72,33 @@ function asTextBoxes(raw: unknown): TextBox[] {
   );
 }
 
+function toTemplateView(row: TemplateRow): PartyTemplateView {
+  return {
+    id: row.id,
+    imageUrl: getPartyTemplateUrl(row.image_path) ?? "",
+    textBoxes: limitTextBoxes(asTextBoxes(row.text_boxes)),
+  };
+}
+
+async function loadTemplatesByIds(
+  supabase: SupabaseClient,
+  ids: string[]
+): Promise<Map<string, PartyTemplateView>> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  const map = new Map<string, PartyTemplateView>();
+  if (unique.length === 0) return map;
+
+  const { data } = await supabase
+    .from("party_templates")
+    .select("id, image_path, text_boxes")
+    .in("id", unique);
+
+  for (const row of (data ?? []) as TemplateRow[]) {
+    map.set(row.id, toTemplateView(row));
+  }
+  return map;
+}
+
 export async function buildPartySnapshot(
   supabase: SupabaseClient<Database>,
   roomId: string,
@@ -76,7 +107,7 @@ export async function buildPartySnapshot(
   const { data: room, error: roomError } = await (supabase as SupabaseClient)
     .from("party_rooms")
     .select(
-      "id, code, status, phase, current_round, round_count, phase_ends_at, template_id, phase_seed, caption_count, votes_cast_count"
+      "id, code, status, phase, current_round, round_count, rerolls_per_player, phase_ends_at, template_id, phase_seed, caption_count, votes_cast_count"
     )
     .eq("id", roomId)
     .maybeSingle();
@@ -90,12 +121,17 @@ export async function buildPartySnapshot(
 
   const { data: playersRaw } = await (supabase as SupabaseClient)
     .from("party_players")
-    .select("user_id, score, is_host")
+    .select("user_id, score, is_host, rerolls_used")
     .eq("room_id", roomId)
     .order("joined_at", { ascending: true });
 
   const playersRows = (playersRaw ?? []) as PartyPlayerRow[];
   const playerIds = playersRows.map((p) => p.user_id);
+  const mePlayer = playersRows.find((p) => p.user_id === userId);
+  const myRerollsRemaining = Math.max(
+    0,
+    roomRow.rerolls_per_player - (mePlayer?.rerolls_used ?? 0)
+  );
 
   const profilesByUser = new Map<string, ProfileRow>();
   if (playerIds.length > 0) {
@@ -109,22 +145,26 @@ export async function buildPartySnapshot(
     }
   }
 
-  let template: PartySnapshot["room"]["template"] = null;
-  if (roomRow.template_id) {
-    const { data: templateRow } = await (supabase as SupabaseClient)
-      .from("party_templates")
-      .select("id, image_path, text_boxes")
-      .eq("id", roomRow.template_id)
+  let myTemplate: PartyTemplateView | null = null;
+  if (phase === "caption" && roomRow.current_round > 0) {
+    const { data: roundRow } = await (supabase as SupabaseClient)
+      .from("party_player_rounds")
+      .select("template_id")
+      .eq("room_id", roomId)
+      .eq("round", roomRow.current_round)
+      .eq("user_id", userId)
       .maybeSingle();
 
-    if (templateRow) {
-      const t = templateRow as TemplateRow;
-      template = {
-        id: t.id,
-        imageUrl: getPartyTemplateUrl(t.image_path) ?? "",
-        textBoxes: asTextBoxes(t.text_boxes),
-      };
+    if (roundRow?.template_id) {
+      const templates = await loadTemplatesByIds(supabase, [roundRow.template_id]);
+      myTemplate = templates.get(roundRow.template_id) ?? null;
     }
+  }
+
+  let roomTemplate: PartySnapshot["room"]["template"] = null;
+  if (phase !== "caption" && roomRow.template_id) {
+    const templates = await loadTemplatesByIds(supabase, [roomRow.template_id]);
+    roomTemplate = templates.get(roomRow.template_id) ?? null;
   }
 
   let submissions: PartySnapshot["submissions"] = [];
@@ -133,7 +173,7 @@ export async function buildPartySnapshot(
   if (phase !== "waiting" && roomRow.current_round > 0) {
     const { data: submissionRows } = await (supabase as SupabaseClient)
       .from("party_submissions")
-      .select("id, user_id, caption")
+      .select("id, user_id, caption, template_id")
       .eq("room_id", roomId)
       .eq("round", roomRow.current_round);
 
@@ -144,8 +184,24 @@ export async function buildPartySnapshot(
       mySubmission = { id: mine.id, caption: mine.caption };
     }
 
+    const templateIds = allSubmissions
+      .map((s) => s.template_id)
+      .filter((id): id is string => Boolean(id));
+    const templatesById = await loadTemplatesByIds(supabase, templateIds);
+
     if (phase === "caption") {
-      submissions = mine ? [{ id: mine.id, userId: mine.user_id, caption: mine.caption }] : [];
+      submissions = mine
+        ? [
+            {
+              id: mine.id,
+              userId: mine.user_id,
+              caption: mine.caption,
+              ...(mine.template_id
+                ? { template: templatesById.get(mine.template_id) }
+                : {}),
+            },
+          ]
+        : [];
     } else {
       const voteCounts = new Map<string, number>();
       if (phase === "reveal" || phase === "finished") {
@@ -164,6 +220,7 @@ export async function buildPartySnapshot(
         id: s.id,
         userId: s.user_id,
         caption: s.caption,
+        ...(s.template_id ? { template: templatesById.get(s.template_id) } : {}),
         ...(phase === "reveal" || phase === "finished"
           ? { voteCount: voteCounts.get(s.id) ?? 0 }
           : {}),
@@ -227,8 +284,9 @@ export async function buildPartySnapshot(
       phase,
       currentRound: roomRow.current_round,
       roundCount: roomRow.round_count,
+      rerollsPerPlayer: roomRow.rerolls_per_player,
       phaseEndsAt: roomRow.phase_ends_at,
-      template,
+      template: roomTemplate,
     },
     players: playersRows.map((p) => {
       const profile = profilesByUser.get(p.user_id);
@@ -246,6 +304,8 @@ export async function buildPartySnapshot(
     votesCastCount: roomRow.votes_cast_count,
     mySubmission,
     myVote,
+    myTemplate,
+    myRerollsRemaining,
     recentReactions,
   };
 }

@@ -13,6 +13,7 @@ const mockVotingSnapshot: PartySnapshot = {
     phase: "voting",
     currentRound: 3,
     roundCount: 7,
+    rerollsPerPlayer: 2,
     phaseEndsAt: new Date(Date.now() + 22_000).toISOString(),
     template: null,
   },
@@ -50,6 +51,8 @@ const mockVotingSnapshot: PartySnapshot = {
   votesCastCount: 1,
   mySubmission: null,
   myVote: null,
+  myTemplate: null,
+  myRerollsRemaining: 0,
   recentReactions: [],
 };
 

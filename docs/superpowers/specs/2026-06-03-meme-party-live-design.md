@@ -46,7 +46,7 @@ Let logged-in friends play a live meme-caption party game on MemeFight: private 
 ```mermaid
 flowchart LR
   P0["P0 Profiles\nhandle + avatar onboarding"]
-  P1["P1 Party Live\nprivate room, same meme"]
+  P1["P1 Party Live\nprivate room, own meme"]
   P15["P1.5 Lobby reactions\nquick emoji only"]
   P2["P2 Async turns"]
   P3["P3 Public lobbies + UGC templates"]
@@ -71,11 +71,18 @@ flowchart LR
 - Host creates room; host starts game when `count(players) >= 3`
 - Host may leave before start; after start, host promotion runs inside `party_advance_phase` (see Section B)
 
-### Mode: Same Meme
+### Mode: Own Meme (P1.10)
 
-- Each round picks one template from `party_templates` (random without repeat within same room until pool exhausted)
-- All players caption the **same** image
-- One caption submission per player per round
+- Each round, **each player** gets a **different** random template from `party_templates`
+- Within-round uniqueness: no two players share the same template in one round (enforced via `party_pick_template_for_round` + local exclusion set, even after room pool reset)
+- One caption submission per player per round; submission stores frozen `template_id` for vote/reveal/share
+
+### Rerolls (P1.10)
+
+- Host selects **0 … round_count** rerolls **per player for the whole game** at create time (default **0**)
+- During caption phase, player may reroll their meme if budget remains and they have not submitted yet
+- Reroll uses same within-round exclusion (cannot steal another player's current template when alternatives exist)
+- Caption draft is **kept** on reroll; UI shows hint: „Dein Text wurde übernommen — passt er noch?“
 
 ### Rounds
 
@@ -103,7 +110,7 @@ Host cannot adjust timers in v1.
 
 ### Caption rules
 
-- Max **120 characters**, trimmed
+- Max **120 characters** total, trimmed (two fields: **Oben** / **Unten**; stored as `top|bottom`)
 - Block empty / whitespace-only
 - Server-side profanity list (same word list module as future moderation; v1 = reject with generic error)
 - No emoji restriction
@@ -734,7 +741,7 @@ assets/party-templates/            ← seed images + LICENSE
 
 - **Templates:** `PartyTemplateFrame` loads Storage WebP URLs from `party_templates` (`placeholder-*.webp`). Generate/upload via `scripts/generate-party-templates.mjs` then `scripts/upload-party-templates.mjs`.
 - **DE copy:** Production strings in `lib/party/copy-de.ts`. `/party/design` preview screens remain EN by design.
-- **Caption UX:** Single `caption` field (120 chars); pipe `\|` for two lines in UI.
+- **Caption UX:** Two fields (Oben / Unten), 120 chars shared budget; pipe `\|` in stored caption. Reroll button when budget > 0.
 - **Nav:** Header link **PARTY** in `components/site-header.tsx`. Footer **Party** + **Credits** in `components/site-footer.tsx`.
 - **Design preview:** `JoinScreen` alias passes `designPreview` (public lobbies visible); production uses `PartyJoinScreen` without it.
 

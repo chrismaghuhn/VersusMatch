@@ -22,6 +22,12 @@ export type TextBox = {
   maxLines: number;
 };
 
+export type PartyTemplateView = {
+  id: string;
+  imageUrl: string;
+  textBoxes: TextBox[];
+};
+
 export type PartySnapshot = {
   room: {
     id: string;
@@ -30,8 +36,10 @@ export type PartySnapshot = {
     phase: PartyPhase;
     currentRound: number;
     roundCount: number;
+    rerollsPerPlayer: number;
     phaseEndsAt: string | null;
-    template: { id: string; imageUrl: string; textBoxes: TextBox[] } | null;
+    /** @deprecated Use myTemplate (caption) or submission.template (vote/reveal) */
+    template: PartyTemplateView | null;
   };
   players: Array<{
     userId: string;
@@ -46,11 +54,14 @@ export type PartySnapshot = {
     userId: string;
     caption: string;
     voteCount?: number;
+    template?: PartyTemplateView;
   }>;
   captionCount: number;
   votesCastCount: number;
   mySubmission: { id: string; caption: string } | null;
   myVote: { submissionId: string } | null;
+  myTemplate: PartyTemplateView | null;
+  myRerollsRemaining: number;
   recentReactions: Array<{
     id: string;
     userId: string;

@@ -8,16 +8,24 @@ export async function POST(request: Request) {
   if ("error" in auth) return auth.error;
 
   let roundCount = 5;
+  let rerollsPerPlayer = 0;
   try {
-    const body = (await request.json()) as { roundCount?: number };
+    const body = (await request.json()) as { roundCount?: number; rerollsPerPlayer?: number };
     if (body.roundCount === 3 || body.roundCount === 5 || body.roundCount === 7) {
       roundCount = body.roundCount;
+    }
+    if (
+      typeof body.rerollsPerPlayer === "number" &&
+      Number.isInteger(body.rerollsPerPlayer) &&
+      body.rerollsPerPlayer >= 0
+    ) {
+      rerollsPerPlayer = Math.min(body.rerollsPerPlayer, roundCount);
     }
   } catch {
     // default round count
   }
 
-  const { data, error } = await partyCreateRoomRpc(auth.supabase, roundCount);
+  const { data, error } = await partyCreateRoomRpc(auth.supabase, roundCount, rerollsPerPlayer);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

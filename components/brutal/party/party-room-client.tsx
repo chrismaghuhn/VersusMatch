@@ -29,7 +29,9 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const [snapshot, setSnapshot] = useState<PartySnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [captionDraft, setCaptionDraft] = useState("");
+  const [showRerollDraftHint, setShowRerollDraftHint] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [rerolling, setRerolling] = useState(false);
   const [voting, setVoting] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [retractingVote, setRetractingVote] = useState(false);
@@ -119,8 +121,20 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const captionCount = snapshot?.captionCount ?? 0;
   const votesCastCount = snapshot?.votesCastCount ?? 0;
   const phaseEndsAt = snapshot?.room.phaseEndsAt ?? null;
+  const currentRound = snapshot?.room.currentRound ?? 0;
 
   snapshotRef.current = snapshot;
+
+  useEffect(() => {
+    if (!showRerollDraftHint) return;
+    const timer = window.setTimeout(() => setShowRerollDraftHint(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [showRerollDraftHint]);
+
+  useEffect(() => {
+    setCaptionDraft("");
+    setShowRerollDraftHint(false);
+  }, [currentRound]);
 
   useEffect(() => {
     if (phase !== "caption" && phase !== "voting") return;
@@ -250,6 +264,31 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         void refresh();
       }
     }
+  }
+
+  async function handleReroll() {
+    setRerolling(true);
+    try {
+      const res = await fetch("/api/party/reroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId }),
+      });
+      const data = (await res.json()) as { snapshot?: PartySnapshot; error?: string };
+      if (data.snapshot) {
+        setSnapshot(data.snapshot);
+        setShowRerollDraftHint(true);
+      } else if (data.error) {
+        setError(data.error);
+      }
+    } finally {
+      setRerolling(false);
+    }
+  }
+
+  function handleCaptionChange(value: string) {
+    setCaptionDraft(value);
+    setShowRerollDraftHint(false);
   }
 
   async function handleSubmitCaption() {
@@ -400,6 +439,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
       <PartyLobbyScreen
         code={snapshot.room.code}
         roundCount={snapshot.room.roundCount as 3 | 5 | 7}
+        rerollsPerPlayer={snapshot.room.rerollsPerPlayer}
         isHost={isHost}
         canStart={isHost && snapshot.players.length >= minPlayers}
         players={snapshot.players.map((p) => {
@@ -440,15 +480,19 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         captionCount={snapshot.captionCount}
         playerCount={snapshot.players.length}
         value={captionDraft}
-        onChange={setCaptionDraft}
+        onChange={handleCaptionChange}
         onSubmit={() => void handleSubmitCaption()}
+        onReroll={() => void handleReroll()}
         onUnlock={() => void handleRetractCaption()}
         locked={locked}
         unlockDisabled={phaseTransitioning}
         unlocking={unlocking}
         submitting={submitting}
+        rerolling={rerolling}
+        rerollsRemaining={snapshot.myRerollsRemaining}
+        showRerollDraftHint={showRerollDraftHint}
         statusMessage={statusMessage}
-        template={snapshot.room.template}
+        template={snapshot.myTemplate}
       />
     );
   }

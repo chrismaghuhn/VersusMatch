@@ -137,8 +137,8 @@ export function PartyMobileVoting({
             <div className="relative h-full min-h-[280px]">
               <PartyTemplateFrame
                 caption={current.caption}
-                imageUrl={snapshot.room.template?.imageUrl}
-                textBoxes={snapshot.room.template?.textBoxes}
+                imageUrl={current.template?.imageUrl}
+                textBoxes={current.template?.textBoxes}
               />
               <div
                 className="absolute inset-x-0 bottom-0 bg-black/90 p-2.5 backdrop-blur"

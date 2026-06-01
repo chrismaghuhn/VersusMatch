@@ -248,6 +248,7 @@ export type Database = {
           joined_at: string;
           last_reaction_at: string | null;
           last_seen_at: string;
+          rerolls_used: number;
           room_id: string;
           score: number;
           user_id: string;
@@ -257,6 +258,7 @@ export type Database = {
           joined_at?: string;
           last_reaction_at?: string | null;
           last_seen_at?: string;
+          rerolls_used?: number;
           room_id: string;
           score?: number;
           user_id: string;
@@ -266,6 +268,7 @@ export type Database = {
           joined_at?: string;
           last_reaction_at?: string | null;
           last_seen_at?: string;
+          rerolls_used?: number;
           room_id?: string;
           score?: number;
           user_id?: string;
@@ -307,6 +310,7 @@ export type Database = {
           phase: string;
           phase_ends_at: string | null;
           phase_seed: number | null;
+          rerolls_per_player: number;
           round_count: number;
           status: string;
           template_id: string | null;
@@ -323,6 +327,7 @@ export type Database = {
           phase?: string;
           phase_ends_at?: string | null;
           phase_seed?: number | null;
+          rerolls_per_player?: number;
           round_count?: number;
           status?: string;
           template_id?: string | null;
@@ -339,11 +344,33 @@ export type Database = {
           phase?: string;
           phase_ends_at?: string | null;
           phase_seed?: number | null;
+          rerolls_per_player?: number;
           round_count?: number;
           status?: string;
           template_id?: string | null;
           used_template_ids?: string[];
           votes_cast_count?: number;
+        };
+        Relationships: [];
+      };
+      party_player_rounds: {
+        Row: {
+          room_id: string;
+          round: number;
+          template_id: string;
+          user_id: string;
+        };
+        Insert: {
+          room_id: string;
+          round: number;
+          template_id: string;
+          user_id: string;
+        };
+        Update: {
+          room_id?: string;
+          round?: number;
+          template_id?: string;
+          user_id?: string;
         };
         Relationships: [];
       };
@@ -375,6 +402,7 @@ export type Database = {
           id: string;
           room_id: string;
           round: number;
+          template_id: string | null;
           user_id: string;
         };
         Insert: {
@@ -383,6 +411,7 @@ export type Database = {
           id?: string;
           room_id: string;
           round: number;
+          template_id?: string | null;
           user_id: string;
         };
         Update: {
@@ -391,6 +420,7 @@ export type Database = {
           id?: string;
           room_id?: string;
           round?: number;
+          template_id?: string | null;
           user_id?: string;
         };
         Relationships: [];
@@ -649,7 +679,7 @@ export type Database = {
         Returns: Record<string, unknown>;
       };
       party_create_room: {
-        Args: { p_round_count?: number };
+        Args: { p_round_count?: number; p_rerolls_per_player?: number };
         Returns: Record<string, unknown>;
       };
       party_get_my_vote: {
@@ -677,6 +707,10 @@ export type Database = {
         Returns: Record<string, unknown>;
       };
       party_retract_vote: {
+        Args: { p_room_id: string };
+        Returns: Record<string, unknown>;
+      };
+      party_reroll_template: {
         Args: { p_room_id: string };
         Returns: Record<string, unknown>;
       };

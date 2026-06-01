@@ -18,6 +18,7 @@ export type ShareCardData = {
     voteCount: number;
     avatarId: AvatarId;
     avatarColor: string;
+    template: PartySnapshot["room"]["template"];
   } | null;
   template: PartySnapshot["room"]["template"];
 };
@@ -50,15 +51,18 @@ export function buildShareCardData(snapshot: PartySnapshot): ShareCardData {
       voteCount: best.voteCount ?? 0,
       avatarId: avatar.id,
       avatarColor: avatar.color,
+      template: best.template ?? null,
     };
   }
+
+  const roundTemplate = roundWinner?.template ?? null;
 
   return {
     roomCode: snapshot.room.code,
     roundCount: snapshot.room.roundCount,
     gameWinners,
     roundWinner,
-    template: snapshot.room.template,
+    template: roundTemplate,
   };
 }
 
