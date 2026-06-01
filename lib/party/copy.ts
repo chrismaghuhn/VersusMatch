@@ -190,6 +190,11 @@ export const PARTY_COPY = {
   rerollButtonBusy: "ROLLING…",
   rerollsRemaining: (n: number) => `${n} reroll${n === 1 ? "" : "s"} left`,
   rerollDraftHint: "Your text was kept — does it still fit?",
+  rerollCustomWarningTitle: "Meme wechseln?",
+  rerollCustomWarningBody:
+    "Reroll tauscht dein Meme und entfernt alle Custom-Texte. Das Layout wird zurückgesetzt.",
+  rerollCustomConfirm: "Trotzdem rerollen",
+  rerollCustomCancel: "Abbrechen",
   canvasAddText: "+ Text",
   canvasDeleteCustom: "Delete",
   canvasResetLayout: "Reset layout",

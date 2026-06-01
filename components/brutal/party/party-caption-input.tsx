@@ -36,6 +36,7 @@ type PartyCaptionInputProps = {
   onRegisterCanvasReset?: (
     reset: (revision: number, draft: CaptionDocumentV3 | null) => void
   ) => void;
+  onRegisterHasCustomBoxes?: (hasCustomBoxes: boolean) => void;
   onLayoutFrozenChange?: (frozen: boolean) => void;
 };
 
@@ -61,6 +62,7 @@ export function PartyCaptionInput({
   roomId = "",
   mobile = false,
   onRegisterCanvasReset,
+  onRegisterHasCustomBoxes,
   onLayoutFrozenChange,
 }: PartyCaptionInputProps) {
   const inputDisabled = (locked ? true : disabled) || submitting || unlocking || rerolling;
@@ -90,6 +92,11 @@ export function PartyCaptionInput({
     if (!canvasEditor?.resetCanvasFromRevision || !onRegisterCanvasReset) return;
     onRegisterCanvasReset(canvasEditor.resetCanvasFromRevision);
   }, [canvasEditor, onRegisterCanvasReset]);
+
+  useEffect(() => {
+    if (!onRegisterHasCustomBoxes) return;
+    onRegisterHasCustomBoxes(canvasEditor?.hasCustomBoxes ?? false);
+  }, [canvasEditor?.hasCustomBoxes, onRegisterHasCustomBoxes]);
 
   useEffect(() => {
     onLayoutFrozenChange?.(canvasEditor?.layoutFrozen ?? false);

@@ -189,6 +189,10 @@ export function useMemeCanvasEditor({
   const canAddCustomBox = useMemo(() => nextCustomBox(boxes) !== null, [boxes]);
   const canDeleteActiveCustomBox =
     activeBoxIndex >= 0 && boxes[activeBoxIndex]?.kind === "custom";
+  const hasCustomBoxes = useMemo(
+    () => boxes.some((b) => b.kind === "custom"),
+    [boxes]
+  );
 
   const plainLength = useMemo(
     () => plainTextLengthFromBoxes(buildPreviewBoxesV3(boxes, fieldTexts, segmentOverrides)),
@@ -327,6 +331,7 @@ export function useMemeCanvasEditor({
     resetLayout,
     canAddCustomBox,
     canDeleteActiveCustomBox,
+    hasCustomBoxes,
     resetCanvasFromRevision,
   };
 }

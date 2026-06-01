@@ -40,6 +40,7 @@ type PartyDesktopCaptionProps = {
   onRegisterCanvasReset?: (
     reset: (revision: number, draft: CaptionDocumentV3 | null) => void
   ) => void;
+  onRegisterHasCustomBoxes?: (hasCustomBoxes: boolean) => void;
 };
 
 export function PartyDesktopCaption({
@@ -69,6 +70,7 @@ export function PartyDesktopCaption({
   captionDraft = null,
   roomId = "",
   onRegisterCanvasReset,
+  onRegisterHasCustomBoxes,
 }: PartyDesktopCaptionProps) {
   const accent = PARTY_DESIGN.accent;
   const [layoutFrozen, setLayoutFrozen] = useState(false);
@@ -123,6 +125,7 @@ export function PartyDesktopCaption({
                 captionDraft={captionDraft}
                 roomId={roomId}
                 onRegisterCanvasReset={onRegisterCanvasReset}
+                onRegisterHasCustomBoxes={onRegisterHasCustomBoxes}
                 onLayoutFrozenChange={setLayoutFrozen}
               />
               {statusMessage ? (

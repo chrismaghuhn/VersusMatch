@@ -9,6 +9,7 @@ import { PartyDesktopCaption } from "@/components/brutal/party/desktop";
 import { usePartyDesktop } from "@/lib/party/use-party-desktop";
 import { PartyRevealScreen } from "@/components/brutal/party/party-reveal-screen";
 import { PartyVotingScreen } from "@/components/brutal/party/party-voting-screen";
+import { RerollConfirmDialog } from "@/components/brutal/party/caption-studio/RerollConfirmDialog";
 import { PartyLobbyScreen } from "@/components/brutal/party/screens/HostOnboarding";
 import { PartyErrorState } from "@/components/brutal/party/party-error-state";
 import { Shell } from "@/components/brutal/party/shared/Shell";
@@ -41,6 +42,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const [showRerollDraftHint, setShowRerollDraftHint] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [rerolling, setRerolling] = useState(false);
+  const [rerollConfirmOpen, setRerollConfirmOpen] = useState(false);
   const [voting, setVoting] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [retractingVote, setRetractingVote] = useState(false);
@@ -55,6 +57,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const canvasResetRef = useRef<
     ((revision: number, draft: CaptionDocumentV3 | null) => void) | null
   >(null);
+  const hasCustomBoxesRef = useRef(false);
 
   const advanceGuardsRef = useRef<AdvancePhaseGuards>({
     advancingRef,
@@ -283,6 +286,14 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     }
   }
 
+  function requestReroll() {
+    if (snapshot?.room.canvasEditorEnabled && hasCustomBoxesRef.current) {
+      setRerollConfirmOpen(true);
+      return;
+    }
+    void handleReroll();
+  }
+
   async function handleReroll() {
     setRerolling(true);
     try {
@@ -305,6 +316,11 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     } finally {
       setRerolling(false);
     }
+  }
+
+  function handleRerollConfirm() {
+    setRerollConfirmOpen(false);
+    void handleReroll();
   }
 
   function handleCaptionChange(value: string) {
@@ -503,67 +519,86 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
           : PARTY_COPY.captionLockedIn
       : null;
 
-    return desktop ? (
-      <PartyDesktopCaption
-        round={snapshot.room.currentRound}
-        roundCount={snapshot.room.roundCount}
-        phaseEndsAt={snapshot.room.phaseEndsAt}
-        allReady={allReady}
-        captionCount={snapshot.captionCount}
-        playerCount={snapshot.players.length}
-        value={captionDraft}
-        onChange={handleCaptionChange}
-        onSubmit={(payload) => void handleSubmitCaption(payload)}
-        onReroll={() => void handleReroll()}
-        onUnlock={() => void handleRetractCaption()}
-        locked={locked}
-        unlockDisabled={phaseTransitioning}
-        unlocking={unlocking}
-        submitting={submitting}
-        rerolling={rerolling}
-        rerollsRemaining={snapshot.myRerollsRemaining}
-        showRerollDraftHint={showRerollDraftHint}
-        statusMessage={statusMessage}
-        template={snapshot.myTemplate}
-        canvasEnabled={snapshot.room.canvasEditorEnabled}
-        captionDurationSeconds={snapshot.room.captionDurationSeconds}
-        layoutRevision={snapshot.layoutRevision}
-        captionDraft={snapshot.captionDraft}
-        roomId={roomId}
-        onRegisterCanvasReset={(reset) => {
-          canvasResetRef.current = reset;
-        }}
-      />
-    ) : (
-      <PartyMobileCaption
-        round={snapshot.room.currentRound}
-        roundCount={snapshot.room.roundCount}
-        phaseEndsAt={snapshot.room.phaseEndsAt}
-        allReady={allReady}
-        captionCount={snapshot.captionCount}
-        playerCount={snapshot.players.length}
-        value={captionDraft}
-        onChange={handleCaptionChange}
-        onSubmit={(payload) => void handleSubmitCaption(payload)}
-        onReroll={() => void handleReroll()}
-        onUnlock={() => void handleRetractCaption()}
-        locked={locked}
-        unlockDisabled={phaseTransitioning}
-        unlocking={unlocking}
-        submitting={submitting}
-        rerolling={rerolling}
-        rerollsRemaining={snapshot.myRerollsRemaining}
-        showRerollDraftHint={showRerollDraftHint}
-        statusMessage={statusMessage}
-        template={snapshot.myTemplate}
-        canvasEnabled={snapshot.room.canvasEditorEnabled}
-        layoutRevision={snapshot.layoutRevision}
-        captionDraft={snapshot.captionDraft}
-        roomId={roomId}
-        onRegisterCanvasReset={(reset) => {
-          canvasResetRef.current = reset;
-        }}
-      />
+    const registerHasCustomBoxes = (hasCustom: boolean) => {
+      hasCustomBoxesRef.current = hasCustom;
+    };
+
+    return (
+      <>
+        <RerollConfirmDialog
+          open={rerollConfirmOpen}
+          onCancel={() => setRerollConfirmOpen(false)}
+          onConfirm={handleRerollConfirm}
+          title={PARTY_COPY.rerollCustomWarningTitle}
+          body={PARTY_COPY.rerollCustomWarningBody}
+          confirmLabel={PARTY_COPY.rerollCustomConfirm}
+          cancelLabel={PARTY_COPY.rerollCustomCancel}
+        />
+        {desktop ? (
+          <PartyDesktopCaption
+            round={snapshot.room.currentRound}
+            roundCount={snapshot.room.roundCount}
+            phaseEndsAt={snapshot.room.phaseEndsAt}
+            allReady={allReady}
+            captionCount={snapshot.captionCount}
+            playerCount={snapshot.players.length}
+            value={captionDraft}
+            onChange={handleCaptionChange}
+            onSubmit={(payload) => void handleSubmitCaption(payload)}
+            onReroll={requestReroll}
+            onUnlock={() => void handleRetractCaption()}
+            locked={locked}
+            unlockDisabled={phaseTransitioning}
+            unlocking={unlocking}
+            submitting={submitting}
+            rerolling={rerolling}
+            rerollsRemaining={snapshot.myRerollsRemaining}
+            showRerollDraftHint={showRerollDraftHint}
+            statusMessage={statusMessage}
+            template={snapshot.myTemplate}
+            canvasEnabled={snapshot.room.canvasEditorEnabled}
+            captionDurationSeconds={snapshot.room.captionDurationSeconds}
+            layoutRevision={snapshot.layoutRevision}
+            captionDraft={snapshot.captionDraft}
+            roomId={roomId}
+            onRegisterCanvasReset={(reset) => {
+              canvasResetRef.current = reset;
+            }}
+            onRegisterHasCustomBoxes={registerHasCustomBoxes}
+          />
+        ) : (
+          <PartyMobileCaption
+            round={snapshot.room.currentRound}
+            roundCount={snapshot.room.roundCount}
+            phaseEndsAt={snapshot.room.phaseEndsAt}
+            allReady={allReady}
+            captionCount={snapshot.captionCount}
+            playerCount={snapshot.players.length}
+            value={captionDraft}
+            onChange={handleCaptionChange}
+            onSubmit={(payload) => void handleSubmitCaption(payload)}
+            onReroll={requestReroll}
+            onUnlock={() => void handleRetractCaption()}
+            locked={locked}
+            unlockDisabled={phaseTransitioning}
+            unlocking={unlocking}
+            submitting={submitting}
+            rerolling={rerolling}
+            rerollsRemaining={snapshot.myRerollsRemaining}
+            showRerollDraftHint={showRerollDraftHint}
+            statusMessage={statusMessage}
+            template={snapshot.myTemplate}
+            canvasEnabled={snapshot.room.canvasEditorEnabled}
+            layoutRevision={snapshot.layoutRevision}
+            captionDraft={snapshot.captionDraft}
+            roomId={roomId}
+            onRegisterCanvasReset={(reset) => {
+              canvasResetRef.current = reset;
+            }}
+            onRegisterHasCustomBoxes={registerHasCustomBoxes}
+          />
+        )}
+      </>
     );
   }
 

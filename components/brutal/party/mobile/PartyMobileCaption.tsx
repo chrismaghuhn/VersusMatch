@@ -42,6 +42,7 @@ type PartyMobileCaptionProps = {
   onRegisterCanvasReset?: (
     reset: (revision: number, draft: CaptionDocumentV3 | null) => void
   ) => void;
+  onRegisterHasCustomBoxes?: (hasCustomBoxes: boolean) => void;
 };
 
 export function PartyMobileCaption({
@@ -71,6 +72,7 @@ export function PartyMobileCaption({
   captionDraft = null,
   roomId = "",
   onRegisterCanvasReset,
+  onRegisterHasCustomBoxes,
 }: PartyMobileCaptionProps) {
   const inputDisabled = locked || submitting || unlocking || rerolling;
   const labelBoxes = template?.textBoxes ?? defaultCaptionTextBoxes(2);
@@ -99,6 +101,11 @@ export function PartyMobileCaption({
     if (!canvasEditor?.resetCanvasFromRevision || !onRegisterCanvasReset) return;
     onRegisterCanvasReset(canvasEditor.resetCanvasFromRevision);
   }, [canvasEditor, onRegisterCanvasReset]);
+
+  useEffect(() => {
+    if (!onRegisterHasCustomBoxes) return;
+    onRegisterHasCustomBoxes(canvasEditor?.hasCustomBoxes ?? false);
+  }, [canvasEditor?.hasCustomBoxes, onRegisterHasCustomBoxes]);
 
   const layoutFrozen = canvasEditor?.layoutFrozen ?? false;
 
