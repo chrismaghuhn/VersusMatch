@@ -6,6 +6,7 @@ import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTempla
 import { PARTY_COPY } from "@/lib/party/copy";
 import {
   buildCaptionFromFields,
+  buildCaptionFromFieldsForSubmit,
   captionFieldsTotalLength,
   clampCaptionFields,
   splitCaptionToFields,
@@ -62,7 +63,10 @@ export function PartyMobileCaption({
 }: PartyMobileCaptionProps) {
   const inputDisabled = locked || submitting || unlocking || rerolling;
   const [topField, bottomField] = splitCaptionToFields(value);
-  const normalized = normalizeCaption(buildCaptionFromFields(topField, bottomField));
+  const previewCaption = buildCaptionFromFields(topField, bottomField);
+  const submitCaption = normalizeCaption(
+    buildCaptionFromFieldsForSubmit(topField, bottomField)
+  );
   const remaining = CAPTION_MAX_LENGTH - captionFieldsTotalLength(topField, bottomField);
   const canReroll = Boolean(onReroll) && !locked && rerollsRemaining > 0;
 
@@ -72,7 +76,7 @@ export function PartyMobileCaption({
   }
 
   function handleSubmit() {
-    if (inputDisabled || !normalized) return;
+    if (inputDisabled || !submitCaption) return;
     onSubmit();
   }
 
@@ -93,7 +97,7 @@ export function PartyMobileCaption({
       ) : null}
       <button
         type="button"
-        disabled={inputDisabled || !normalized}
+        disabled={inputDisabled || !submitCaption}
         onClick={handleSubmit}
         className="flex w-full items-center justify-center gap-2 bg-[#FF2D87] py-3.5 text-white transition hover:bg-[#CCFF00] hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
         style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.18em" }}
@@ -128,7 +132,7 @@ export function PartyMobileCaption({
       <div className="flex flex-1 flex-col p-3">
         <div className="p-1">
           <PartyTemplateFrame
-            caption={normalized || undefined}
+            caption={previewCaption || undefined}
             imageUrl={template?.imageUrl}
             textBoxes={template?.textBoxes}
           />

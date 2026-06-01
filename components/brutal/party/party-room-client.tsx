@@ -20,6 +20,11 @@ import { usePartyRealtime } from "@/lib/party/realtime";
 import { useEveryoneLeft } from "@/lib/party/use-everyone-left";
 import { tryAdvancePhase, type AdvancePhaseGuards } from "@/lib/party/try-advance-phase";
 import type { PartySnapshot, PartyReactionKey } from "@/lib/party/types";
+import {
+  buildCaptionFromFieldsForSubmit,
+  splitCaptionToFields,
+} from "@/lib/party/caption-fields";
+import { normalizeCaption } from "@/lib/party/caption";
 import { getAppUrl } from "@/lib/utils";
 
 type PartyRoomClientProps = {
@@ -295,12 +300,14 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   }
 
   async function handleSubmitCaption() {
+    const [top, bottom] = splitCaptionToFields(captionDraft);
+    const caption = normalizeCaption(buildCaptionFromFieldsForSubmit(top, bottom));
     setSubmitting(true);
     try {
       const res = await fetch("/api/party/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId, caption: captionDraft }),
+        body: JSON.stringify({ roomId, caption }),
       });
       const data = (await res.json()) as { snapshot?: PartySnapshot; error?: string };
       if (data.snapshot) {

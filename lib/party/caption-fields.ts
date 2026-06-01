@@ -4,28 +4,34 @@ export const CAPTION_FIELD_COUNT = 2;
 
 export const CAPTION_FIELD_LABELS = ["Top", "Bottom"] as const;
 
+/** Split stored caption into fields without trimming (preserves spaces while editing). */
 export function splitCaptionToFields(caption: string): [string, string] {
-  const parts = caption.split("|").map((p) => p.trim());
-  return [parts[0] ?? "", parts[1] ?? ""];
+  const pipeIndex = caption.indexOf("|");
+  if (pipeIndex === -1) {
+    return [caption, ""];
+  }
+  return [caption.slice(0, pipeIndex), caption.slice(pipeIndex + 1)];
 }
 
+/** Build caption from fields — no trim; used on change and for live preview. */
 export function buildCaptionFromFields(top: string, bottom: string): string {
-  const t = top.trim();
-  const b = bottom.trim();
-  if (!t && !b) return "";
-  if (!b) return t.slice(0, CAPTION_MAX_LENGTH);
-  if (!t) return b.slice(0, CAPTION_MAX_LENGTH);
-  const combined = `${t}|${b}`;
+  if (!top && !bottom) return "";
+  if (!bottom) return top.slice(0, CAPTION_MAX_LENGTH);
+  if (!top) return bottom.slice(0, CAPTION_MAX_LENGTH);
+  const combined = `${top}|${bottom}`;
   return combined.slice(0, CAPTION_MAX_LENGTH);
 }
 
+/** Trim each field then build — call only at submit boundary. */
+export function buildCaptionFromFieldsForSubmit(top: string, bottom: string): string {
+  return buildCaptionFromFields(top.trim(), bottom.trim());
+}
+
 export function captionFieldsTotalLength(top: string, bottom: string): number {
-  const t = top.trim();
-  const b = bottom.trim();
-  if (!t && !b) return 0;
-  if (!t) return b.length;
-  if (!b) return t.length;
-  return t.length + 1 + b.length;
+  if (!top && !bottom) return 0;
+  if (!top) return bottom.length;
+  if (!bottom) return top.length;
+  return top.length + 1 + bottom.length;
 }
 
 export function clampCaptionFields(top: string, bottom: string): [string, string] {

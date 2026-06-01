@@ -6,6 +6,7 @@ import type { TextBox } from "@/lib/party/types";
 import { PARTY_COPY } from "@/lib/party/copy";
 import {
   buildCaptionFromFields,
+  buildCaptionFromFieldsForSubmit,
   captionFieldsTotalLength,
   clampCaptionFields,
   splitCaptionToFields,
@@ -49,7 +50,10 @@ export function PartyCaptionInput({
 }: PartyCaptionInputProps) {
   const inputDisabled = (locked ? true : disabled) || submitting || unlocking || rerolling;
   const [topField, bottomField] = splitCaptionToFields(value);
-  const normalized = normalizeCaption(buildCaptionFromFields(topField, bottomField));
+  const previewCaption = buildCaptionFromFields(topField, bottomField);
+  const submitCaption = normalizeCaption(
+    buildCaptionFromFieldsForSubmit(topField, bottomField)
+  );
   const remaining = CAPTION_MAX_LENGTH - captionFieldsTotalLength(topField, bottomField);
   const canReroll = Boolean(onReroll) && !locked && rerollsRemaining > 0;
 
@@ -59,14 +63,14 @@ export function PartyCaptionInput({
   }
 
   function handleSubmit() {
-    if (inputDisabled || !normalized) return;
+    if (inputDisabled || !submitCaption) return;
     onSubmit();
   }
 
   return (
     <div className="flex flex-col gap-4">
       <PartyTemplateFrame
-        caption={normalized || undefined}
+        caption={previewCaption || undefined}
         imageUrl={template?.imageUrl}
         textBoxes={template?.textBoxes}
         fallbackTemplate={previewTemplate}
@@ -149,7 +153,7 @@ export function PartyCaptionInput({
           ) : null}
           <button
             type="button"
-            disabled={inputDisabled || !normalized}
+            disabled={inputDisabled || !submitCaption}
             onClick={handleSubmit}
             className="flex w-full items-center justify-center gap-2 bg-[#FF2D87] py-3.5 text-white transition hover:bg-[#CCFF00] hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
             style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.18em" }}

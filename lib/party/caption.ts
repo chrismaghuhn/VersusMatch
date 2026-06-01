@@ -3,6 +3,7 @@ export const CAPTION_MAX_LENGTH = 120;
 
 export const CAPTION_PLACEHOLDER = "TOP TEXT | BOTTOM TEXT";
 
+/** Trim and clamp length — submit/API boundary only, not while editing drafts. */
 export function normalizeCaption(raw: string): string {
   return raw.trim().slice(0, CAPTION_MAX_LENGTH);
 }
