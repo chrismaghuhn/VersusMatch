@@ -398,6 +398,7 @@ export type Database = {
       party_submissions: {
         Row: {
           caption: string;
+          caption_rich: unknown | null;
           created_at: string;
           id: string;
           room_id: string;
@@ -407,6 +408,7 @@ export type Database = {
         };
         Insert: {
           caption: string;
+          caption_rich?: unknown | null;
           created_at?: string;
           id?: string;
           room_id: string;
@@ -416,6 +418,7 @@ export type Database = {
         };
         Update: {
           caption?: string;
+          caption_rich?: unknown | null;
           created_at?: string;
           id?: string;
           room_id?: string;
@@ -723,7 +726,11 @@ export type Database = {
         Returns: Record<string, unknown>;
       };
       party_submit_caption: {
-        Args: { p_room_id: string; p_caption: string };
+        Args: {
+          p_room_id: string;
+          p_caption: string;
+          p_caption_rich?: unknown | null;
+        };
         Returns: Record<string, unknown>;
       };
     };
