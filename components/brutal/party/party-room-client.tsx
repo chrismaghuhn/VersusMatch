@@ -515,6 +515,10 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         showRerollDraftHint={showRerollDraftHint}
         statusMessage={statusMessage}
         template={snapshot.myTemplate}
+        canvasEnabled={snapshot.room.canvasEditorEnabled}
+        layoutRevision={snapshot.layoutRevision}
+        captionDraft={snapshot.captionDraft}
+        roomId={roomId}
       />
     ) : (
       <PartyMobileCaption
@@ -538,6 +542,10 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         showRerollDraftHint={showRerollDraftHint}
         statusMessage={statusMessage}
         template={snapshot.myTemplate}
+        canvasEnabled={snapshot.room.canvasEditorEnabled}
+        layoutRevision={snapshot.layoutRevision}
+        captionDraft={snapshot.captionDraft}
+        roomId={roomId}
       />
     );
   }

@@ -7,6 +7,7 @@ import { Shell } from "@/components/brutal/party/shared/Shell";
 import { PARTY_COPY } from "@/lib/party/copy";
 import { PARTY_DESIGN } from "@/lib/party/design";
 import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
+import type { CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
 
 type PartyDesktopCaptionProps = {
@@ -30,6 +31,10 @@ type PartyDesktopCaptionProps = {
   showRerollDraftHint?: boolean;
   statusMessage?: string | null;
   template?: { imageUrl: string; textBoxes: TextBox[] } | null;
+  canvasEnabled?: boolean;
+  layoutRevision?: number;
+  captionDraft?: CaptionDocumentV3 | null;
+  roomId?: string;
 };
 
 export function PartyDesktopCaption({
@@ -53,6 +58,10 @@ export function PartyDesktopCaption({
   showRerollDraftHint = false,
   statusMessage,
   template = null,
+  canvasEnabled = false,
+  layoutRevision = 0,
+  captionDraft = null,
+  roomId = "",
 }: PartyDesktopCaptionProps) {
   const accent = PARTY_DESIGN.accent;
 
@@ -93,6 +102,10 @@ export function PartyDesktopCaption({
                 rerollsRemaining={rerollsRemaining}
                 showRerollDraftHint={showRerollDraftHint}
                 template={template}
+                canvasEnabled={canvasEnabled}
+                layoutRevision={layoutRevision}
+                captionDraft={captionDraft}
+                roomId={roomId}
               />
               {statusMessage ? (
                 <p

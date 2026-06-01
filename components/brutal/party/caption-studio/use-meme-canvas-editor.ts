@@ -1,0 +1,256 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CAPTION_MAX_LENGTH } from "@/lib/party/caption";
+import {
+  buildCaptionFromFieldTexts,
+  clampCaptionFieldTexts,
+  splitCaptionToFieldTexts,
+} from "@/lib/party/caption-fields";
+import type { CanvasSubmitOptions, CaptionSubmitPayload } from "@/lib/party/caption-submit";
+import { prepareCaptionSubmit } from "@/lib/party/caption-submit";
+import { finalizeCaptionDocumentV3 } from "@/lib/party/caption-rich/document";
+import { defaultTemplateBoxes } from "@/lib/party/caption-rich/layout";
+import { parseMarkup } from "@/lib/party/caption-rich/parse-markup";
+import { plainTextLengthFromBoxes } from "@/lib/party/caption-rich/plain-text";
+import {
+  applyToolbarToSegments,
+  type TextSelection,
+  type ToolbarAction,
+} from "@/lib/party/caption-rich/segment-toolbar";
+import type {
+  BoxLayout,
+  CaptionBox,
+  CaptionDocument,
+  CaptionDocumentV3,
+  CaptionSegment,
+} from "@/lib/party/caption-rich/types";
+import type { TextBox } from "@/lib/party/types";
+import { useCaptionStudio } from "./use-caption-studio";
+
+const PREVIEW_DEBOUNCE_MS = 500;
+const DRAFT_SYNC_MS = 2000;
+
+function emptyOverrides(boxCount: number): (CaptionSegment[] | null)[] {
+  return Array.from({ length: boxCount }, () => null);
+}
+
+function emptyFieldTexts(boxCount: number): string[] {
+  return Array.from({ length: boxCount }, () => "");
+}
+
+function buildPreviewBoxesV3(
+  boxes: CaptionBox[],
+  fieldTexts: string[],
+  segmentOverrides: (CaptionSegment[] | null)[]
+): CaptionBox[] {
+  return boxes.map((box, i) => ({
+    ...box,
+    segments: segmentOverrides[i] ?? parseMarkup(fieldTexts[i] ?? ""),
+  }));
+}
+
+export type UseMemeCanvasEditorParams = {
+  value: string;
+  onChange: (value: string) => void;
+  textBoxes: TextBox[];
+  canvasEnabled: boolean;
+  layoutRevision: number;
+  captionDraft: CaptionDocumentV3 | null;
+  roomId: string;
+};
+
+export function useMemeCanvasEditor({
+  value,
+  onChange,
+  textBoxes,
+  canvasEnabled,
+  layoutRevision,
+  captionDraft,
+  roomId,
+}: UseMemeCanvasEditorParams) {
+  const boxCount = Math.max(1, Math.min(4, textBoxes.length));
+  const studio = useCaptionStudio(value, onChange, boxCount);
+
+  const layoutRevisionRef = useRef(layoutRevision);
+  const skipDebounceRef = useRef(false);
+  const skipDraftSyncRef = useRef(false);
+
+  const [boxes, setBoxes] = useState<CaptionBox[]>(() =>
+    captionDraft?.v === 3 ? captionDraft.boxes : defaultTemplateBoxes(textBoxes)
+  );
+  const [fieldTexts, setFieldTexts] = useState<string[]>(() =>
+    captionDraft?.v === 3
+      ? captionDraft.rawTexts
+      : splitCaptionToFieldTexts(value, boxCount)
+  );
+  const [segmentOverrides, setSegmentOverrides] = useState<(CaptionSegment[] | null)[]>(() =>
+    emptyOverrides(boxCount)
+  );
+  const [previewDoc, setPreviewDoc] = useState<CaptionDocumentV3>(() => ({
+    v: 3,
+    layoutRevision,
+    rawTexts: fieldTexts,
+    boxes: buildPreviewBoxesV3(boxes, fieldTexts, emptyOverrides(boxCount)),
+  }));
+  const [activeBoxId, setActiveBoxId] = useState<string>(() => textBoxes[0]?.id ?? "box-0");
+  const [layoutFrozen, setLayoutFrozen] = useState(false);
+
+  useEffect(() => {
+    if (!canvasEnabled) return;
+    if (layoutRevision === layoutRevisionRef.current) return;
+
+    layoutRevisionRef.current = layoutRevision;
+
+    const nextBoxes =
+      captionDraft?.v === 3 ? captionDraft.boxes : defaultTemplateBoxes(textBoxes);
+    const nextTexts =
+      captionDraft?.v === 3 ? captionDraft.rawTexts : emptyFieldTexts(textBoxes.length);
+
+    skipDebounceRef.current = true;
+    skipDraftSyncRef.current = true;
+    setBoxes(nextBoxes);
+    setFieldTexts(nextTexts);
+    setSegmentOverrides(emptyOverrides(textBoxes.length));
+    setActiveBoxId(textBoxes[0]?.id ?? "box-0");
+    onChange(buildCaptionFromFieldTexts(nextTexts));
+  }, [layoutRevision, captionDraft, textBoxes, canvasEnabled, onChange]);
+
+  useEffect(() => {
+    if (!canvasEnabled) return;
+
+    const previewBoxes = buildPreviewBoxesV3(boxes, fieldTexts, segmentOverrides);
+    const doc: CaptionDocumentV3 = {
+      v: 3,
+      layoutRevision: layoutRevisionRef.current,
+      rawTexts: fieldTexts,
+      boxes: previewBoxes,
+    };
+
+    if (skipDebounceRef.current) {
+      skipDebounceRef.current = false;
+      setPreviewDoc(doc);
+      return;
+    }
+
+    const timer = window.setTimeout(() => setPreviewDoc(doc), PREVIEW_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [boxes, fieldTexts, segmentOverrides, canvasEnabled]);
+
+  useEffect(() => {
+    if (!canvasEnabled || !roomId) return;
+
+    if (skipDraftSyncRef.current) {
+      skipDraftSyncRef.current = false;
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      const trimmed = clampCaptionFieldTexts(fieldTexts);
+      const draft = finalizeCaptionDocumentV3({
+        boxes,
+        layoutRevision: layoutRevisionRef.current,
+        rawTexts: trimmed.slice(0, boxCount),
+        segmentOverrides,
+      });
+
+      void fetch("/api/party/sync-draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId,
+          draft,
+          layoutRevision: layoutRevisionRef.current,
+        }),
+      });
+    }, DRAFT_SYNC_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [previewDoc, boxes, canvasEnabled, roomId, fieldTexts, segmentOverrides, boxCount]);
+
+  const plainLength = useMemo(
+    () => plainTextLengthFromBoxes(buildPreviewBoxesV3(boxes, fieldTexts, segmentOverrides)),
+    [boxes, fieldTexts, segmentOverrides]
+  );
+
+  const remaining = CAPTION_MAX_LENGTH - plainLength;
+
+  const canvasSubmitOptions: CanvasSubmitOptions = useMemo(
+    () => ({
+      canvasEnabled: true,
+      boxes,
+      layoutRevision: layoutRevisionRef.current,
+      templateBoxes: textBoxes,
+    }),
+    [boxes, textBoxes, layoutRevision]
+  );
+
+  const submitPayload: CaptionSubmitPayload | null = useMemo(
+    () =>
+      canvasEnabled
+        ? prepareCaptionSubmit(fieldTexts, boxCount, segmentOverrides, canvasSubmitOptions)
+        : null,
+    [canvasEnabled, fieldTexts, boxCount, segmentOverrides, canvasSubmitOptions]
+  );
+
+  const updateField = useCallback(
+    (index: number, nextValue: string) => {
+      const next = [...fieldTexts];
+      next[index] = nextValue;
+      const clamped = clampCaptionFieldTexts(next);
+      setFieldTexts(clamped);
+      setSegmentOverrides((prev) => {
+        const cleared = [...prev];
+        cleared[index] = null;
+        return cleared;
+      });
+      skipDebounceRef.current = false;
+      onChange(buildCaptionFromFieldTexts(clamped));
+    },
+    [fieldTexts, onChange]
+  );
+
+  const applyToolbar = useCallback(
+    (boxIndex: number, action: ToolbarAction, selection: TextSelection | null) => {
+      const raw = fieldTexts[boxIndex] ?? "";
+      const base = segmentOverrides[boxIndex] ?? parseMarkup(raw);
+      const next = applyToolbarToSegments(base, selection, action);
+      skipDebounceRef.current = true;
+      setSegmentOverrides((prev) => {
+        const updated = [...prev];
+        updated[boxIndex] = next;
+        return updated;
+      });
+    },
+    [fieldTexts, segmentOverrides]
+  );
+
+  const updateBoxLayout = useCallback((boxId: string, layout: BoxLayout) => {
+    setBoxes((prev) =>
+      prev.map((box) => (box.id === boxId ? { ...box, layout } : box))
+    );
+  }, []);
+
+  const onInteractionStart = useCallback(() => setLayoutFrozen(true), []);
+  const onInteractionEnd = useCallback(() => setLayoutFrozen(false), []);
+
+  if (!canvasEnabled) {
+    return studio;
+  }
+
+  return {
+    fieldTexts,
+    previewDoc: previewDoc as CaptionDocument,
+    remaining,
+    submitPayload,
+    updateField,
+    applyToolbar,
+    activeBoxId,
+    setActiveBoxId,
+    layoutFrozen,
+    boxes,
+    updateBoxLayout,
+    onInteractionStart,
+    onInteractionEnd,
+  };
+}

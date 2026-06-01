@@ -15,6 +15,7 @@ type CaptionFieldProps = {
   isLastField?: boolean;
   onChange: (value: string) => void;
   onSubmit?: () => void;
+  onFocus?: () => void;
   onToolbarAction: (action: ToolbarAction, selection: TextSelection | null) => void;
 };
 
@@ -28,6 +29,7 @@ export function CaptionField({
   isLastField = false,
   onChange,
   onSubmit,
+  onFocus,
   onToolbarAction,
 }: CaptionFieldProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -63,6 +65,7 @@ export function CaptionField({
           disabled={disabled}
           placeholder={placeholder ?? label}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={onFocus}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey && isLastField) {
               e.preventDefault();

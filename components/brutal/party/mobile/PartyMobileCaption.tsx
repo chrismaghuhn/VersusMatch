@@ -2,12 +2,14 @@
 
 import { RefreshCw, Send } from "lucide-react";
 import { CaptionField } from "@/components/brutal/party/caption-studio/CaptionField";
-import { useCaptionStudio } from "@/components/brutal/party/caption-studio/use-caption-studio";
+import { MemeCanvasOverlay } from "@/components/brutal/party/caption-studio/MemeCanvasOverlay";
+import { useMemeCanvasEditor } from "@/components/brutal/party/caption-studio/use-meme-canvas-editor";
 import { PartyMobileShell } from "@/components/brutal/party/mobile/PartyMobileShell";
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import { PARTY_COPY } from "@/lib/party/copy";
 import { captionFieldLabels, defaultCaptionTextBoxes } from "@/lib/party/caption-fields";
 import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
+import type { CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
 
 type PartyMobileCaptionProps = {
@@ -32,6 +34,10 @@ type PartyMobileCaptionProps = {
   statusMessage?: string | null;
   template?: { imageUrl: string; textBoxes: TextBox[] } | null;
   embedded?: boolean;
+  canvasEnabled?: boolean;
+  layoutRevision?: number;
+  captionDraft?: CaptionDocumentV3 | null;
+  roomId?: string;
 };
 
 export function PartyMobileCaption({
@@ -56,15 +62,38 @@ export function PartyMobileCaption({
   statusMessage,
   template = null,
   embedded = false,
+  canvasEnabled = false,
+  layoutRevision = 0,
+  captionDraft = null,
+  roomId = "",
 }: PartyMobileCaptionProps) {
   const inputDisabled = locked || submitting || unlocking || rerolling;
-  const textBoxes = template?.textBoxes ?? defaultCaptionTextBoxes(2);
-  const boxCount = Math.max(1, Math.min(4, textBoxes.length));
-  const labels = captionFieldLabels(textBoxes, boxCount);
-  const { fieldTexts, previewDoc, remaining, submitPayload, updateField, applyToolbar } =
-    useCaptionStudio(value, onChange, boxCount);
+  const labelBoxes = template?.textBoxes ?? defaultCaptionTextBoxes(2);
+  const canvasTextBoxes = template?.textBoxes ?? [];
+  const boxCount = Math.max(1, Math.min(4, labelBoxes.length));
+  const labels = captionFieldLabels(labelBoxes, boxCount);
+
+  const editor = useMemeCanvasEditor({
+    value,
+    onChange,
+    textBoxes: canvasTextBoxes,
+    canvasEnabled,
+    layoutRevision,
+    captionDraft,
+    roomId,
+  });
+
+  const { fieldTexts, previewDoc, remaining, submitPayload, updateField, applyToolbar } = editor;
+
+  const canvasEditor =
+    canvasEnabled && "activeBoxId" in editor
+      ? editor
+      : null;
+
   const canReroll = Boolean(onReroll) && !locked && rerollsRemaining > 0;
   const lastFieldIndex = boxCount - 1;
+  const showOverlay =
+    Boolean(canvasEditor) && !inputDisabled && Boolean(canvasEditor?.activeBoxId);
 
   function handleSubmit() {
     if (inputDisabled || !submitPayload) return;
@@ -121,12 +150,24 @@ export function PartyMobileCaption({
       embedded={embedded}
     >
       <div className="flex flex-1 flex-col p-3">
-        <div className="p-1">
+        <div className="relative p-1">
           <PartyTemplateFrame
+            density={canvasEnabled ? "editor" : undefined}
             captionRich={previewDoc}
             imageUrl={template?.imageUrl}
             textBoxes={template?.textBoxes}
           />
+          {showOverlay && canvasEditor ? (
+            <MemeCanvasOverlay
+              boxes={canvasEditor.boxes}
+              activeBoxId={canvasEditor.activeBoxId}
+              mobile
+              onMoveBox={canvasEditor.updateBoxLayout}
+              onResizeBox={canvasEditor.updateBoxLayout}
+              onInteractionStart={canvasEditor.onInteractionStart}
+              onInteractionEnd={canvasEditor.onInteractionEnd}
+            />
+          ) : null}
         </div>
         {showRerollDraftHint ? (
           <p
@@ -139,6 +180,7 @@ export function PartyMobileCaption({
         <div className="mt-3 flex-1 space-y-3 px-1">
           {labels.map((label, index) => {
             const inputId = `party-caption-mobile-${index}`;
+            const boxId = labelBoxes[index]?.id;
             return (
               <CaptionField
                 key={inputId}
@@ -151,6 +193,9 @@ export function PartyMobileCaption({
                 onChange={(next) => updateField(index, next)}
                 onSubmit={handleSubmit}
                 onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
+                onFocus={
+                  canvasEditor && boxId ? () => canvasEditor.setActiveBoxId(boxId) : undefined
+                }
               />
             );
           })}
