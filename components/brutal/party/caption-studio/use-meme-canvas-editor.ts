@@ -18,8 +18,14 @@ import {
   type TextSelection,
   type ToolbarAction,
 } from "@/lib/party/caption-rich/segment-toolbar";
+import {
+  takeSnapshot,
+  snapshotsEqual,
+  type EditorSnapshot,
+} from "@/lib/party/caption-rich/editor-snapshot";
 import type {
   BoxLayout,
+  BoxVisualStyle,
   CaptionBox,
   CaptionDocument,
   CaptionDocumentV3,
@@ -32,60 +38,6 @@ const PREVIEW_DEBOUNCE_MS = 500;
 const DRAFT_SYNC_MS = 2000;
 const TEXT_HISTORY_DEBOUNCE_MS = 500;
 const MAX_UNDO = 10;
-
-type EditorSnapshot = {
-  boxes: CaptionBox[];
-  fieldTexts: string[];
-  segmentOverrides: (CaptionSegment[] | null)[];
-};
-
-function takeSnapshot(
-  boxes: CaptionBox[],
-  fieldTexts: string[],
-  segmentOverrides: (CaptionSegment[] | null)[]
-): EditorSnapshot {
-  return {
-    boxes: boxes.map((box) => ({
-      ...box,
-      layout: { ...box.layout },
-      segments: box.segments.map((segment) => ({ ...segment })),
-    })),
-    fieldTexts: [...fieldTexts],
-    segmentOverrides: segmentOverrides.map((override) =>
-      override ? override.map((segment) => ({ ...segment })) : null
-    ),
-  };
-}
-
-function snapshotsEqual(a: EditorSnapshot, b: EditorSnapshot): boolean {
-  if (a.fieldTexts.length !== b.fieldTexts.length) return false;
-  if (a.fieldTexts.some((text, i) => text !== b.fieldTexts[i])) return false;
-  if (a.segmentOverrides.length !== b.segmentOverrides.length) return false;
-  for (let i = 0; i < a.segmentOverrides.length; i++) {
-    const left = a.segmentOverrides[i];
-    const right = b.segmentOverrides[i];
-    if (left === null && right === null) continue;
-    if (left === null || right === null) return false;
-    if (left.length !== right.length) return false;
-    if (left.some((segment, j) => segment.text !== right[j]?.text)) return false;
-  }
-  if (a.boxes.length !== b.boxes.length) return false;
-  for (let i = 0; i < a.boxes.length; i++) {
-    const left = a.boxes[i];
-    const right = b.boxes[i];
-    if (left.id !== right.id || left.kind !== right.kind) return false;
-    if (
-      left.layout.x !== right.layout.x ||
-      left.layout.y !== right.layout.y ||
-      left.layout.w !== right.layout.w ||
-      left.layout.h !== right.layout.h ||
-      left.layout.align !== right.layout.align
-    ) {
-      return false;
-    }
-  }
-  return true;
-}
 
 function emptyOverrides(boxCount: number): (CaptionSegment[] | null)[] {
   return Array.from({ length: boxCount }, () => null);
@@ -470,6 +422,37 @@ export function useMemeCanvasEditor({
     commitTextHistory,
   ]);
 
+  const updateBoxStyle = useCallback(
+    (boxId: string, patch: Partial<BoxVisualStyle>) => {
+      if (!boxId || !boxes.some((b) => b.id === boxId)) return;
+      commitTextHistory();
+      pushUndo(takeSnapshot(boxes, fieldTexts, segmentOverrides));
+      setBoxes((prev) =>
+        prev.map((box) => {
+          if (box.id !== boxId) return box;
+          const nextStyle = { ...box.style, ...patch };
+          const cleaned = Object.fromEntries(
+            Object.entries(nextStyle).filter(([, v]) => v !== undefined)
+          ) as BoxVisualStyle;
+          return {
+            ...box,
+            style: Object.keys(cleaned).length > 0 ? cleaned : undefined,
+          };
+        })
+      );
+    },
+    [boxes, fieldTexts, segmentOverrides, pushUndo, commitTextHistory]
+  );
+
+  const toggleBoxPill = useCallback(
+    (boxId: string) => {
+      const box = boxes.find((b) => b.id === boxId);
+      if (!box) return;
+      updateBoxStyle(boxId, { pill: !(box.style?.pill ?? false) });
+    },
+    [boxes, updateBoxStyle]
+  );
+
   const resetLayout = useCallback(() => {
     commitTextHistory();
     pushUndo(takeSnapshot(boxes, fieldTexts, segmentOverrides));
@@ -522,5 +505,7 @@ export function useMemeCanvasEditor({
     canRedo,
     onCaptionFieldFocus,
     commitTextHistory,
+    updateBoxStyle,
+    toggleBoxPill,
   };
 }

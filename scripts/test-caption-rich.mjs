@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import {
   finalizeCaptionDocument,
+  finalizeCaptionDocumentV3,
   structuralDocumentFromFieldTexts,
 } from "../lib/party/caption-rich/document.ts";
 import { captionForFrame } from "../lib/party/caption-rich/legacy-read.ts";
@@ -13,6 +14,7 @@ import {
 } from "../lib/party/caption-rich/plain-text.ts";
 import { resolveSegmentFill, strokeStylesForFill } from "../lib/party/caption-rich/fill.ts";
 import { applyToolbarToSegments } from "../lib/party/caption-rich/segment-toolbar.ts";
+import { snapshotsEqual, takeSnapshot } from "../lib/party/caption-rich/editor-snapshot.ts";
 
 test("serializeCaptionPlain uses newline between boxes not pipe", () => {
   const doc = { v: 2, boxes: [[{ text: "TOP" }], [{ text: "BOT" }]] };
@@ -130,4 +132,68 @@ test("fillBlack applies to selection range only", () => {
   assert.equal(next[0].style?.fill, "black");
   assert.equal(next[1].text, " world");
   assert.equal(next[1].style?.fill, undefined);
+});
+
+test("snapshotsEqual ignores box.segments text changes", () => {
+  const boxes = [
+    {
+      id: "t0",
+      kind: "template",
+      templateIndex: 0,
+      segments: [{ text: "a" }],
+      layout: { x: 0.1, y: 0.05, w: 0.8, h: 0.2 },
+    },
+  ];
+  const a = takeSnapshot(boxes, ["a"], [null]);
+  const boxes2 = [{ ...boxes[0], segments: [{ text: "changed" }] }];
+  const b = takeSnapshot(boxes2, ["a"], [null]);
+  assert.equal(snapshotsEqual(a, b), true);
+});
+
+test("snapshotsEqual detects style.fill change", () => {
+  const base = {
+    id: "t0",
+    kind: "template",
+    templateIndex: 0,
+    segments: [{ text: "a" }],
+    layout: { x: 0.1, y: 0.05, w: 0.8, h: 0.2 },
+  };
+  const a = takeSnapshot([base], ["a"], [null]);
+  const b = takeSnapshot([{ ...base, style: { fill: "black" } }], ["a"], [null]);
+  assert.equal(snapshotsEqual(a, b), false);
+});
+
+test("snapshotsEqual detects segment override fill change", () => {
+  const boxes = [
+    {
+      id: "t0",
+      kind: "template",
+      templateIndex: 0,
+      segments: [{ text: "" }],
+      layout: { x: 0.1, y: 0.05, w: 0.8, h: 0.2 },
+    },
+  ];
+  const a = takeSnapshot(boxes, ["hi"], [null]);
+  const b = takeSnapshot(boxes, ["hi"], [[{ text: "hi", style: { fill: "black" } }]]);
+  assert.equal(snapshotsEqual(a, b), false);
+});
+
+test("finalizeCaptionDocumentV3 preserves box.style on submit", () => {
+  const boxes = [
+    {
+      id: "t0",
+      kind: "template",
+      templateIndex: 0,
+      segments: [{ text: "" }],
+      layout: { x: 0.1, y: 0.05, w: 0.8, h: 0.2 },
+      style: { fill: "black", pill: true },
+    },
+  ];
+  const doc = finalizeCaptionDocumentV3({
+    boxes,
+    layoutRevision: 1,
+    rawTexts: ["hi"],
+  });
+  assert.equal(doc.boxes[0].style?.fill, "black");
+  assert.equal(doc.boxes[0].style?.pill, true);
 });
