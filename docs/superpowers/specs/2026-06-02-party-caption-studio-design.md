@@ -25,7 +25,7 @@ Make party captions feel like a real meme editor: **spaces and line breaks work*
 
 | Item | Deferred |
 |------|----------|
-| Free drag / resize text on image | P2.5+ |
+| Free drag / resize text on image | **P2.5** — [`2026-06-03-party-meme-canvas-editor-design.md`](2026-06-03-party-meme-canvas-editor-design.md) |
 | Custom fonts, colors, stroke color | Later |
 | User-uploaded templates | Phase 3 |
 | Rich text in lobby chat / reactions | N/A |
