@@ -14,28 +14,12 @@ const publicLobbies = [
 
 export type PartyJoinScreenProps = {
   designPreview?: boolean;
-  roundCount?: 3 | 5 | 7;
-  onRoundCountChange?: (count: 3 | 5 | 7) => void;
-  rerollsPerPlayer?: number;
-  onRerollsPerPlayerChange?: (count: number) => void;
-  roundModifiersEnabled?: boolean;
-  onRoundModifiersEnabledChange?: (enabled: boolean) => void;
-  authorGuessEnabled?: boolean;
-  onAuthorGuessEnabledChange?: (enabled: boolean) => void;
   onJoin?: (code: string) => void;
   onCreate?: () => void;
 };
 
 export function PartyJoinScreen({
   designPreview = false,
-  roundCount = 5,
-  onRoundCountChange,
-  rerollsPerPlayer = 0,
-  onRerollsPerPlayerChange,
-  roundModifiersEnabled = false,
-  onRoundModifiersEnabledChange,
-  authorGuessEnabled = true,
-  onAuthorGuessEnabledChange,
   onJoin,
   onCreate,
 }: PartyJoinScreenProps) {
@@ -124,7 +108,7 @@ export function PartyJoinScreen({
                 <div className="h-px flex-1 bg-white/10" />
               </div>
 
-              {onRoundCountChange ? (
+              {designPreview ? (
                 <div className="mb-4">
                   <Meta>{PARTY_COPY.joinRounds}</Meta>
                   <div className="mt-2 flex gap-2">
@@ -132,10 +116,10 @@ export function PartyJoinScreen({
                       <button
                         key={n}
                         type="button"
-                        onClick={() => onRoundCountChange(n)}
+                        onClick={() => undefined}
                         className={
                           "flex-1 border-2 py-2.5 transition " +
-                          (roundCount === n
+                          (n === 5
                             ? "border-[#CCFF00] bg-[#CCFF00]/15 text-[#CCFF00]"
                             : "border-white/10 text-white/50 hover:border-white/30 hover:text-white")
                         }
@@ -148,18 +132,18 @@ export function PartyJoinScreen({
                 </div>
               ) : null}
 
-              {onRerollsPerPlayerChange ? (
+              {designPreview ? (
                 <div className="mb-4">
                   <Meta>{PARTY_COPY.joinRerolls}</Meta>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {Array.from({ length: roundCount + 1 }, (_, n) => n).map((n) => (
+                    {Array.from({ length: 6 }, (_, n) => n).map((n) => (
                       <button
                         key={n}
                         type="button"
-                        onClick={() => onRerollsPerPlayerChange(n)}
+                        onClick={() => undefined}
                         className={
                           "min-w-[2.5rem] flex-1 border-2 py-2.5 transition " +
-                          (rerollsPerPlayer === n
+                          (n === 2
                             ? "border-[#00E1FF] bg-[#00E1FF]/15 text-[#00E1FF]"
                             : "border-white/10 text-white/50 hover:border-white/30 hover:text-white")
                         }
@@ -172,47 +156,37 @@ export function PartyJoinScreen({
                 </div>
               ) : null}
 
-              {onRoundModifiersEnabledChange ? (
+              {designPreview ? (
                 <div className="mb-4">
                   <Meta>CHAOS-RUNDEN</Meta>
                   <button
                     type="button"
-                    onClick={() => onRoundModifiersEnabledChange(!roundModifiersEnabled)}
-                    className={
-                      "mt-2 flex w-full items-center justify-between border-2 px-3 py-2.5 transition " +
-                      (roundModifiersEnabled
-                        ? "border-[#FF2D87] bg-[#FF2D87]/15 text-[#FF2D87]"
-                        : "border-white/10 text-white/50 hover:border-white/30 hover:text-white")
-                    }
+                    onClick={() => undefined}
+                    className="mt-2 flex w-full items-center justify-between border-2 border-[#FF2D87] bg-[#FF2D87]/15 px-3 py-2.5 text-[#FF2D87] transition"
                   >
                     <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.12em" }}>
                       CHAOS-RUNDEN
                     </span>
                     <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em" }}>
-                      {roundModifiersEnabled ? "ON" : "OFF"}
+                      ON
                     </span>
                   </button>
                 </div>
               ) : null}
 
-              {onAuthorGuessEnabledChange ? (
+              {designPreview ? (
                 <div className="mb-4">
                   <Meta>{PARTY_COPY.authorGuessToggleLabel.toUpperCase()}</Meta>
                   <button
                     type="button"
-                    onClick={() => onAuthorGuessEnabledChange(!authorGuessEnabled)}
-                    className={
-                      "mt-2 flex w-full items-center justify-between border-2 px-3 py-2.5 transition " +
-                      (authorGuessEnabled
-                        ? "border-[#FF2D87] bg-[#FF2D87]/15 text-[#FF2D87]"
-                        : "border-white/10 text-white/50 hover:border-white/30 hover:text-white")
-                    }
+                    onClick={() => undefined}
+                    className="mt-2 flex w-full items-center justify-between border-2 border-[#FF2D87] bg-[#FF2D87]/15 px-3 py-2.5 text-[#FF2D87] transition"
                   >
                     <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.12em" }}>
                       {PARTY_COPY.authorGuessToggleLabel.toUpperCase()}
                     </span>
                     <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em" }}>
-                      {authorGuessEnabled ? "ON" : "OFF"}
+                      ON
                     </span>
                   </button>
                   <p className="mt-1 text-white/40" style={{ fontSize: 11, lineHeight: 1.45 }}>
