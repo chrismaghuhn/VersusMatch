@@ -260,6 +260,27 @@ Spec: [`docs/superpowers/specs/2026-06-04-party-wave-2.5-lobby-polls-design.md`]
 
 ---
 
+## Lobby settings + kick
+
+Branch `feat/party-lobby-settings-kick` — `npm run typecheck`, `test:party-lobby-settings`, `test:party-rpc-parse` pass; manual verification pending before merge/deploy.
+
+Spec: [`docs/superpowers/specs/2026-06-02-party-lobby-settings-kick-design.md`](superpowers/specs/2026-06-02-party-lobby-settings-kick-design.md)
+
+| # | Case | Pass |
+|---|------|------|
+| LS | Create room from `/party` — no settings form; lands in lobby with defaults | ☐ |
+| LS | Host changes caption 75s, vote 45s, max 4, saves — guests see updates | ☐ |
+| LS | Host sets max 4 with 6 players — save rejected with clear message | ☐ |
+| LS | Host kicks guest (no ban) — guest sees **`kicked`** on next poll (not generic Forbidden); redirected to `/party` | ☐ |
+| LS | Host kicks with block — guest sees **`kicked`**; re-join shows **`banned_from_room`** | ☐ |
+| LS | Start game — settings locked; timers match saved values in caption/vote | ☐ |
+| LS | Rematch — same settings in lobby (play game → rematch → values unchanged) | ☐ |
+| LS | **Settings persist after rematch** — host sets caption 75s / vote 45s / max 6 → play full game → rematch → lobby still shows same values | ☐ |
+| LS | **Never joined** — open room URL without join → `not_in_room`, not kick copy | ☐ |
+| LS | **Never-member GET** — user opens `/party/room/{id}` without having joined → `not_in_room`, not kick copy | ☐ |
+
+---
+
 ## Notes
 
 Record room IDs, browser versions, and any console/network errors when filing bugs.
