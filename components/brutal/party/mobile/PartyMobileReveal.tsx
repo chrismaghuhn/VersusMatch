@@ -10,6 +10,8 @@ import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { decodePartyAvatar } from "@/lib/party/avatar";
 import { PARTY_COPY } from "@/lib/party/copy";
 import { captionForFrame } from "@/lib/party/caption-rich/legacy-read";
+import { formatGuessRevealLine } from "@/lib/party/guess-author";
+import { getRevealTheatreLabel } from "@/lib/party/reveal-theatre";
 import type { PartyReactionKey, PartySnapshot } from "@/lib/party/types";
 
 type PartyMobileRevealProps = {
@@ -25,15 +27,24 @@ export function PartyMobileReveal({
   onSendReaction,
   embedded = false,
 }: PartyMobileRevealProps) {
-  const sorted = [...snapshot.submissions].sort(
-    (a, b) => (b.voteCount ?? 0) - (a.voteCount ?? 0)
-  );
-  const winner = sorted[0];
+  const winnerId = snapshot.room.roundWinnerSubmissionId;
+  const winner = winnerId
+    ? snapshot.submissions.find((submission) => submission.id === winnerId)
+    : undefined;
   const winnerPlayer = winner
     ? snapshot.players.find((p) => p.userId === winner.userId)
     : undefined;
   const winnerAvatar = decodePartyAvatar(winnerPlayer?.avatarUrl);
   const winnerFrame = winner ? captionForFrame(winner) : null;
+  const theatreLabel = getRevealTheatreLabel(snapshot.submissions);
+  const guessLine =
+    snapshot.guessReveal && winnerPlayer
+      ? formatGuessRevealLine(
+          snapshot.guessReveal.correctGuesses,
+          snapshot.guessReveal.eligibleGuessers,
+          winnerPlayer.handle
+        )
+      : "";
 
   const rankedPlayers = [...snapshot.players].sort((a, b) => b.score - a.score);
 
@@ -53,7 +64,7 @@ export function PartyMobileReveal({
               className="text-[#CCFF00]"
               style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em" }}
             >
-              {PARTY_COPY.revealWinner}
+              {theatreLabel ?? PARTY_COPY.revealWinner}
             </span>
           </div>
           <div className="p-3">
@@ -75,6 +86,11 @@ export function PartyMobileReveal({
               <div className="text-white/40" style={{ fontSize: 10 }}>
                 {PARTY_COPY.revealVotes(winner.voteCount ?? 0)}
               </div>
+              {guessLine ? (
+                <div className="text-white/55" style={{ fontSize: 10 }}>
+                  {guessLine}
+                </div>
+              ) : null}
             </div>
           </div>
         </>
