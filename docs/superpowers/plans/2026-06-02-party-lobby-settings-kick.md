@@ -1,5 +1,7 @@
 # Party Lobby Settings + Host Kick — Implementation Plan
 
+> **Rev. 2026-06-02** — Pre-implementation review fixes (strict TS numbers, SQL rerolls vs room state, static UPDATE, precise `kicked` vs `not_in_room`, kick UI gated on `waiting`).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Host edits game rules in the waiting lobby (timers, caps, toggles) and can kick players (optional 24h room ban); create screen stays minimal; kicked/banned users get explicit error codes.
@@ -18,14 +20,14 @@
 
 | File | Responsibility |
 |------|----------------|
-| `supabase/migrations/20260616120000_party_lobby_settings_kick.sql` | Schema + RPCs + patched join/create/advance |
+| `supabase/migrations/20260616120000_party_lobby_settings_kick.sql` | Schema + RPCs + `party_user_was_room_member` + patched join/create/advance |
 | `lib/party/lobby-settings.ts` | Allowlist, patch validation (TS mirror for tests) |
 | `lib/supabase/party-rpc.ts` | `partyUpdateLobbySettingsRpc`, `partyKickPlayerRpc`; update create defaults |
 | `lib/party/snapshot.ts` | `vote_duration_seconds`, `max_players`, settings on snapshot |
 | `lib/party/rpc-response.ts` | HTTP status for new error codes |
 | `lib/party/copy.ts` | Lobby save/kick copy + `PARTY_ERRORS` for `kicked`, `banned_from_room`, etc. |
 | `app/api/party/rooms/route.ts` | POST `{}` → create with server defaults |
-| `app/api/party/rooms/[id]/route.ts` | GET returns `kicked` when ex-member |
+| `app/api/party/rooms/[id]/route.ts` | GET: `kicked` only if ex-member; `not_in_room` if never joined |
 | `app/api/party/rooms/[id]/settings/route.ts` | PATCH settings |
 | `app/api/party/rooms/[id]/kick/route.ts` | POST kick |
 | `app/api/party/join/route.ts` | Map `banned_from_room` |
@@ -94,6 +96,17 @@ test("rerolls cannot exceed round_count in same patch", () => {
   assert.equal(r.ok, false);
 });
 
+test("rejects string numbers (no coercion)", () => {
+  assert.equal(validateLobbySettingsPatch({ caption_duration_seconds: "75" }).ok, false);
+  assert.equal(validateLobbySettingsPatch({ vote_duration_seconds: "30" }).ok, false);
+  assert.equal(validateLobbySettingsPatch({ max_players: "8" }).ok, false);
+});
+
+test("rerolls cannot exceed context round_count when only rerolls patched", () => {
+  const r = validateLobbySettingsPatch({ rerolls_per_player: 7 }, { roundCount: 5 });
+  assert.equal(r.ok, false);
+});
+
 test("allowlist is stable", () => {
   assert.ok(LOBBY_SETTINGS_KEYS.includes("max_players"));
 });
@@ -132,8 +145,26 @@ export type LobbySettingsPatch = Partial<
 const ROUND_COUNTS = new Set([3, 5, 7]);
 const VOTE_SECONDS = new Set([20, 30, 45]);
 
+const NUMERIC_KEYS = new Set([
+  "round_count",
+  "rerolls_per_player",
+  "caption_duration_seconds",
+  "vote_duration_seconds",
+  "max_players",
+]);
+
+function requireInt(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value);
+}
+
+export type LobbySettingsValidationContext = {
+  /** Current room round_count — required for rerolls-only patches at API layer */
+  roundCount?: number;
+};
+
 export function validateLobbySettingsPatch(
-  input: Record<string, unknown>
+  input: Record<string, unknown>,
+  context?: LobbySettingsValidationContext
 ): { ok: true; patch: LobbySettingsPatch } | { ok: false; error: "invalid_settings" } {
   const keys = Object.keys(input);
   if (keys.length === 0) return { ok: false, error: "invalid_settings" };
@@ -147,42 +178,48 @@ export function validateLobbySettingsPatch(
     if (value === null || value === undefined) {
       return { ok: false, error: "invalid_settings" };
     }
+    if (NUMERIC_KEYS.has(key) && !requireInt(value)) {
+      return { ok: false, error: "invalid_settings" };
+    }
+    if (
+      (key === "canvas_editor_enabled" ||
+        key === "round_modifiers_enabled" ||
+        key === "author_guess_enabled") &&
+      typeof value !== "boolean"
+    ) {
+      return { ok: false, error: "invalid_settings" };
+    }
     (patch as Record<string, unknown>)[key] = value;
   }
 
-  if (patch.round_count !== undefined && !ROUND_COUNTS.has(patch.round_count as number)) {
+  if (patch.round_count !== undefined && !ROUND_COUNTS.has(patch.round_count)) {
     return { ok: false, error: "invalid_settings" };
   }
   if (
     patch.vote_duration_seconds !== undefined &&
-    !VOTE_SECONDS.has(patch.vote_duration_seconds as number)
+    !VOTE_SECONDS.has(patch.vote_duration_seconds)
   ) {
     return { ok: false, error: "invalid_settings" };
   }
   if (patch.caption_duration_seconds !== undefined) {
-    const c = patch.caption_duration_seconds as number;
+    const c = patch.caption_duration_seconds;
     if (c < 30 || c > 120 || c % 15 !== 0) return { ok: false, error: "invalid_settings" };
   }
   if (patch.max_players !== undefined) {
-    const m = patch.max_players as number;
-    if (!Number.isInteger(m) || m < 2 || m > 8) return { ok: false, error: "invalid_settings" };
+    const m = patch.max_players;
+    if (m < 2 || m > 8) return { ok: false, error: "invalid_settings" };
   }
-  if (patch.rerolls_per_player !== undefined) {
-    const r = patch.rerolls_per_player as number;
-    if (!Number.isInteger(r) || r < 0) return { ok: false, error: "invalid_settings" };
+  if (patch.rerolls_per_player !== undefined && patch.rerolls_per_player < 0) {
+    return { ok: false, error: "invalid_settings" };
   }
-  const effectiveRounds = (patch.round_count as number | undefined) ?? undefined;
+
+  const effectiveRounds = patch.round_count ?? context?.roundCount;
   if (
     patch.rerolls_per_player !== undefined &&
     effectiveRounds !== undefined &&
-    (patch.rerolls_per_player as number) > effectiveRounds
+    patch.rerolls_per_player > effectiveRounds
   ) {
     return { ok: false, error: "invalid_settings" };
-  }
-  for (const k of ["canvas_editor_enabled", "round_modifiers_enabled", "author_guess_enabled"] as const) {
-    if (patch[k] !== undefined && typeof patch[k] !== "boolean") {
-      return { ok: false, error: "invalid_settings" };
-    }
   }
 
   return { ok: true, patch };
@@ -233,6 +270,12 @@ alter table public.party_rooms
   drop constraint if exists party_rooms_caption_duration_seconds_check;
 
 alter table public.party_rooms
+  drop constraint if exists party_rooms_vote_duration_seconds_check;
+
+alter table public.party_rooms
+  drop constraint if exists party_rooms_max_players_check;
+
+alter table public.party_rooms
   add constraint party_rooms_caption_duration_seconds_check
   check (
     caption_duration_seconds >= 30
@@ -262,11 +305,44 @@ alter table public.party_room_bans enable row level security;
 
 - [ ] **Step 2: `party_update_lobby_settings`**
 
-Implement plpgsql: host check, `waiting`+`open`, reject empty/unknown/null keys in JSON (mirror TS allowlist), build dynamic UPDATE, `too_many_players` when lowering max below current count, `party_log_event('lobby_settings_updated', ...)`.
+Implement plpgsql: host check, `waiting`+`open`, reject empty/unknown/null keys in JSON (mirror TS allowlist).
+
+**Prefer static `UPDATE` — no dynamic SQL.** Parse allowlisted keys into local variables (`v_round_count`, `v_rerolls`, …) only when key present in JSON.
+
+**Rerolls vs rounds (mandatory):**
+
+```sql
+v_effective_rounds := coalesce(v_round_count, v_room.round_count);
+v_effective_rerolls := coalesce(v_rerolls_per_player, v_room.rerolls_per_player);
+
+if v_effective_rerolls > v_effective_rounds then
+  return jsonb_build_object('ok', false, 'error', 'invalid_settings');
+end if;
+```
+
+Example update body:
+
+```sql
+update public.party_rooms
+set
+  round_count = coalesce(v_round_count, round_count),
+  rerolls_per_player = coalesce(v_rerolls_per_player, rerolls_per_player),
+  caption_duration_seconds = coalesce(v_caption_duration_seconds, caption_duration_seconds),
+  vote_duration_seconds = coalesce(v_vote_duration_seconds, vote_duration_seconds),
+  max_players = coalesce(v_max_players, max_players),
+  canvas_editor_enabled = coalesce(v_canvas_editor_enabled, canvas_editor_enabled),
+  round_modifiers_enabled = coalesce(v_round_modifiers_enabled, round_modifiers_enabled),
+  author_guess_enabled = coalesce(v_author_guess_enabled, author_guess_enabled)
+where id = p_room_id;
+```
+
+`too_many_players` when lowering `max_players` below `count(party_players)`. `party_log_event('lobby_settings_updated', ...)`.
 
 - [ ] **Step 3: `party_kick_player`**
 
 Implement per spec: `cannot_kick_self`, `cannot_kick_last` when `count <= 1`, delete non-host row, optional ban upsert 24h, `party_log_event('player_kicked', ...)`.
+
+**Phase guard:** reject unless `v_room.phase = 'waiting'` and `status = 'open'` (`wrong_phase` otherwise) — kick after start must stay impossible at SQL layer.
 
 - [ ] **Step 4: Patch `party_join_room`**
 
@@ -296,23 +372,29 @@ Replace vote-entry lines with:
 phase_ends_at = now() + (v_room.vote_duration_seconds * interval '1 second')
 ```
 
-- [ ] **Step 7: Grants**
+- [ ] **Step 7: `party_user_was_room_member(p_room_id, p_user_id)`**
+
+Returns `true` if analytics/log shows `player_joined` for that user in that room (used by GET room route for `kicked` vs `not_in_room`).
+
+- [ ] **Step 8: Grants**
 
 ```sql
 revoke all on function public.party_update_lobby_settings(uuid, jsonb) from public;
 grant execute on function public.party_update_lobby_settings(uuid, jsonb) to authenticated;
 revoke all on function public.party_kick_player(uuid, uuid, boolean) from public;
 grant execute on function public.party_kick_player(uuid, uuid, boolean) to authenticated;
+revoke all on function public.party_user_was_room_member(uuid, uuid) from public;
+grant execute on function public.party_user_was_room_member(uuid, uuid) to authenticated;
 ```
 
-- [ ] **Step 8: Apply migration**
+- [ ] **Step 10: Apply migration**
 
 ```bash
 npx supabase db push
 # or apply via Supabase MCP apply_migration on project srimmoqxrbwxlyyfgdhs
 ```
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 11: Commit**
 
 ```bash
 git add supabase/migrations/20260616120000_party_lobby_settings_kick.sql
@@ -433,6 +515,7 @@ const { data, error } = await partyCreateRoomRpc(auth.supabase);
 import { NextResponse } from "next/server";
 import { requirePartyApi } from "@/lib/party/api-auth";
 import { validateLobbySettingsPatch } from "@/lib/party/lobby-settings";
+import { buildPartySnapshot } from "@/lib/party/snapshot";
 import { parsePartyRpc, partyRpcStatus, partyRpcTransportError } from "@/lib/party/rpc-response";
 import { partyUpdateLobbySettingsRpc } from "@/lib/supabase/party-rpc";
 
@@ -465,31 +548,54 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: partyRpcStatus(result.error) });
   }
-  return NextResponse.json({ ok: true });
+  const snapshot = await buildPartySnapshot(auth.supabase, id, auth.user.id);
+  if (!snapshot) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+  return NextResponse.json({ ok: true, snapshot });
 }
 ```
+
+**API note:** Pass `validateLobbySettingsPatch(body, { roundCount: snapshot.room.roundCount })` when validating PATCH if snapshot is loaded first, **or** rely on SQL for rerolls-only patches (TS context optional). SQL is source of truth.
 
 - [ ] **Step 3: Kick POST — `app/api/party/rooms/[id]/kick/route.ts`**
 
 Body `{ userId: string, blockRejoin?: boolean }` → `partyKickPlayerRpc`.
 
-- [ ] **Step 4: Kicked snapshot — `app/api/party/rooms/[id]/route.ts`**
+- [ ] **Step 4: Member vs kicked — `app/api/party/rooms/[id]/route.ts`**
 
-Replace:
-
-```typescript
-if (!isMember) {
-  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-}
-```
-
-With:
+Do **not** map every non-member to `kicked`.
 
 ```typescript
-if (!isMember) {
-  return NextResponse.json({ error: "kicked" }, { status: 403 });
+const snapshot = await buildPartySnapshot(auth.supabase, id, auth.user.id);
+
+if (!snapshot) {
+  return NextResponse.json({ error: "not_found" }, { status: 404 });
 }
+
+const isMember = snapshot.players.some((p) => p.isYou);
+if (!isMember) {
+  const { data: joinedBefore } = await auth.supabase.rpc("party_user_was_room_member", {
+    p_room_id: id,
+    p_user_id: auth.user.id,
+  });
+  // Or query party_analytics_events / party_log for player_joined + this user
+  const wasMember = Boolean(joinedBefore);
+  if (wasMember) {
+    return NextResponse.json({ error: "kicked" }, { status: 403 });
+  }
+  return NextResponse.json({ error: "not_in_room" }, { status: 403 });
+}
+
+return NextResponse.json({ snapshot });
 ```
+
+**Implementation choice (pick one in migration):**
+
+- Small helper RPC `party_user_was_room_member(p_room_id, p_user_id)` returns true if `party_log_event` / analytics has `player_joined` for that pair, **or**
+- Inline SQL in route via service role (avoid) — prefer SECURITY DEFINER helper.
+
+Map `not_in_room` in `partyRpcStatus` → 403. Client: `kicked` → kick copy; `not_in_room` → generic forbidden / redirect `/party`.
 
 - [ ] **Step 5: Join API — map `banned_from_room`**
 
@@ -615,12 +721,14 @@ Controls:
 
 Replace read-only `SettingRow` aside with `LobbySettingsForm`.
 
-Player row (host): ⋯ menu → Kick → confirm dialog with “Block re-join 24h” checkbox → `onKickPlayer(userId, blockRejoin)`.
+Player row: show kick ⋯ menu **only when** `isHost && snapshot.room.phase === "waiting"` (not host-only; block during caption/vote/reveal even if RPC would reject).
+
+Kick flow: confirm dialog with “Block re-join 24h” → `onKickPlayer(userId, blockRejoin)`.
 
 - [ ] **Step 5: `party-room-client.tsx`**
 
 - Local `settingsDraft` initialized from `snapshot.room` on enter `waiting`
-- `saveSettings`: PATCH `/api/party/rooms/${roomId}/settings` with draft; on success `refresh()`
+- `saveSettings`: PATCH settings; on `{ ok, snapshot }` call `setSnapshot(snapshot)` (fallback `refresh()` if snapshot missing)
 - `kickPlayer`: POST kick; host `refresh()`; guest gets `kicked` on next poll
 - On `refresh()` error `kicked`: `setSnapshot(null)`; set error code for `PartyErrorState`
 
@@ -650,7 +758,11 @@ git commit -m "feat(party): lobby settings UI, kick, minimal create"
 **Files:**
 - Modify: `docs/party-manual-qa.md`
 
-- [ ] **Step 1: Add manual QA section** (copy from spec § Manual QA)
+- [ ] **Step 1: Add manual QA section** (include all spec rows **plus**):
+
+- [ ] **Settings persist after rematch** — host sets caption 75s / vote 45s / max 6 → play full game → rematch → lobby still shows same values
+
+- [ ] **Never-member GET** — user opens `/party/room/{id}` without having joined → `not_in_room`, not kick copy
 
 - [ ] **Step 2: Run full script suite**
 
@@ -685,7 +797,12 @@ git commit -m "docs(party): manual QA for lobby settings and kick"
 | max_players join | Task 2 |
 | vote_duration in advance only | Task 2 step 6 |
 | caption CHECK migration name | Task 2 step 1 |
+| kicked vs not_in_room | Task 2 helper RPC, Task 4 |
 | kicked / banned UX | Task 4, 5, 6 |
+| Kick UI only in waiting | Task 6 |
+| PATCH returns snapshot | Task 4 |
+| Strict integer TS validation | Task 1 |
+| SQL rerolls vs room round_count | Task 2 |
 | create defaults | Task 2, 4 |
 | rematch keeps settings/bans | Task 2 (no rematch change) |
 | Tests | Task 1, 3, 7 |
@@ -694,5 +811,6 @@ git commit -m "docs(party): manual QA for lobby settings and kick"
 
 ## Deferred / follow-up
 
-- Wave 3a spec note: `max_players` = active players only
+- Wave 3a spec note: `max_players` = active players only (not spectators)
+- Ban cleanup job: delete expired `party_room_bans` rows (v1 ignores expired via `expires_at > now()`)
 - Optional: Supabase integration test script with service role + test users (not required for v1 if manual QA passes)

@@ -1,6 +1,6 @@
 # MemeFight Party — Lobby settings + host kick
 
-**Date:** 2026-06-02 (rev. 2026-06-02 — review clarifications)  
+**Date:** 2026-06-02 (rev. 2026-06-02 — review clarifications + pre-implementation plan fixes)  
 **Status:** Approved — ready for implementation plan  
 **Phase:** Post-QA host control (between Wave 2.5 and Wave 3a)  
 **Builds on:** P1 lobby, Wave 1 rematch, Wave 2 guess phase, canvas editor (`caption_duration_seconds`), Wave 2.5 lobby polls  
@@ -88,6 +88,12 @@ ALTER TABLE public.party_rooms
   DROP CONSTRAINT IF EXISTS party_rooms_caption_duration_seconds_check;
 
 ALTER TABLE public.party_rooms
+  DROP CONSTRAINT IF EXISTS party_rooms_vote_duration_seconds_check;
+
+ALTER TABLE public.party_rooms
+  DROP CONSTRAINT IF EXISTS party_rooms_max_players_check;
+
+ALTER TABLE public.party_rooms
   ADD CONSTRAINT party_rooms_caption_duration_seconds_check
   CHECK (
     caption_duration_seconds >= 30
@@ -149,10 +155,11 @@ Expired bans ignored (`expires_at > now()`).
 
 **Rules:**
 
-- `rerolls_per_player <= round_count` (use effective `round_count` from patch or current row)
+- `rerolls_per_player <= coalesce(patch.round_count, room.round_count)` — SQL must validate even when patch is only `{ "rerolls_per_player": N }`
 - If `max_players` decreases: reject with `too_many_players` when `count(party_players) > new max`
 - If `canvas_editor_enabled` set false: allow; caption timer may still be 60–120 (host choice). If true and caption was 60-only legacy, no forced bump required.
-- Single `UPDATE party_rooms SET ...` + `party_log_event('lobby_settings_updated', ...)`
+- **Static `UPDATE`** with `coalesce(v_*, column)` per field — no dynamic SQL
+- `party_log_event('lobby_settings_updated', ...)`
 - Return `{ ok: true, room: { ...subset fields } }`
 
 **Errors:** `unauthorized`, `not_host`, `wrong_phase`, `invalid_settings`, `too_many_players`
@@ -227,7 +234,7 @@ Rematch resets phase to `waiting`; **do not reset** lobby settings columns (host
 | Method | Path | Body | RPC |
 |--------|------|------|-----|
 | `POST` | `/api/party/rooms` | `{}` or empty | `party_create_room()` defaults |
-| `PATCH` | `/api/party/rooms/[id]/settings` | settings object | `party_update_lobby_settings` |
+| `PATCH` | `/api/party/rooms/[id]/settings` | settings object | `party_update_lobby_settings` → returns `{ ok: true, snapshot }` when possible |
 | `POST` | `/api/party/rooms/[id]/kick` | `{ userId, blockRejoin?: boolean }` | `party_kick_player` |
 
 Use existing `requirePartyApi`, `parsePartyRpc`, `partyRpcStatus`.
@@ -238,12 +245,21 @@ Use existing `requirePartyApi`, `parsePartyRpc`, `partyRpcStatus`.
 
 ### Snapshot poll (`GET /api/party/rooms/[id]`)
 
-Today: non-member gets `{ error: "Forbidden" }` (403). **Change:**
+Today: non-member gets `{ error: "Forbidden" }` (403). **Change (precise):**
 
-- If room exists and authenticated user is **not** in `party_players` → `{ error: "kicked" }` with **403** (or **410** if preferred; client maps either to same UX).
-- Do **not** return a partial snapshot without `isYou` — avoids ambiguous UI.
+| Condition | Response |
+|-----------|----------|
+| Not authenticated | `401` / existing `requirePartyApi` |
+| Room missing | `{ error: "not_found" }` **404** |
+| User not in `party_players` but **was** a member (joined before, e.g. kicked) | `{ error: "kicked" }` **403** |
+| User not in `party_players` and **never** joined | `{ error: "not_in_room" }` **403** |
+| Member | `{ snapshot }` **200** |
 
-`party-room-client` `refresh()` already sets `setError(data.error)` on non-OK — wire `kicked` to `PartyErrorState` / redirect `/party?error=kicked` using existing copy (`PARTY_ERRORS.kicked` or equivalent).
+Detect “was member” via `party_log_event` / analytics `player_joined` for `(room_id, user_id)`, or helper RPC `party_user_was_room_member`.
+
+Do **not** return a partial snapshot without `isYou`.
+
+`party-room-client` `refresh()`: `kicked` → kick copy; `not_in_room` → generic / redirect `/party`.
 
 ### Join after ban
 
@@ -282,7 +298,7 @@ author_guess_enabled: boolean;
 `HostOnboarding.tsx` / `PartyLobbyScreen`:
 
 - Replace read-only `SettingRow` list with host controls or guest read-only mirror
-- Player list: kick affordance (⋯ menu) for host
+- Player list: kick affordance (⋯ menu) only when `isHost && phase === "waiting"` (UI + SQL `wrong_phase` after start)
 
 `lib/party/peek.ts`: expose `max_players` from peek RPC if join page needs it (optional).
 
@@ -324,7 +340,8 @@ author_guess_enabled: boolean;
 - [ ] Host kicks guest (no ban) — guest sees **`kicked`** on next poll (not generic Forbidden); redirected to `/party`
 - [ ] Host kicks with block — guest sees **`kicked`**; re-join shows **`banned_from_room`**
 - [ ] Start game — settings locked; timers match saved values in caption/vote
-- [ ] Rematch — same settings in lobby
+- [ ] Rematch — same settings in lobby (play game → rematch → values unchanged)
+- [ ] Never joined — open room URL without join → `not_in_room`, not kick copy
 
 ---
 
