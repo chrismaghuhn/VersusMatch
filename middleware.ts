@@ -12,8 +12,10 @@ export const config = {
     "/admin/:path*",
     "/auth/:path*",
     "/party/:path*",
+    "/board-brawl/:path*",
     "/onboarding",
     "/api/profile",
     "/api/party/:path*",
+    "/api/board-brawl/:path*",
   ],
 };

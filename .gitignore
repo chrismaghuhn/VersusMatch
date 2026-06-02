@@ -26,6 +26,9 @@ Memes templates -HD--*.zip
 .DS_Store
 *.pem
 
+# board brawl asset conversion tooling (FBX2glTF binary, downloaded locally)
+/tools/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

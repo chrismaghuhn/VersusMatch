@@ -557,6 +557,153 @@ export type Database = {
         };
         Relationships: [];
       };
+      bb_rooms: {
+        Row: {
+          id: string;
+          code: string;
+          host_id: string;
+          status: "open" | "in_progress" | "finished" | "abandoned";
+          phase: string;
+          round_count: number;
+          current_round: number;
+          board_seed: number;
+          turn_order: string[];
+          turn_index: number;
+          active_player_id: string | null;
+          last_roll: number | null;
+          pending_action: string | null;
+          minigame_id: string | null;
+          minigame_state: Json | null;
+          minigame_pending_inputs: Json;
+          last_tick_at: string | null;
+          phase_ends_at: string | null;
+          turn_nonce: string | null;
+          map_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          host_id: string;
+          status?: string;
+          phase?: string;
+          round_count?: number;
+          current_round?: number;
+          board_seed?: number;
+          turn_order?: string[];
+          turn_index?: number;
+          active_player_id?: string | null;
+          last_roll?: number | null;
+          pending_action?: string | null;
+          minigame_id?: string | null;
+          minigame_state?: Json | null;
+          minigame_pending_inputs?: Json;
+          last_tick_at?: string | null;
+          phase_ends_at?: string | null;
+          turn_nonce?: string | null;
+          map_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          host_id?: string;
+          status?: string;
+          phase?: string;
+          round_count?: number;
+          current_round?: number;
+          board_seed?: number;
+          turn_order?: string[];
+          turn_index?: number;
+          active_player_id?: string | null;
+          last_roll?: number | null;
+          pending_action?: string | null;
+          minigame_id?: string | null;
+          minigame_state?: Json | null;
+          minigame_pending_inputs?: Json;
+          last_tick_at?: string | null;
+          phase_ends_at?: string | null;
+          turn_nonce?: string | null;
+          map_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      bb_maps: {
+        Row: {
+          id: string;
+          owner_id: string | null;
+          name: string;
+          definition: Json;
+          is_public: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id?: string | null;
+          name: string;
+          definition: Json;
+          is_public?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string | null;
+          name?: string;
+          definition?: Json;
+          is_public?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      bb_players: {
+        Row: {
+          room_id: string;
+          user_id: string;
+          coins: number;
+          stars: number;
+          position: number;
+          items: Json;
+          avatar_id: string;
+          ready: boolean;
+          is_host: boolean;
+          minigame_first_places: number;
+          last_seen_at: string;
+          disconnected_at: string | null;
+          joined_at: string;
+        };
+        Insert: {
+          room_id: string;
+          user_id: string;
+          coins?: number;
+          stars?: number;
+          position?: number;
+          items?: Json;
+          avatar_id?: string;
+          ready?: boolean;
+          is_host?: boolean;
+          minigame_first_places?: number;
+          last_seen_at?: string;
+          disconnected_at?: string | null;
+          joined_at?: string;
+        };
+        Update: {
+          room_id?: string;
+          user_id?: string;
+          coins?: number;
+          stars?: number;
+          position?: number;
+          items?: Json;
+          avatar_id?: string;
+          ready?: boolean;
+          is_host?: boolean;
+          minigame_first_places?: number;
+          last_seen_at?: string;
+          disconnected_at?: string | null;
+          joined_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -687,6 +834,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      bb_migrate_host_if_stale: {
+        Args: { p_room_id: string };
+        Returns: undefined;
+      };
       cast_vote: {
         Args: {
           p_battle_id: string;

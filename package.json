@@ -23,10 +23,21 @@
     "test:party-reveal-theatre": "node --experimental-strip-types --test scripts/test-party-reveal-theatre.mjs",
     "test:party-lobby-settings": "node --experimental-strip-types --test scripts/test-party-lobby-settings.mjs",
     "party:analytics": "node scripts/party-analytics-report.mjs",
-    "party:bulk-import": "node scripts/bulk-import-party-templates.mjs"
+    "party:bulk-import": "node scripts/bulk-import-party-templates.mjs",
+    "test:board-brawl-dice": "node --import ./scripts/resolve-ts-alias.mjs --experimental-strip-types --test scripts/test-board-brawl-dice.mjs",
+    "test:board-brawl-movement": "node --import ./scripts/resolve-ts-alias.mjs --experimental-strip-types --test scripts/test-board-brawl-movement.mjs",
+    "test:board-brawl-tile-effects": "node --import ./scripts/resolve-ts-alias.mjs --experimental-strip-types --test scripts/test-board-brawl-tile-effects.mjs",
+    "test:board-brawl-win-condition": "node --import ./scripts/resolve-ts-alias.mjs --experimental-strip-types --test scripts/test-board-brawl-win-condition.mjs",
+    "test:board-brawl-layout-3d": "node --import ./scripts/resolve-ts-alias.mjs --experimental-strip-types --test scripts/test-board-brawl-layout-3d.mjs",
+    "test:board-brawl-board-map": "node --import ./scripts/resolve-ts-alias.mjs --experimental-strip-types --test scripts/test-board-brawl-board-map.mjs",
+    "test:board-brawl-minigame-engine": "node --import ./scripts/resolve-ts-alias.mjs --experimental-strip-types --test scripts/test-board-brawl-minigame-engine.mjs",
+    "test:board-brawl": "npm run test:board-brawl-dice && npm run test:board-brawl-movement && npm run test:board-brawl-tile-effects && npm run test:board-brawl-win-condition && npm run test:board-brawl-layout-3d && npm run test:board-brawl-board-map && npm run test:board-brawl-minigame-engine",
+    "test:board-brawl-e2e": "node --import ./scripts/resolve-ts-alias.mjs --experimental-strip-types scripts/test-board-brawl-e2e.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@sentry/nextjs": "^9.47.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.8",
@@ -42,6 +53,7 @@
     "react-dom": "^19.1.0",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.3.0",
+    "three": "^0.184.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
@@ -50,6 +62,7 @@
     "@types/node": "^22.15.29",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
+    "@types/three": "^0.184.1",
     "@types/uuid": "^10.0.0",
     "eslint": "^9.28.0",
     "eslint-config-next": "^15.3.3",

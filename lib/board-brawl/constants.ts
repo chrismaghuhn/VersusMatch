@@ -1,0 +1,10 @@
+export const BOARD_TILE_COUNT = 24;
+export const BOARD_BRAWL_MIN_PLAYERS = 2;
+export const BOARD_BRAWL_MAX_PLAYERS = 8;
+export const STAR_SHOP_INDICES = [6, 14, 22] as const;
+export const MAX_STARS_PER_PLAYER = 3;
+export const MAX_ITEMS_PER_PLAYER = 2;
+export const STAR_COST_DEFAULT = 20;
+export const STAR_COST_UNDERDOG = 15;
+export const BONUS_ROLL_MAX_CHAIN = 2;
+export const MIN_TICK_INTERVAL_MS = 200;
