@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { siteMetadata } from "@/lib/site-metadata";
 import "./globals.css";
 
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} min-h-screen bg-black font-sans text-white`}>
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
