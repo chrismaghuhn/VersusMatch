@@ -301,6 +301,8 @@ export type Database = {
       };
       party_rooms: {
         Row: {
+          author_guess_enabled: boolean;
+          author_guesses_count: number;
           canvas_editor_enabled: boolean;
           caption_count: number;
           caption_duration_seconds: number;
@@ -315,6 +317,7 @@ export type Database = {
           phase_seed: number | null;
           rerolls_per_player: number;
           round_count: number;
+          round_winner_submission_id: string | null;
           round_modifiers_enabled: boolean;
           status: string;
           template_id: string | null;
@@ -322,6 +325,8 @@ export type Database = {
           votes_cast_count: number;
         };
         Insert: {
+          author_guess_enabled?: boolean;
+          author_guesses_count?: number;
           canvas_editor_enabled?: boolean;
           caption_count?: number;
           caption_duration_seconds?: number;
@@ -336,6 +341,7 @@ export type Database = {
           phase_seed?: number | null;
           rerolls_per_player?: number;
           round_count?: number;
+          round_winner_submission_id?: string | null;
           round_modifiers_enabled?: boolean;
           status?: string;
           template_id?: string | null;
@@ -343,6 +349,8 @@ export type Database = {
           votes_cast_count?: number;
         };
         Update: {
+          author_guess_enabled?: boolean;
+          author_guesses_count?: number;
           canvas_editor_enabled?: boolean;
           caption_count?: number;
           caption_duration_seconds?: number;
@@ -357,11 +365,36 @@ export type Database = {
           phase_seed?: number | null;
           rerolls_per_player?: number;
           round_count?: number;
+          round_winner_submission_id?: string | null;
           round_modifiers_enabled?: boolean;
           status?: string;
           template_id?: string | null;
           used_template_ids?: string[];
           votes_cast_count?: number;
+        };
+        Relationships: [];
+      };
+      party_author_guesses: {
+        Row: {
+          created_at: string;
+          guessed_user_id: string;
+          room_id: string;
+          round: number;
+          voter_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          guessed_user_id: string;
+          room_id: string;
+          round: number;
+          voter_id: string;
+        };
+        Update: {
+          created_at?: string;
+          guessed_user_id?: string;
+          room_id?: string;
+          round?: number;
+          voter_id?: string;
         };
         Relationships: [];
       };
