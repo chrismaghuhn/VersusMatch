@@ -17,6 +17,8 @@ const mockVotingSnapshot: PartySnapshot = {
     phaseEndsAt: new Date(Date.now() + 22_000).toISOString(),
     canvasEditorEnabled: false,
     roundModifiersEnabled: false,
+    authorGuessEnabled: true,
+    roundWinnerSubmissionId: "s1",
     currentModifier: null,
     captionDurationSeconds: 60,
     template: null,
