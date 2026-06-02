@@ -11,6 +11,7 @@ import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTempla
 import { PARTY_COPY } from "@/lib/party/copy";
 import { captionBoxFieldLabel, captionFieldLabels, defaultCaptionTextBoxes } from "@/lib/party/caption-fields";
 import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
+import { modifierBlocksCaption } from "@/lib/party/caption-submit";
 import type { CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
 import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 import type { TextBox } from "@/lib/party/types";
@@ -107,6 +108,7 @@ export function PartyMobileCaption({
     layoutRevision,
     captionDraft,
     roomId,
+    currentModifier,
   });
 
   const { fieldTexts, previewDoc, remaining, submitPayload, updateField, applyToolbar } = editor;
@@ -138,6 +140,15 @@ export function PartyMobileCaption({
     if (inputDisabled || !submitPayload) return;
     onSubmit(submitPayload);
   }
+
+  const hasDraftText = fieldTexts.some((text) => text.trim().length > 0);
+  const inlineSubmitError =
+    submitError ??
+    (hasDraftText && !submitPayload && currentModifier && modifierBlocksCaption(currentModifier, fieldTexts, fieldCount)
+      ? PARTY_COPY.modifierViolation(currentModifier)
+      : hasDraftText && !submitPayload
+        ? PARTY_COPY.captionSubmitBlocked
+        : null);
 
   function maybeNormalizeModifierText(next: string) {
     return currentModifier === "all_caps" ? next.toUpperCase() : next;
@@ -199,13 +210,13 @@ export function PartyMobileCaption({
           <span className="text-white/40">· {PARTY_COPY.rerollsRemaining(rerollsRemaining)}</span>
         </button>
       ) : null}
-      {submitError ? (
+      {inlineSubmitError ? (
         <p
           className="text-center text-[#FF2D87]"
           style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em" }}
           role="alert"
         >
-          {submitError}
+          {inlineSubmitError}
         </p>
       ) : null}
       {rerollError ? (

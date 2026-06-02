@@ -32,6 +32,7 @@ import type {
   CaptionSegment,
 } from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
+import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 import { useCaptionStudio } from "./use-caption-studio";
 
 const PREVIEW_DEBOUNCE_MS = 500;
@@ -66,6 +67,7 @@ export type UseMemeCanvasEditorParams = {
   layoutRevision: number;
   captionDraft: CaptionDocumentV3 | null;
   roomId: string;
+  currentModifier?: PartyRoundModifier | null;
 };
 
 export function useMemeCanvasEditor({
@@ -76,6 +78,7 @@ export function useMemeCanvasEditor({
   layoutRevision,
   captionDraft,
   roomId,
+  currentModifier = null,
 }: UseMemeCanvasEditorParams) {
   const boxCount = Math.max(1, Math.min(4, textBoxes.length));
   const studio = useCaptionStudio(value, onChange, boxCount);
@@ -261,16 +264,25 @@ export function useMemeCanvasEditor({
       boxes,
       layoutRevision: layoutRevisionRef.current,
       templateBoxes: textBoxes,
+      currentModifier,
     }),
-    [boxes, textBoxes, layoutRevision]
+    [boxes, textBoxes, layoutRevision, currentModifier]
   );
 
   const submitPayload: CaptionSubmitPayload | null = useMemo(
     () =>
       canvasEnabled
         ? prepareCaptionSubmit(fieldTexts, boxes.length, segmentOverrides, canvasSubmitOptions)
-        : null,
-    [canvasEnabled, fieldTexts, boxes.length, segmentOverrides, canvasSubmitOptions]
+        : prepareCaptionSubmit(fieldTexts, boxCount, segmentOverrides, undefined, currentModifier),
+    [
+      canvasEnabled,
+      fieldTexts,
+      boxes.length,
+      boxCount,
+      segmentOverrides,
+      canvasSubmitOptions,
+      currentModifier,
+    ]
   );
 
   const commitTextHistory = useCallback(() => {

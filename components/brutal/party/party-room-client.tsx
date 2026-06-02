@@ -394,8 +394,21 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         setCaptionSubmitError(null);
         await runAdvance(data.snapshot);
       } else if (data.error) {
-        if (data.error === "modifier_violation" && snapshot?.room.currentModifier) {
-          setCaptionSubmitError(PARTY_COPY.modifierViolation(snapshot.room.currentModifier));
+        const captionErrors = new Set([
+          "modifier_violation",
+          "invalid_caption",
+          "stale_revision",
+          "caption_rich_required",
+          "profanity_rejected",
+        ]);
+        if (captionErrors.has(data.error)) {
+          if (data.error === "modifier_violation" && snapshot?.room.currentModifier) {
+            setCaptionSubmitError(PARTY_COPY.modifierViolation(snapshot.room.currentModifier));
+          } else if (data.error === "stale_revision") {
+            setCaptionSubmitError(PARTY_COPY.captionSubmitBlocked);
+          } else {
+            setCaptionSubmitError(PARTY_COPY.captionSubmitBlocked);
+          }
         } else {
           setError(data.error);
         }

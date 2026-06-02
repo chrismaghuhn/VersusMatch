@@ -202,6 +202,8 @@ export const PARTY_COPY = {
   modifierLabel: (modifier: PartyRoundModifier) => MODIFIER_LABELS[modifier],
   modifierViolation: (modifier: PartyRoundModifier) =>
     `Regel verletzt: ${MODIFIER_LABELS[modifier]}`,
+  captionSubmitBlocked:
+    "Caption konnte nicht gesendet werden — prüfe Chaos-Regel, Länge oder Layout.",
   rerollButton: "NEW MEME",
   rerollButtonBusy: "ROLLING…",
   rerollsRemaining: (n: number) => `${n} reroll${n === 1 ? "" : "s"} left`,

@@ -11,6 +11,7 @@ import type { TextBox } from "@/lib/party/types";
 import { PARTY_COPY } from "@/lib/party/copy";
 import { captionBoxFieldLabel, captionFieldLabels, defaultCaptionTextBoxes } from "@/lib/party/caption-fields";
 import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
+import { modifierBlocksCaption } from "@/lib/party/caption-submit";
 import type { CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
 import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 
@@ -87,6 +88,7 @@ export function PartyCaptionInput({
     layoutRevision,
     captionDraft,
     roomId,
+    currentModifier,
   });
 
   const { fieldTexts, previewDoc, remaining, submitPayload, updateField, applyToolbar } = editor;
@@ -147,6 +149,15 @@ export function PartyCaptionInput({
     if (inputDisabled || !submitPayload) return;
     onSubmit(submitPayload);
   }
+
+  const hasDraftText = fieldTexts.some((text) => text.trim().length > 0);
+  const inlineSubmitError =
+    submitError ??
+    (hasDraftText && !submitPayload && currentModifier && modifierBlocksCaption(currentModifier, fieldTexts, fieldCount)
+      ? PARTY_COPY.modifierViolation(currentModifier)
+      : hasDraftText && !submitPayload
+        ? PARTY_COPY.captionSubmitBlocked
+        : null);
 
   const activeBox =
     canvasEditor?.activeBoxId != null
@@ -289,13 +300,13 @@ export function PartyCaptionInput({
 
       {!locked ? (
         <div className="flex flex-col gap-2">
-          {submitError ? (
+          {inlineSubmitError ? (
             <p
               className="text-center text-[#FF2D87]"
               style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em" }}
               role="alert"
             >
-              {submitError}
+              {inlineSubmitError}
             </p>
           ) : null}
           {canReroll ? (
