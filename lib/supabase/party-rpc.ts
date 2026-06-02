@@ -17,12 +17,14 @@ export function partyCreateRoomRpc(
   supabase: RpcSupabase,
   roundCount: number = 5,
   rerollsPerPlayer: number = 0,
-  canvasEditorEnabled: boolean = false
+  canvasEditorEnabled: boolean = false,
+  roundModifiersEnabled: boolean = false
 ) {
   return callRpc(supabase, "party_create_room", {
     p_round_count: roundCount,
     p_rerolls_per_player: rerollsPerPlayer,
     p_canvas_editor_enabled: canvasEditorEnabled,
+    p_round_modifiers_enabled: roundModifiersEnabled,
   });
 }
 
@@ -108,4 +110,16 @@ export function partyRetractVoteRpc(supabase: RpcSupabase, roomId: string) {
 
 export function partyRerollTemplateRpc(supabase: RpcSupabase, roomId: string) {
   return callRpc(supabase, "party_reroll_template", { p_room_id: roomId });
+}
+
+export function partyRematchRpc(supabase: RpcSupabase, roomId: string) {
+  return callRpc(supabase, "party_rematch", { p_room_id: roomId });
+}
+
+export function partyPeekRoomRpc(supabase: RpcSupabase, code: string) {
+  return callRpc(supabase, "party_peek_room", { p_code: code });
+}
+
+export function partyGetRecapRpc(supabase: RpcSupabase, code: string) {
+  return callRpc(supabase, "party_get_recap", { p_code: code });
 }

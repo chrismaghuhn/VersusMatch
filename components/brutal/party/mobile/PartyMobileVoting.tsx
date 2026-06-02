@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PartyMobileShell } from "@/components/brutal/party/mobile/PartyMobileShell";
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
@@ -33,6 +33,10 @@ export function PartyMobileVoting({
 }: PartyMobileVotingProps) {
   const pool = useMemo(() => snapshot.submissions, [snapshot.submissions]);
   const [index, setIndex] = useState(0);
+  const currentRound = snapshot.room.currentRound;
+  const voteFlavorRef = useRef<string>(
+    PARTY_COPY.captionProgressFlavor(snapshot.players.length - snapshot.votesCastCount + currentRound)
+  );
   const voted = Boolean(snapshot.myVote);
   const current = pool[index % Math.max(pool.length, 1)];
   const author = current
@@ -41,6 +45,11 @@ export function PartyMobileVoting({
   const avatar = decodePartyAvatar(author?.avatarUrl);
   const frame = current ? captionForFrame(current) : null;
   const allReady = isVotingPhaseReady(snapshot);
+  useEffect(() => {
+    voteFlavorRef.current = PARTY_COPY.captionProgressFlavor(
+      snapshot.players.length - snapshot.votesCastCount + currentRound
+    );
+  }, [currentRound]);
 
   async function handleVote() {
     if (!current || voted || voting) return;
@@ -96,8 +105,8 @@ export function PartyMobileVoting({
         voted
           ? PARTY_COPY.voteLockedIn
           : pool.length > 0
-            ? `${PARTY_COPY.voteOf(index + 1, pool.length)} · ${PARTY_COPY.voteProgress(snapshot.votesCastCount, snapshot.players.length)}`
-            : PARTY_COPY.voteProgress(snapshot.votesCastCount, snapshot.players.length)
+            ? `${PARTY_COPY.voteOf(index + 1, pool.length)} · ${PARTY_COPY.voteProgress(snapshot.votesCastCount, snapshot.players.length)} · ${voteFlavorRef.current}`
+            : `${PARTY_COPY.voteProgress(snapshot.votesCastCount, snapshot.players.length)} · ${voteFlavorRef.current}`
       }
       footer={footer}
       embedded={embedded}

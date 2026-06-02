@@ -171,6 +171,30 @@ Branch `feat/p2.6a-canvas-readability` — `node --experimental-strip-types --te
 
 ---
 
+## Wave 1 Parallel
+
+| # | Case | Pass |
+|---|------|------|
+| W1 | Host rematch -> lobby, scores 0, same code | ☐ |
+| W1 | After rematch, canvas editor fresh (`layout_revision` 0, no stale draft) | ☐ |
+| W1 | Non-host cannot rematch | ☐ |
+| W1 | Reveal reactions fire + show burst | ☐ |
+| W1 | Reactions blocked during voting | ☐ |
+| W1 | Chaos round: three_words rejects 4th word | ☐ |
+| W1 | Chaos all_caps: CSS caps-only rejected; literal uppercase passes | ☐ |
+| W1 | Chaos off: no banner, normal submit | ☐ |
+| W1 | Logged-out join URL shows teaser (lobby open) | ☐ |
+| W1 | Teaser -> login -> lands in room (lobby open) | ☐ |
+| W1 | Join URL during in_progress: waiting UI, no join RPC, no false CTA | ☐ |
+| W1 | After rematch, join URL CTA active again | ☐ |
+| W1 | Recap page loads when finished | ☐ |
+| W1 | Recap 404 / message when in progress | ☐ |
+| W1 | Copy recap link from ShareCard | ☐ |
+| W1 | Finished screen shows public recap disclosure | ☐ |
+| W1 | Caption progress copy visible | ☐ |
+
+---
+
 ## Notes
 
 Record room IDs, browser versions, and any console/network errors when filing bugs.

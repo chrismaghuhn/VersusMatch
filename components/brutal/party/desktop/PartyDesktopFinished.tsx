@@ -11,12 +11,23 @@ import { decodePartyAvatar } from "@/lib/party/avatar";
 import { PARTY_COPY } from "@/lib/party/copy";
 import { PARTY_DESIGN } from "@/lib/party/design";
 import type { PartySnapshot } from "@/lib/party/types";
+import { getAppUrl } from "@/lib/utils";
 
 type PartyDesktopFinishedProps = {
   snapshot: PartySnapshot;
+  isHost: boolean;
+  rematching: boolean;
+  rematchError: string | null;
+  onRematch?: () => void;
 };
 
-export function PartyDesktopFinished({ snapshot }: PartyDesktopFinishedProps) {
+export function PartyDesktopFinished({
+  snapshot,
+  isHost,
+  rematching,
+  rematchError,
+  onRematch,
+}: PartyDesktopFinishedProps) {
   const accent = PARTY_DESIGN.accent;
   const ranked = [...snapshot.players].sort((a, b) => b.score - a.score);
   const topScore = ranked[0]?.score ?? 0;
@@ -97,9 +108,28 @@ export function PartyDesktopFinished({ snapshot }: PartyDesktopFinishedProps) {
             </div>
           ),
           actions: (
-            <Link href="/party" className="block max-w-sm">
-              <PartyBtn accent={accent}>{PARTY_COPY.finishedPlayAgain} →</PartyBtn>
-            </Link>
+            <div className="max-w-sm space-y-3">
+              <p className="text-xs text-white/50 break-all">
+                {PARTY_COPY.recapPublicDisclosure(getAppUrl(`/party/recap/${snapshot.room.code}`))}
+              </p>
+              {isHost ? (
+                <PartyBtn accent={accent} onClick={onRematch} disabled={rematching}>
+                  {PARTY_COPY.finishedRunItBack}
+                </PartyBtn>
+              ) : (
+                <p className="text-sm font-bold text-white/60">
+                  {PARTY_COPY.finishedWaitingForHost}
+                </p>
+              )}
+              {rematchError ? (
+                <p className="text-xs font-bold text-[#FF6A6A]">{rematchError}</p>
+              ) : null}
+              <Link href="/party" className="block">
+                <PartyBtn kind="ghost" accent={accent}>
+                  {PARTY_COPY.finishedNewRoom}
+                </PartyBtn>
+              </Link>
+            </div>
           ),
         }}
       />

@@ -1,7 +1,9 @@
 import type { CaptionDocument } from "@/lib/party/caption-rich/types";
-import type { PartySnapshot } from "@/lib/party/types";
+import type { PartySnapshot, TextBox } from "@/lib/party/types";
 import type { AvatarId } from "@/lib/party/avatar-ids";
 import { decodePartyAvatar } from "@/lib/party/avatar";
+import { getPartyTemplateUrl } from "@/lib/party/template-url";
+import { limitTextBoxes } from "@/lib/party/limit-text-boxes";
 
 export type ShareCardData = {
   roomCode: string;
@@ -24,6 +26,113 @@ export type ShareCardData = {
   } | null;
   template: PartySnapshot["room"]["template"];
 };
+
+type PartyRecapTemplateRow = {
+  id: string;
+  image_path: string;
+  text_boxes: unknown;
+};
+
+function asTextBoxes(raw: unknown): TextBox[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (box): box is TextBox =>
+      Boolean(box) &&
+      typeof box === "object" &&
+      typeof (box as { id?: unknown }).id === "string" &&
+      typeof (box as { x?: unknown }).x === "number"
+  );
+}
+
+export function toPartyTemplateViewFromRecap(
+  row: PartyRecapTemplateRow
+): PartySnapshot["room"]["template"] {
+  return {
+    id: row.id,
+    imageUrl: getPartyTemplateUrl(row.image_path) ?? "",
+    textBoxes: limitTextBoxes(asTextBoxes(row.text_boxes)),
+  };
+}
+
+export type PartyRecapParseResult =
+  | { ok: true; data: ShareCardData; templateId: string | null }
+  | { ok: false; error: string };
+
+export function parsePartyRecap(
+  raw: unknown,
+  template?: PartySnapshot["room"]["template"] | null
+): PartyRecapParseResult {
+  if (!raw || typeof raw !== "object" || !("ok" in raw)) {
+    return { ok: false, error: "invalid_response" };
+  }
+  const row = raw as Record<string, unknown>;
+  if (row.ok !== true) {
+    return { ok: false, error: String(row.error ?? "unknown") };
+  }
+
+  const winnerRows = Array.isArray(row.gameWinners) ? row.gameWinners : [];
+  const gameWinners = winnerRows.map((winner) => {
+    const entry = winner as Record<string, unknown>;
+    const avatar = decodePartyAvatar(
+      typeof entry.avatarUrl === "string" ? entry.avatarUrl : null
+    );
+    return {
+      handle: String(entry.handle ?? "?"),
+      score: Number(entry.score ?? 0),
+      isYou: false,
+      avatarId: avatar.id,
+      avatarColor: avatar.color,
+    };
+  });
+
+  const roundWinnerRow =
+    row.roundWinner && typeof row.roundWinner === "object"
+      ? (row.roundWinner as Record<string, unknown>)
+      : null;
+  const roundWinner = roundWinnerRow
+    ? (() => {
+        const avatar = decodePartyAvatar(null);
+        return {
+        handle: String(roundWinnerRow.handle ?? "?"),
+        caption: String(roundWinnerRow.caption ?? ""),
+        captionRich:
+          roundWinnerRow.captionRich &&
+          typeof roundWinnerRow.captionRich === "object"
+            ? (roundWinnerRow.captionRich as CaptionDocument)
+            : null,
+        voteCount: Number(roundWinnerRow.voteCount ?? 0),
+        avatarId: avatar.id,
+        avatarColor: avatar.color,
+        template: template ?? null,
+      };
+    })()
+    : null;
+
+  const templateId =
+    roundWinnerRow && typeof roundWinnerRow.templateId === "string"
+      ? roundWinnerRow.templateId
+      : null;
+
+  return {
+    ok: true,
+    templateId,
+    data: {
+      roomCode: String(row.roomCode ?? ""),
+      roundCount: Number(row.roundCount ?? 0),
+      gameWinners,
+      roundWinner,
+      template: template ?? null,
+    },
+  };
+}
+
+export function parsePartyRecapTemplateId(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  if (!row.roundWinner || typeof row.roundWinner !== "object") return null;
+  const roundWinner = row.roundWinner as Record<string, unknown>;
+  return typeof roundWinner.templateId === "string" ? roundWinner.templateId : null;
+}
 
 export function buildShareCardData(snapshot: PartySnapshot): ShareCardData {
   const ranked = [...snapshot.players].sort((a, b) => b.score - a.score);

@@ -12,6 +12,7 @@ import { PARTY_COPY } from "@/lib/party/copy";
 import { captionBoxFieldLabel, captionFieldLabels, defaultCaptionTextBoxes } from "@/lib/party/caption-fields";
 import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
 import type { CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
+import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 
 type PartyCaptionInputProps = {
   value: string;
@@ -40,6 +41,8 @@ type PartyCaptionInputProps = {
   ) => void;
   onRegisterHasCustomBoxes?: (hasCustomBoxes: boolean) => void;
   onLayoutFrozenChange?: (frozen: boolean) => void;
+  currentModifier?: PartyRoundModifier | null;
+  submitError?: string | null;
 };
 
 export function PartyCaptionInput({
@@ -67,6 +70,8 @@ export function PartyCaptionInput({
   onRegisterCanvasReset,
   onRegisterHasCustomBoxes,
   onLayoutFrozenChange,
+  currentModifier = null,
+  submitError = null,
 }: PartyCaptionInputProps) {
   const inputDisabled = (locked ? true : disabled) || submitting || unlocking || rerolling;
   const labelBoxes = template?.textBoxes ?? defaultCaptionTextBoxes(2);
@@ -133,6 +138,10 @@ export function PartyCaptionInput({
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [canvasEditor, mobile, inputDisabled]);
+
+  function maybeNormalizeModifierText(next: string) {
+    return currentModifier === "all_caps" ? next.toUpperCase() : next;
+  }
 
   function handleSubmit() {
     if (inputDisabled || !submitPayload) return;
@@ -214,6 +223,14 @@ export function PartyCaptionInput({
           {PARTY_COPY.rerollDraftHint}
         </p>
       ) : null}
+      {currentModifier ? (
+        <p
+          className="rounded border border-[#FFB800]/40 bg-[#FFB800]/10 px-3 py-2 text-[#FFB800]"
+          style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.06em" }}
+        >
+          CHAOS-RUNDE: {PARTY_COPY.modifierLabel(currentModifier)}
+        </p>
+      ) : null}
 
       <div className="space-y-3">
         {editorBoxes
@@ -227,7 +244,7 @@ export function PartyCaptionInput({
                   value={fieldTexts[index] ?? ""}
                   disabled={inputDisabled}
                   isLastField={index === lastFieldIndex}
-                  onChange={(next) => updateField(index, next)}
+                  onChange={(next) => updateField(index, maybeNormalizeModifierText(next))}
                   onSubmit={handleSubmit}
                   onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
                   onFocus={() => {
@@ -249,7 +266,7 @@ export function PartyCaptionInput({
                   value={fieldTexts[index] ?? ""}
                   disabled={inputDisabled}
                   isLastField={index === lastFieldIndex}
-                  onChange={(next) => updateField(index, next)}
+                  onChange={(next) => updateField(index, maybeNormalizeModifierText(next))}
                   onSubmit={handleSubmit}
                   onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
                   onFocus={
@@ -272,6 +289,15 @@ export function PartyCaptionInput({
 
       {!locked ? (
         <div className="flex flex-col gap-2">
+          {submitError ? (
+            <p
+              className="text-center text-[#FF2D87]"
+              style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em" }}
+              role="alert"
+            >
+              {submitError}
+            </p>
+          ) : null}
           {canReroll ? (
             <button
               type="button"

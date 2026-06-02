@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { PartyLayout } from "@/components/brutal/party/shared/PartyLayout";
 import {
   HeadCluster,
@@ -36,6 +36,15 @@ export function PartyDesktopVoting({
   const pool = useMemo(() => snapshot.submissions, [snapshot.submissions]);
   const votedId = snapshot.myVote?.submissionId ?? null;
   const allReady = isVotingPhaseReady(snapshot);
+  const currentRound = snapshot.room.currentRound;
+  const voteFlavorRef = useRef<string>(
+    PARTY_COPY.captionProgressFlavor(snapshot.players.length - snapshot.votesCastCount + currentRound)
+  );
+  useEffect(() => {
+    voteFlavorRef.current = PARTY_COPY.captionProgressFlavor(
+      snapshot.players.length - snapshot.votesCastCount + currentRound
+    );
+  }, [currentRound]);
 
   const statusLine = votedId
     ? phaseTransitioning
@@ -60,7 +69,7 @@ export function PartyDesktopVoting({
               Pick the <span className="italic text-[#CCFF00]">funniest</span>.
             </>
           ),
-          subtitle: "All anonymous. Trust your gut.",
+          subtitle: `${PARTY_COPY.voteProgress(snapshot.votesCastCount, snapshot.players.length)} · ${voteFlavorRef.current}`,
           headRight: (
             <HeadCluster
               currentRound={snapshot.room.currentRound}

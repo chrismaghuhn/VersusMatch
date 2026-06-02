@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PartyCaptionInput } from "@/components/brutal/party/party-caption-input";
 import { PartyLayout } from "@/components/brutal/party/shared/PartyLayout";
 import { HeadCluster } from "@/components/brutal/party/shared/PartyPrimitives";
@@ -9,6 +9,7 @@ import { PARTY_COPY } from "@/lib/party/copy";
 import { PARTY_DESIGN } from "@/lib/party/design";
 import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
 import type { CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
+import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 import type { TextBox } from "@/lib/party/types";
 
 type PartyDesktopCaptionProps = {
@@ -42,6 +43,8 @@ type PartyDesktopCaptionProps = {
     reset: (revision: number, draft: CaptionDocumentV3 | null) => void
   ) => void;
   onRegisterHasCustomBoxes?: (hasCustomBoxes: boolean) => void;
+  currentModifier?: PartyRoundModifier | null;
+  submitError?: string | null;
 };
 
 export function PartyDesktopCaption({
@@ -73,13 +76,25 @@ export function PartyDesktopCaption({
   roomId = "",
   onRegisterCanvasReset,
   onRegisterHasCustomBoxes,
+  currentModifier = null,
+  submitError = null,
 }: PartyDesktopCaptionProps) {
   const accent = PARTY_DESIGN.accent;
   const [layoutFrozen, setLayoutFrozen] = useState(false);
+  const phaseFlavorSeed = useMemo(
+    () => Math.max(0, playerCount - captionCount) + round,
+    [captionCount, playerCount, round]
+  );
+  const phaseFlavorRef = useRef<string>(PARTY_COPY.captionProgressFlavor(phaseFlavorSeed));
 
   useEffect(() => {
     if (!canvasEnabled) setLayoutFrozen(false);
   }, [canvasEnabled]);
+  useEffect(() => {
+    phaseFlavorRef.current = PARTY_COPY.captionProgressFlavor(
+      Math.max(0, playerCount - captionCount) + round
+    );
+  }, [round]);
 
   const captionTimerTotal = captionDurationSeconds;
 
@@ -94,7 +109,7 @@ export function PartyDesktopCaption({
               Write your <span className="italic text-[#CCFF00]">caption</span>.
             </>
           ),
-          subtitle: PARTY_COPY.captionExample,
+          subtitle: `${PARTY_COPY.captionProgress(captionCount, playerCount)} · ${phaseFlavorRef.current}`,
           headRight: (
             <HeadCluster
               currentRound={round}
@@ -130,6 +145,8 @@ export function PartyDesktopCaption({
                 onRegisterCanvasReset={onRegisterCanvasReset}
                 onRegisterHasCustomBoxes={onRegisterHasCustomBoxes}
                 onLayoutFrozenChange={setLayoutFrozen}
+                currentModifier={currentModifier}
+                submitError={submitError}
               />
               {statusMessage ? (
                 <p

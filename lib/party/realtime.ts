@@ -66,7 +66,7 @@ function buildChannel(
     options.onRefresh();
   });
 
-  if (phase === "waiting") {
+  if (phase === "waiting" || phase === "reveal") {
     channel.on(
       "postgres_changes",
       {

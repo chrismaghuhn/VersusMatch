@@ -6,6 +6,7 @@ import { limitTextBoxes } from "@/lib/party/limit-text-boxes";
 import { seededShuffle } from "@/lib/party/shuffle";
 import { partyGetMyVoteRpc } from "@/lib/supabase/party-rpc";
 import { getPartyTemplateUrl } from "@/lib/party/template-url";
+import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 import type {
   PartySnapshot,
   PartyPhase,
@@ -25,6 +26,8 @@ type PartyRoomRow = {
   round_count: number;
   rerolls_per_player: number;
   canvas_editor_enabled: boolean;
+  round_modifiers_enabled: boolean;
+  current_modifier: PartyRoundModifier | null;
   caption_duration_seconds: number;
   phase_ends_at: string | null;
   template_id: string | null;
@@ -153,7 +156,7 @@ export async function buildPartySnapshot(
   const { data: room, error: roomError } = await (supabase as SupabaseClient)
     .from("party_rooms")
     .select(
-      "id, code, status, phase, current_round, round_count, rerolls_per_player, canvas_editor_enabled, caption_duration_seconds, phase_ends_at, template_id, phase_seed, caption_count, votes_cast_count"
+      "id, code, status, phase, current_round, round_count, rerolls_per_player, canvas_editor_enabled, round_modifiers_enabled, current_modifier, caption_duration_seconds, phase_ends_at, template_id, phase_seed, caption_count, votes_cast_count"
     )
     .eq("id", roomId)
     .maybeSingle();
@@ -345,6 +348,8 @@ export async function buildPartySnapshot(
       rerollsPerPlayer: roomRow.rerolls_per_player,
       phaseEndsAt: roomRow.phase_ends_at,
       canvasEditorEnabled: roomRow.canvas_editor_enabled,
+      roundModifiersEnabled: roomRow.round_modifiers_enabled,
+      currentModifier: roomRow.current_modifier,
       captionDurationSeconds: roomRow.caption_duration_seconds,
       template: roomTemplate,
     },

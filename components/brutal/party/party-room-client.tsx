@@ -41,6 +41,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const [captionDraft, setCaptionDraft] = useState("");
   const [showRerollDraftHint, setShowRerollDraftHint] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [captionSubmitError, setCaptionSubmitError] = useState<string | null>(null);
   const [rerolling, setRerolling] = useState(false);
   const [rerollConfirmOpen, setRerollConfirmOpen] = useState(false);
   const [rerollError, setRerollError] = useState<string | null>(null);
@@ -48,6 +49,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const [unlocking, setUnlocking] = useState(false);
   const [retractingVote, setRetractingVote] = useState(false);
   const [phaseTransitioning, setPhaseTransitioning] = useState(false);
+  const [rematchError, setRematchError] = useState<string | null>(null);
   const [lobbyReactions, setLobbyReactions] = useState<LobbyReactionFeedItem[]>([]);
   const [disconnected, setDisconnected] = useState(false);
   const playersRef = useRef<PartySnapshot["players"]>([]);
@@ -120,7 +122,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         });
       }
 
-      if (data.snapshot.room.phase === "waiting") {
+      if (data.snapshot.room.phase === "waiting" || data.snapshot.room.phase === "reveal") {
         setLobbyReactions(
           data.snapshot.recentReactions.map((r) => ({
             id: r.id,
@@ -155,6 +157,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   useEffect(() => {
     setCaptionDraft("");
     setShowRerollDraftHint(false);
+    setCaptionSubmitError(null);
   }, [currentRound]);
 
   useEffect(() => {
@@ -255,7 +258,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
       const data = (await res.json()) as { snapshot?: PartySnapshot };
       if (data.snapshot) {
         setSnapshot(data.snapshot);
-        if (data.snapshot.room.phase === "waiting") {
+        if (data.snapshot.room.phase === "waiting" || data.snapshot.room.phase === "reveal") {
           setLobbyReactions(
             data.snapshot.recentReactions.map((r) => ({
               id: r.id,
@@ -284,6 +287,41 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
       } else {
         void refresh();
       }
+    }
+  }
+
+  async function handleRematch() {
+    setRematchError(null);
+    setPhaseTransitioning(true);
+    try {
+      const res = await fetch("/api/party/rematch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        snapshot?: PartySnapshot;
+      };
+
+      if (!res.ok || data.error) {
+        setRematchError(
+          data.error === "not_host"
+            ? PARTY_COPY.finishedRematchNotHost
+            : PARTY_COPY.finishedRematchError
+        );
+        return;
+      }
+
+      if (data.snapshot) {
+        setSnapshot(data.snapshot);
+        setLobbyReactions([]);
+      }
+    } catch {
+      setRematchError(PARTY_COPY.finishedRematchError);
+    } finally {
+      setPhaseTransitioning(false);
     }
   }
 
@@ -334,10 +372,12 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     setCaptionDraft(value);
     setShowRerollDraftHint(false);
     setRerollError(null);
+    setCaptionSubmitError(null);
   }
 
   async function handleSubmitCaption(payload: CaptionSubmitPayload) {
     setSubmitting(true);
+    setCaptionSubmitError(null);
     try {
       const res = await fetch("/api/party/submit", {
         method: "POST",
@@ -351,9 +391,14 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
       const data = (await res.json()) as { snapshot?: PartySnapshot; error?: string };
       if (data.snapshot) {
         setSnapshot(data.snapshot);
+        setCaptionSubmitError(null);
         await runAdvance(data.snapshot);
       } else if (data.error) {
-        setError(data.error);
+        if (data.error === "modifier_violation" && snapshot?.room.currentModifier) {
+          setCaptionSubmitError(PARTY_COPY.modifierViolation(snapshot.room.currentModifier));
+        } else {
+          setError(data.error);
+        }
       }
     } finally {
       setSubmitting(false);
@@ -573,6 +618,8 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
               canvasResetRef.current = reset;
             }}
             onRegisterHasCustomBoxes={registerHasCustomBoxes}
+            currentModifier={snapshot.room.currentModifier}
+            submitError={captionSubmitError}
           />
         ) : (
           <PartyMobileCaption
@@ -605,6 +652,8 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
               canvasResetRef.current = reset;
             }}
             onRegisterHasCustomBoxes={registerHasCustomBoxes}
+            currentModifier={snapshot.room.currentModifier}
+            submitError={captionSubmitError}
           />
         )}
       </>
@@ -626,8 +675,22 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   }
 
   if (snapshot.room.phase === "reveal") {
-    return <PartyRevealScreen snapshot={snapshot} />;
+    return (
+      <PartyRevealScreen
+        snapshot={snapshot}
+        recentReactions={lobbyReactions}
+        onSendReaction={handleSendReaction}
+      />
+    );
   }
 
-  return <PartyFinishedScreen snapshot={snapshot} />;
+  return (
+    <PartyFinishedScreen
+      snapshot={snapshot}
+      isHost={isHost}
+      rematching={phaseTransitioning}
+      rematchError={rematchError}
+      onRematch={isHost ? handleRematch : undefined}
+    />
+  );
 }

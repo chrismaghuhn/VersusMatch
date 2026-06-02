@@ -306,6 +306,7 @@ export type Database = {
           caption_duration_seconds: number;
           code: string;
           created_at: string;
+          current_modifier: string | null;
           current_round: number;
           host_id: string;
           id: string;
@@ -314,6 +315,7 @@ export type Database = {
           phase_seed: number | null;
           rerolls_per_player: number;
           round_count: number;
+          round_modifiers_enabled: boolean;
           status: string;
           template_id: string | null;
           used_template_ids: string[];
@@ -325,6 +327,7 @@ export type Database = {
           caption_duration_seconds?: number;
           code: string;
           created_at?: string;
+          current_modifier?: string | null;
           current_round?: number;
           host_id: string;
           id?: string;
@@ -333,6 +336,7 @@ export type Database = {
           phase_seed?: number | null;
           rerolls_per_player?: number;
           round_count?: number;
+          round_modifiers_enabled?: boolean;
           status?: string;
           template_id?: string | null;
           used_template_ids?: string[];
@@ -344,6 +348,7 @@ export type Database = {
           caption_duration_seconds?: number;
           code?: string;
           created_at?: string;
+          current_modifier?: string | null;
           current_round?: number;
           host_id?: string;
           id?: string;
@@ -352,6 +357,7 @@ export type Database = {
           phase_seed?: number | null;
           rerolls_per_player?: number;
           round_count?: number;
+          round_modifiers_enabled?: boolean;
           status?: string;
           template_id?: string | null;
           used_template_ids?: string[];
@@ -698,7 +704,12 @@ export type Database = {
           p_round_count?: number;
           p_rerolls_per_player?: number;
           p_canvas_editor_enabled?: boolean;
+          p_round_modifiers_enabled?: boolean;
         };
+        Returns: Record<string, unknown>;
+      };
+      party_get_recap: {
+        Args: { p_code: string };
         Returns: Record<string, unknown>;
       };
       party_sync_caption_draft: {
@@ -725,7 +736,19 @@ export type Database = {
         Args: { p_code: string };
         Returns: Record<string, unknown>;
       };
+      party_peek_room: {
+        Args: { p_code: string };
+        Returns: Record<string, unknown>;
+      };
+      party_pick_round_modifier: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
       party_leave_room: {
+        Args: { p_room_id: string };
+        Returns: Record<string, unknown>;
+      };
+      party_rematch: {
         Args: { p_room_id: string };
         Returns: Record<string, unknown>;
       };
@@ -756,6 +779,10 @@ export type Database = {
           p_caption_rich?: unknown | null;
         };
         Returns: Record<string, unknown>;
+      };
+      party_validate_round_modifier: {
+        Args: { p_modifier: string; p_plain: string };
+        Returns: string;
       };
     };
     Enums: {

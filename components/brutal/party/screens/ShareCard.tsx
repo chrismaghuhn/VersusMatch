@@ -13,6 +13,7 @@ import {
 import { captureShareCardPng } from "@/lib/party/share-card-png";
 import type { PartySnapshot } from "@/lib/party/types";
 import { getAppUrl } from "@/lib/utils";
+import { PARTY_COPY } from "@/lib/party/copy";
 
 const MOCK_DATA: ShareCardData = {
   roomCode: "FIGHT42",
@@ -39,22 +40,33 @@ const MOCK_DATA: ShareCardData = {
 
 type ShareCardProps = {
   snapshot?: PartySnapshot;
+  data?: ShareCardData;
   /** Compact layout for embedding under finished leaderboard */
   embedded?: boolean;
+  /** Set false when parent already renders Shell */
+  wrapInShell?: boolean;
   /** Hide PNG download (e.g. desktop finished arena layout) */
   showPngDownload?: boolean;
 };
 
-export function ShareCard({ snapshot, embedded = false, showPngDownload = true }: ShareCardProps) {
+export function ShareCard({
+  snapshot,
+  data: explicitData,
+  embedded = false,
+  wrapInShell = true,
+  showPngDownload = true,
+}: ShareCardProps) {
   const data = useMemo(
-    () => (snapshot ? buildShareCardData(snapshot) : MOCK_DATA),
-    [snapshot]
+    () => explicitData ?? (snapshot ? buildShareCardData(snapshot) : MOCK_DATA),
+    [explicitData, snapshot]
   );
   const joinUrl = getAppUrl(`/party/join/${data.roomCode}`);
+  const recapUrl = getAppUrl(`/party/recap/${data.roomCode}`);
   const tweetText = buildShareTweetText(data, joinUrl);
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
 
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedRecapLink, setCopiedRecapLink] = useState(false);
   const [copiedTweet, setCopiedTweet] = useState(false);
   const [pngState, setPngState] = useState<"idle" | "generating" | "done" | "error">("idle");
   const previewRef = useRef<HTMLDivElement>(null);
@@ -78,6 +90,16 @@ export function ShareCard({ snapshot, embedded = false, showPngDownload = true }
       await navigator.clipboard.writeText(joinUrl);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 1500);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function copyRecapLink() {
+    try {
+      await navigator.clipboard.writeText(recapUrl);
+      setCopiedRecapLink(true);
+      setTimeout(() => setCopiedRecapLink(false), 1500);
     } catch {
       /* ignore */
     }
@@ -272,7 +294,7 @@ export function ShareCard({ snapshot, embedded = false, showPngDownload = true }
           <Twitter className="h-4 w-4 fill-current" /> POST TO TWITTER
         </a>
 
-        <div className={"grid grid-cols-1 gap-2 " + (showPngDownload ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
+        <div className={"grid grid-cols-1 gap-2 " + (showPngDownload ? "sm:grid-cols-4" : "sm:grid-cols-3")}>
           {showPngDownload ? (
             <button
               type="button"
@@ -328,12 +350,31 @@ export function ShareCard({ snapshot, embedded = false, showPngDownload = true }
               </>
             )}
           </button>
+          <button
+            type="button"
+            onClick={() => void copyRecapLink()}
+            className="flex items-center justify-center gap-2 border border-white/20 py-3 text-white hover:border-[#CCFF00] hover:text-[#CCFF00]"
+            style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em" }}
+          >
+            {copiedRecapLink ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-[#CCFF00]" /> COPIED
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5" /> COPY RECAP LINK
+              </>
+            )}
+          </button>
         </div>
+        <p className="text-white/50 break-all" style={{ fontSize: 12 }}>
+          {PARTY_COPY.recapPublicDisclosure(recapUrl)}
+        </p>
       </div>
     </div>
   );
 
-  if (embedded) {
+  if (embedded || !wrapInShell) {
     return inner;
   }
 

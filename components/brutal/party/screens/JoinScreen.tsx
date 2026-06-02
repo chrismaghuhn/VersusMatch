@@ -18,6 +18,8 @@ export type PartyJoinScreenProps = {
   onRoundCountChange?: (count: 3 | 5 | 7) => void;
   rerollsPerPlayer?: number;
   onRerollsPerPlayerChange?: (count: number) => void;
+  roundModifiersEnabled?: boolean;
+  onRoundModifiersEnabledChange?: (enabled: boolean) => void;
   onJoin?: (code: string) => void;
   onCreate?: () => void;
 };
@@ -28,6 +30,8 @@ export function PartyJoinScreen({
   onRoundCountChange,
   rerollsPerPlayer = 0,
   onRerollsPerPlayerChange,
+  roundModifiersEnabled = false,
+  onRoundModifiersEnabledChange,
   onJoin,
   onCreate,
 }: PartyJoinScreenProps) {
@@ -161,6 +165,29 @@ export function PartyJoinScreen({
                       </button>
                     ))}
                   </div>
+                </div>
+              ) : null}
+
+              {onRoundModifiersEnabledChange ? (
+                <div className="mb-4">
+                  <Meta>CHAOS-RUNDEN</Meta>
+                  <button
+                    type="button"
+                    onClick={() => onRoundModifiersEnabledChange(!roundModifiersEnabled)}
+                    className={
+                      "mt-2 flex w-full items-center justify-between border-2 px-3 py-2.5 transition " +
+                      (roundModifiersEnabled
+                        ? "border-[#FF2D87] bg-[#FF2D87]/15 text-[#FF2D87]"
+                        : "border-white/10 text-white/50 hover:border-white/30 hover:text-white")
+                    }
+                  >
+                    <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.12em" }}>
+                      CHAOS-RUNDEN
+                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em" }}>
+                      {roundModifiersEnabled ? "ON" : "OFF"}
+                    </span>
+                  </button>
                 </div>
               ) : null}
 

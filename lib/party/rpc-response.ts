@@ -66,6 +66,9 @@ export function partyRpcStatus(error: string | undefined): number {
     case "no_template":
     case "stale_revision":
     case "invalid_draft":
+    case "modifier_violation":
+    case "not_finished":
+    case "room_closed":
       return 409;
     default:
       return 400;

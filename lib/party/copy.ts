@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { AlertTriangle, Lock, UserX, Users, WifiOff } from "lucide-react";
+import { MODIFIER_LABELS, type PartyRoundModifier } from "@/lib/party/round-modifiers";
 
 export type PartyErrorCode =
   | "room_full"
@@ -155,7 +156,19 @@ export const PARTY_COPY = {
   captionLockedIn: "Locked in — waiting on others…",
   captionAllReady: "Everyone's ready — voting starts…",
   captionPhaseChanging: "Next phase…",
-  captionProgress: (done: number, total: number) => `${done}/${total} submitted`,
+  captionProgress: (done: number, total: number) => `${done}/${total} captioned`,
+  captionProgressFlavor: (remaining: number) => {
+    const pool = [
+      "No pressure. Just speed.",
+      "Cook fast. Chaos is hungry.",
+      "Timer's ruthless. Keep typing.",
+      "Don't overthink the punchline.",
+      "Last-second captions still count.",
+      "Speed beats perfect right now.",
+    ] as const;
+    const safeRemaining = Number.isFinite(remaining) ? Math.max(0, Math.floor(remaining)) : 0;
+    return pool[safeRemaining % pool.length];
+  },
   voteLockedIn: "VOTE LOCKED IN",
   voteAllReady: "Everyone voted — results incoming…",
   voteWaiting: "Waiting on the others…",
@@ -186,6 +199,9 @@ export const PARTY_COPY = {
   captionFieldBottom: "Bottom",
   captionExample: "Two lines — 120 characters total max",
   captionSyntaxHint: "~schräg~ · *kursiv* · ^groß^",
+  modifierLabel: (modifier: PartyRoundModifier) => MODIFIER_LABELS[modifier],
+  modifierViolation: (modifier: PartyRoundModifier) =>
+    `Regel verletzt: ${MODIFIER_LABELS[modifier]}`,
   rerollButton: "NEW MEME",
   rerollButtonBusy: "ROLLING…",
   rerollsRemaining: (n: number) => `${n} reroll${n === 1 ? "" : "s"} left`,
@@ -223,6 +239,18 @@ export const PARTY_COPY = {
   joinCreateTitle: "CREATE NEW LOBBY",
   joinCreateSub: "Be the host. Invite friends with a 6-character code.",
   joinButton: "JOIN",
+  joinTeaserHosting: (handle: string) => `@${handle} hostet eine Party`,
+  joinTeaserPlayers: (n: number, max: number) => `${n}/${max} Spieler`,
+  joinTeaserTagline: "Live meme captions · 2–8 Spieler",
+  joinTeaserCta: "JOIN THE CHAOS →",
+  joinTeaserInGameTitle: (handle: string) => `@${handle} — Party läuft gerade`,
+  joinTeaserInGameBody: (n: number, max: number) =>
+    `${n}/${max} Spieler · Du kannst beitreten, sobald die Lobby wieder offen ist.`,
+  joinTeaserInGameCta: "SPIEL LÄUFT — WARTEN",
+  joinTeaserFinished: "Diese Party ist vorbei.",
+  joinTeaserFinishedRecap: "Recap ansehen →",
+  joinTeaserNotFound: "Code nicht gefunden.",
+  joinTeaserClosed: "Raum geschlossen.",
   lobbyHosting: "YOU'RE HOSTING",
   lobbyWaiting: "WAITING FOR HOST",
   lobbyWelcomeHost: "Welcome,",
@@ -257,6 +285,12 @@ export const PARTY_COPY = {
   finishedScores: "Final scores.",
   finishedRoom: (code: string, rounds: number) => `Room ${code} · ${rounds} rounds`,
   finishedPlayAgain: "PLAY AGAIN →",
+  finishedRunItBack: "RUN IT BACK →",
+  finishedNewRoom: "NEW ROOM →",
+  finishedWaitingForHost: "Waiting for host to run it back…",
+  finishedRematchError: "Could not reset room — try again.",
+  finishedRematchNotHost: "Only the host can run it back.",
+  recapPublicDisclosure: (url: string) => `Recap ist öffentlich: ${url}`,
   tutorialSkip: "SKIP →",
   tutorialBack: "BACK",
   tutorialNext: "NEXT",

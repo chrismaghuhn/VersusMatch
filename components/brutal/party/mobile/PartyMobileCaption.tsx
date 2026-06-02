@@ -1,7 +1,7 @@
 "use client";
 
 import { RefreshCw, Send } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { CanvasLayoutToolbar } from "@/components/brutal/party/caption-studio/CanvasLayoutToolbar";
 import { CaptionField } from "@/components/brutal/party/caption-studio/CaptionField";
 import { MemeCanvasOverlay } from "@/components/brutal/party/caption-studio/MemeCanvasOverlay";
@@ -12,6 +12,7 @@ import { PARTY_COPY } from "@/lib/party/copy";
 import { captionBoxFieldLabel, captionFieldLabels, defaultCaptionTextBoxes } from "@/lib/party/caption-fields";
 import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
 import type { CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
+import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 import type { TextBox } from "@/lib/party/types";
 
 type PartyMobileCaptionProps = {
@@ -45,6 +46,8 @@ type PartyMobileCaptionProps = {
     reset: (revision: number, draft: CaptionDocumentV3 | null) => void
   ) => void;
   onRegisterHasCustomBoxes?: (hasCustomBoxes: boolean) => void;
+  currentModifier?: PartyRoundModifier | null;
+  submitError?: string | null;
 };
 
 export function PartyMobileCaption({
@@ -76,7 +79,20 @@ export function PartyMobileCaption({
   roomId = "",
   onRegisterCanvasReset,
   onRegisterHasCustomBoxes,
+  currentModifier = null,
+  submitError = null,
 }: PartyMobileCaptionProps) {
+  const phaseFlavorSeed = useMemo(
+    () => Math.max(0, playerCount - captionCount) + round,
+    [captionCount, playerCount, round]
+  );
+  const phaseFlavorRef = useRef<string>(PARTY_COPY.captionProgressFlavor(phaseFlavorSeed));
+  useEffect(() => {
+    phaseFlavorRef.current = PARTY_COPY.captionProgressFlavor(
+      Math.max(0, playerCount - captionCount) + round
+    );
+  }, [round]);
+
   const inputDisabled = locked || submitting || unlocking || rerolling;
   const labelBoxes = template?.textBoxes ?? defaultCaptionTextBoxes(2);
   const canvasTextBoxes = template?.textBoxes ?? [];
@@ -121,6 +137,10 @@ export function PartyMobileCaption({
   function handleSubmit() {
     if (inputDisabled || !submitPayload) return;
     onSubmit(submitPayload);
+  }
+
+  function maybeNormalizeModifierText(next: string) {
+    return currentModifier === "all_caps" ? next.toUpperCase() : next;
   }
 
   const activeBox =
@@ -179,6 +199,15 @@ export function PartyMobileCaption({
           <span className="text-white/40">· {PARTY_COPY.rerollsRemaining(rerollsRemaining)}</span>
         </button>
       ) : null}
+      {submitError ? (
+        <p
+          className="text-center text-[#FF2D87]"
+          style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em" }}
+          role="alert"
+        >
+          {submitError}
+        </p>
+      ) : null}
       {rerollError ? (
         <p
           className="text-center text-[#FF2D87]"
@@ -219,7 +248,7 @@ export function PartyMobileCaption({
       phaseEndsAt={phaseEndsAt}
       allReady={allReady}
       layoutFrozen={layoutFrozen}
-      progressLabel={PARTY_COPY.captionProgress(captionCount, playerCount)}
+      progressLabel={`${PARTY_COPY.captionProgress(captionCount, playerCount)} · ${phaseFlavorRef.current}`}
       footer={footer}
       embedded={embedded}
     >
@@ -254,6 +283,14 @@ export function PartyMobileCaption({
             {PARTY_COPY.rerollDraftHint}
           </p>
         ) : null}
+        {currentModifier ? (
+          <p
+            className="mx-1 mt-2 rounded border border-[#FFB800]/40 bg-[#FFB800]/10 px-3 py-2 text-[#FFB800]"
+            style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.06em" }}
+          >
+            CHAOS-RUNDE: {PARTY_COPY.modifierLabel(currentModifier)}
+          </p>
+        ) : null}
         <div className="mt-3 flex-1 space-y-3 px-1">
           {editorBoxes
             ? editorBoxes.map((box, index) => {
@@ -267,7 +304,7 @@ export function PartyMobileCaption({
                     disabled={inputDisabled}
                     mobile
                     isLastField={index === lastFieldIndex}
-                    onChange={(next) => updateField(index, next)}
+                    onChange={(next) => updateField(index, maybeNormalizeModifierText(next))}
                     onSubmit={handleSubmit}
                     onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
                     onFocus={() => {
@@ -290,7 +327,7 @@ export function PartyMobileCaption({
                     disabled={inputDisabled}
                     mobile
                     isLastField={index === lastFieldIndex}
-                    onChange={(next) => updateField(index, next)}
+                    onChange={(next) => updateField(index, maybeNormalizeModifierText(next))}
                     onSubmit={handleSubmit}
                     onToolbarAction={(action, selection) => applyToolbar(index, action, selection)}
                     onFocus={

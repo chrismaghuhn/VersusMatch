@@ -16,6 +16,8 @@ const mockVotingSnapshot: PartySnapshot = {
     rerollsPerPlayer: 2,
     phaseEndsAt: new Date(Date.now() + 22_000).toISOString(),
     canvasEditorEnabled: false,
+    roundModifiersEnabled: false,
+    currentModifier: null,
     captionDurationSeconds: 60,
     template: null,
   },

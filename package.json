@@ -14,6 +14,8 @@
     "seed:battles": "node scripts/seed-battles.mjs",
     "seo:list-urls": "node scripts/list-index-urls.mjs",
     "test:party-handle": "node scripts/test-party-handle.mjs",
+    "test:party-rpc-parse": "node --experimental-strip-types scripts/test-party-rpc-parse.mjs",
+    "test:party-modifiers": "node --experimental-strip-types scripts/test-party-modifiers.mjs",
     "test:caption-fields": "node scripts/test-caption-fields.mjs",
     "test:caption-rich": "node --experimental-strip-types scripts/test-caption-rich.mjs",
     "test:caption-layout": "node --experimental-strip-types scripts/test-caption-layout.mjs",

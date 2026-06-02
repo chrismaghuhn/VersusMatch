@@ -2,16 +2,26 @@
 
 import { PartyLayout } from "@/components/brutal/party/shared/PartyLayout";
 import { HeadCluster, Scoreboard, SubmissionCard } from "@/components/brutal/party/shared/PartyPrimitives";
+import {
+  LobbyReactionBar,
+  type LobbyReactionFeedItem,
+} from "@/components/brutal/party/lobby-reaction-bar";
 import { Meta, Shell } from "@/components/brutal/party/shared/Shell";
 import { PARTY_COPY } from "@/lib/party/copy";
 import { PARTY_DESIGN } from "@/lib/party/design";
-import type { PartySnapshot } from "@/lib/party/types";
+import type { PartyReactionKey, PartySnapshot } from "@/lib/party/types";
 
 type PartyDesktopRevealProps = {
   snapshot: PartySnapshot;
+  recentReactions?: LobbyReactionFeedItem[];
+  onSendReaction?: (key: PartyReactionKey) => void;
 };
 
-export function PartyDesktopReveal({ snapshot }: PartyDesktopRevealProps) {
+export function PartyDesktopReveal({
+  snapshot,
+  recentReactions,
+  onSendReaction,
+}: PartyDesktopRevealProps) {
   const accent = PARTY_DESIGN.accent;
   const sorted = [...snapshot.submissions].sort(
     (a, b) => (b.voteCount ?? 0) - (a.voteCount ?? 0)
@@ -107,6 +117,10 @@ export function PartyDesktopReveal({ snapshot }: PartyDesktopRevealProps) {
             {
               label: "STANDINGS",
               node: <Scoreboard players={snapshot.players} accent={accent} compact />,
+            },
+            {
+              label: "REACTIONS",
+              node: <LobbyReactionBar recent={recentReactions} onSend={onSendReaction} />,
             },
           ],
         }}

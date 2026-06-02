@@ -1,4 +1,5 @@
 import type { CaptionDocument, CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
+import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 
 export type PartyPhase = "waiting" | "caption" | "voting" | "reveal" | "finished";
 
@@ -43,6 +44,8 @@ export type PartySnapshot = {
     rerollsPerPlayer: number;
     phaseEndsAt: string | null;
     canvasEditorEnabled: boolean;
+    roundModifiersEnabled: boolean;
+    currentModifier: PartyRoundModifier | null;
     captionDurationSeconds: number;
     /** @deprecated Use myTemplate (caption) or submission.template (vote/reveal) */
     template: PartyTemplateView | null;

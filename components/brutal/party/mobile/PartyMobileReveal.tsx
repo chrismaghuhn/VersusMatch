@@ -1,19 +1,30 @@
 "use client";
 
 import { PartyMobileShell } from "@/components/brutal/party/mobile/PartyMobileShell";
+import {
+  LobbyReactionBar,
+  type LobbyReactionFeedItem,
+} from "@/components/brutal/party/lobby-reaction-bar";
 import { PartyTemplateFrame } from "@/components/brutal/party/shared/PartyTemplateFrame";
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { decodePartyAvatar } from "@/lib/party/avatar";
 import { PARTY_COPY } from "@/lib/party/copy";
 import { captionForFrame } from "@/lib/party/caption-rich/legacy-read";
-import type { PartySnapshot } from "@/lib/party/types";
+import type { PartyReactionKey, PartySnapshot } from "@/lib/party/types";
 
 type PartyMobileRevealProps = {
   snapshot: PartySnapshot;
+  recentReactions?: LobbyReactionFeedItem[];
+  onSendReaction?: (key: PartyReactionKey) => void;
   embedded?: boolean;
 };
 
-export function PartyMobileReveal({ snapshot, embedded = false }: PartyMobileRevealProps) {
+export function PartyMobileReveal({
+  snapshot,
+  recentReactions,
+  onSendReaction,
+  embedded = false,
+}: PartyMobileRevealProps) {
   const sorted = [...snapshot.submissions].sort(
     (a, b) => (b.voteCount ?? 0) - (a.voteCount ?? 0)
   );
@@ -100,6 +111,9 @@ export function PartyMobileReveal({ snapshot, embedded = false }: PartyMobileRev
             </div>
           );
         })}
+      </div>
+      <div className="px-4 pb-4">
+        <LobbyReactionBar recent={recentReactions} onSend={onSendReaction} />
       </div>
     </PartyMobileShell>
   );

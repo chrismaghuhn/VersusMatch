@@ -10,12 +10,23 @@ import Link from "next/link";
 import { Crown } from "lucide-react";
 import { Avatar } from "@/components/brutal/party/shared/Avatar";
 import { decodePartyAvatar } from "@/lib/party/avatar";
+import { getAppUrl } from "@/lib/utils";
 
 type PartyFinishedScreenProps = {
   snapshot: PartySnapshot;
+  isHost: boolean;
+  rematching: boolean;
+  rematchError: string | null;
+  onRematch?: () => void;
 };
 
-function PartyFinishedMobile({ snapshot }: PartyFinishedScreenProps) {
+function PartyFinishedMobile({
+  snapshot,
+  isHost,
+  rematching,
+  rematchError,
+  onRematch,
+}: PartyFinishedScreenProps) {
   const ranked = [...snapshot.players].sort((a, b) => b.score - a.score);
   const topScore = ranked[0]?.score ?? 0;
   const winners = ranked.filter((p) => p.score === topScore && topScore > 0);
@@ -90,22 +101,49 @@ function PartyFinishedMobile({ snapshot }: PartyFinishedScreenProps) {
 
         <ShareCard snapshot={snapshot} embedded />
 
+        <p className="mt-6 text-white/50 break-all" style={{ fontSize: 12 }}>
+          {PARTY_COPY.recapPublicDisclosure(getAppUrl(`/party/recap/${snapshot.room.code}`))}
+        </p>
+
+        {isHost ? (
+          <button
+            type="button"
+            onClick={onRematch}
+            disabled={rematching}
+            className="mt-6 flex w-full items-center justify-center bg-[#CCFF00] py-4 text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.18em" }}
+          >
+            {PARTY_COPY.finishedRunItBack}
+          </button>
+        ) : (
+          <p className="mt-6 text-white/60" style={{ fontSize: 13, fontWeight: 700 }}>
+            {PARTY_COPY.finishedWaitingForHost}
+          </p>
+        )}
+
+        {rematchError ? (
+          <p className="mt-3 text-[#FF6A6A]" style={{ fontSize: 12, fontWeight: 700 }}>
+            {rematchError}
+          </p>
+        ) : null}
+
         <Link
           href="/party"
-          className="mt-8 flex w-full items-center justify-center bg-[#CCFF00] py-4 text-black transition hover:bg-white"
+          className="mt-6 flex w-full items-center justify-center border border-white/20 py-4 text-white/85 transition hover:border-[#CCFF00] hover:text-[#CCFF00]"
           style={{ fontWeight: 900, fontSize: 12, letterSpacing: "0.18em" }}
         >
-          {PARTY_COPY.finishedPlayAgain}
+          {PARTY_COPY.finishedNewRoom}
         </Link>
       </div>
     </Shell>
   );
 }
 
-export function PartyFinishedScreen({ snapshot }: PartyFinishedScreenProps) {
+export function PartyFinishedScreen(props: PartyFinishedScreenProps) {
+  const { snapshot } = props;
   const desktop = usePartyDesktop();
   if (desktop) {
-    return <PartyDesktopFinished snapshot={snapshot} />;
+    return <PartyDesktopFinished {...props} />;
   }
-  return <PartyFinishedMobile snapshot={snapshot} />;
+  return <PartyFinishedMobile {...props} />;
 }
