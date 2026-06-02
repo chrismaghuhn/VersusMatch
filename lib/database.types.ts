@@ -346,6 +346,8 @@ export type Database = {
           status: string;
           template_id: string | null;
           used_template_ids: string[];
+          vote_duration_seconds: number;
+          max_players: number;
           votes_cast_count: number;
         };
         Insert: {
@@ -370,6 +372,8 @@ export type Database = {
           status?: string;
           template_id?: string | null;
           used_template_ids?: string[];
+          vote_duration_seconds?: number;
+          max_players?: number;
           votes_cast_count?: number;
         };
         Update: {
@@ -394,6 +398,8 @@ export type Database = {
           status?: string;
           template_id?: string | null;
           used_template_ids?: string[];
+          vote_duration_seconds?: number;
+          max_players?: number;
           votes_cast_count?: number;
         };
         Relationships: [];
@@ -766,6 +772,22 @@ export type Database = {
         };
         Returns: Record<string, unknown>;
       };
+      party_update_lobby_settings: {
+        Args: { p_room_id: string; p_settings: Json };
+        Returns: Json;
+      };
+      party_kick_player: {
+        Args: {
+          p_room_id: string;
+          p_target_user_id: string;
+          p_block_rejoin?: boolean;
+        };
+        Returns: Json;
+      };
+      party_user_was_room_member: {
+        Args: { p_room_id: string; p_user_id: string };
+        Returns: boolean;
+      };
       party_get_recap: {
         Args: { p_code: string };
         Returns: Record<string, unknown>;
@@ -793,6 +815,22 @@ export type Database = {
       party_join_room: {
         Args: { p_code: string };
         Returns: Record<string, unknown>;
+      };
+      party_kick_player: {
+        Args: {
+          p_room_id: string;
+          p_target_user_id: string;
+          p_block_rejoin?: boolean;
+        };
+        Returns: Record<string, unknown>;
+      };
+      party_update_lobby_settings: {
+        Args: { p_room_id: string; p_settings: Json };
+        Returns: Record<string, unknown>;
+      };
+      party_user_was_room_member: {
+        Args: { p_room_id: string; p_user_id: string };
+        Returns: boolean;
       };
       party_peek_room: {
         Args: { p_code: string };
