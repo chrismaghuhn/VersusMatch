@@ -13,7 +13,10 @@ import {
   snapLayoutCenterVertical,
   sortBoxesByZ,
 } from "../lib/party/caption-rich/layout.ts";
-import { validateCaptionDocumentV3 } from "../lib/party/caption-rich/validate-document.ts";
+import {
+  isCaptionDocument,
+  validateCaptionDocumentV3,
+} from "../lib/party/caption-rich/validate-document.ts";
 import { boxPlainText } from "../lib/party/caption-rich/plain-text.ts";
 
 const TEMPLATE_BOXES = [
@@ -125,6 +128,29 @@ test("validateCaptionDocumentV3 accepts black fill and pill", () => {
   doc.boxes[0].style = { fill: "black", pill: true };
   const result = validateCaptionDocumentV3(doc, TEMPLATE_BOXES, 1);
   assert.equal(result.ok, true);
+});
+
+test("isCaptionDocument rejects non-string segment text", () => {
+  const doc = makeV3Doc();
+  doc.boxes[0].segments = [{ text: { hidden: "payload" } }];
+  assert.equal(isCaptionDocument(doc), false);
+});
+
+test("isCaptionDocument rejects invalid segment style types", () => {
+  const doc = makeV3Doc();
+  doc.boxes[0].segments = [{ text: "hello", style: { scale: "999" } }];
+  assert.equal(isCaptionDocument(doc), false);
+});
+
+test("isCaptionDocument rejects null style fields", () => {
+  const doc = makeV3Doc();
+  doc.boxes[0].segments = [{ text: "hello", style: null }];
+  assert.equal(isCaptionDocument(doc), false);
+});
+
+test("isCaptionDocument rejects oversized rawTexts payloads", () => {
+  const doc = makeV3Doc({ rawTexts: ["x".repeat(121), ""] });
+  assert.equal(isCaptionDocument(doc), false);
 });
 
 test("hitTestBox returns topmost box in reverse z-order", () => {
