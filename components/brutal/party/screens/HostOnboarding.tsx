@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Crown, Copy, Clock, Users } from "lucide-react";
+import { Crown, Copy, EllipsisVertical } from "lucide-react";
 import { LobbyReactionBar, type LobbyReactionFeedItem } from "@/components/brutal/party/lobby-reaction-bar";
+import { LobbySettingsForm, type LobbySettingsDraft } from "@/components/brutal/party/lobby-settings-form";
 import { Shell, Meta } from "@/components/brutal/party/shared/Shell";
 import { PartyLayout } from "@/components/brutal/party/shared/PartyLayout";
 import { CountChip, PartyBtn } from "@/components/brutal/party/shared/PartyPrimitives";
@@ -15,6 +16,7 @@ import { PARTY_DESIGN } from "@/lib/party/design";
 import type { PartyReactionKey } from "@/lib/party/types";
 
 export type PartyLobbyPlayer = {
+  userId: string;
   handle: string;
   avatarId: AvatarId;
   color: string;
@@ -24,9 +26,11 @@ export type PartyLobbyPlayer = {
 export type PartyLobbyScreenProps = {
   code?: string;
   players?: PartyLobbyPlayer[];
-  roundCount?: 3 | 5 | 7;
-  rerollsPerPlayer?: number;
-  captionDurationSeconds?: number;
+  settingsDraft?: LobbySettingsDraft;
+  settingsSaving?: boolean;
+  settingsError?: string | null;
+  maxPlayersBlocked?: boolean;
+  phase?: "waiting" | "caption" | "voting" | "tie" | "guess" | "reveal" | "finished";
   minPlayers?: number;
   maxPlayers?: number;
   isHost?: boolean;
@@ -36,6 +40,9 @@ export type PartyLobbyScreenProps = {
   onCopyLink?: () => void;
   onStartGame?: () => void;
   onLeave?: () => void;
+  onSettingsDraftChange?: (draft: LobbySettingsDraft) => void;
+  onSaveSettings?: () => void;
+  onKickPlayer?: (userId: string, blockRejoin: boolean) => void;
   lobbyPoll?: LobbyPollSnapshot | null;
   onLobbyPollVote?: (optionIndex: number) => void;
   lobbyPollBusy?: boolean;
@@ -44,17 +51,28 @@ export type PartyLobbyScreenProps = {
 };
 
 const DEFAULT_PLAYERS: PartyLobbyPlayer[] = [
-  { handle: "?", avatarId: "gremlin", color: "#1a1a1a" },
-  { handle: "?", avatarId: "skull", color: "#1a1a1a" },
-  { handle: "you", avatarId: "crown", color: "#FFB800", isHost: true },
+  { userId: "p-1", handle: "?", avatarId: "gremlin", color: "#1a1a1a" },
+  { userId: "p-2", handle: "?", avatarId: "skull", color: "#1a1a1a" },
+  { userId: "you", handle: "you", avatarId: "crown", color: "#FFB800", isHost: true },
 ];
 
 export function PartyLobbyScreen({
   code = "ABC123",
   players = DEFAULT_PLAYERS,
-  roundCount = 5,
-  rerollsPerPlayer = 0,
-  captionDurationSeconds = 90,
+  settingsDraft = {
+    captionDurationSeconds: 90,
+    voteDurationSeconds: 30,
+    maxPlayers: 8,
+    roundCount: 5,
+    rerollsPerPlayer: 2,
+    canvasEditorEnabled: true,
+    roundModifiersEnabled: false,
+    authorGuessEnabled: true,
+  },
+  settingsSaving = false,
+  settingsError = null,
+  maxPlayersBlocked = false,
+  phase = "waiting",
   minPlayers = PARTY_MIN_PLAYERS,
   maxPlayers = PARTY_MAX_PLAYERS,
   isHost = true,
@@ -64,13 +82,19 @@ export function PartyLobbyScreen({
   onCopyLink,
   onStartGame,
   onLeave,
+  onSettingsDraftChange,
+  onSaveSettings,
+  onKickPlayer,
   lobbyPoll = null,
   onLobbyPollVote,
   lobbyPollBusy = false,
-  designPreview = false,
+  designPreview: _designPreview = false, // design-only prop remains for preview entrypoint compatibility
 }: PartyLobbyScreenProps) {
+  void _designPreview;
   const [localReactions, setLocalReactions] = useState<LobbyReactionFeedItem[]>(recentReactions);
   const feed = onSendReaction ? recentReactions : localReactions;
+  const [kickTarget, setKickTarget] = useState<{ userId: string; handle: string } | null>(null);
+  const [blockRejoin, setBlockRejoin] = useState(false);
   const joined = players.length;
   const need = Math.max(0, minPlayers - joined);
   const accent = isHost ? "#FFB800" : PARTY_DESIGN.accent;
@@ -147,10 +171,22 @@ export function PartyLobbyScreen({
                   {players.map((p, i) => (
                     <div
                       key={i}
-                      className={"border-2 " + (p.isHost ? "border-[#FFB800]" : "border-white/20")}
+                      className={
+                        "relative border-2 pr-7 " + (p.isHost ? "border-[#FFB800]" : "border-white/20")
+                      }
                       title={p.handle}
                     >
                       <Avatar id={p.avatarId} color={p.color} size={40} />
+                      {isHost && phase === "waiting" && !p.isHost && onKickPlayer ? (
+                        <button
+                          type="button"
+                          onClick={() => setKickTarget({ userId: p.userId, handle: p.handle })}
+                          className="absolute -right-6 top-1/2 -translate-y-1/2 border border-white/20 bg-black p-1 text-white/70 transition hover:border-white/50 hover:text-white"
+                          aria-label={`Kick @${p.handle}`}
+                        >
+                          <EllipsisVertical className="h-3.5 w-3.5" />
+                        </button>
+                      ) : null}
                     </div>
                   ))}
                   <span className="text-white/50" style={{ fontSize: 12 }}>
@@ -171,30 +207,15 @@ export function PartyLobbyScreen({
             {
               label: PARTY_COPY.lobbySettings,
               node: (
-                <div>
-                  <SettingRow icon={<Clock className="h-4 w-4" />} label={PARTY_COPY.lobbyCaptionTimer} value={`${captionDurationSeconds}s`} />
-                  <SettingRow icon={<Clock className="h-4 w-4" />} label={PARTY_COPY.lobbyVoteTimer} value="30s" />
-                  <SettingRow
-                    icon={<Users className="h-4 w-4" />}
-                    label={PARTY_COPY.lobbyPlayersSetting}
-                    value={`${minPlayers}–${maxPlayers}`}
-                  />
-                  <SettingRow
-                    icon={<Users className="h-4 w-4" />}
-                    label={PARTY_COPY.lobbyRoundsSetting}
-                    value={String(roundCount)}
-                  />
-                  <SettingRow
-                    icon={<Users className="h-4 w-4" />}
-                    label={PARTY_COPY.lobbyRerollsSetting}
-                    value={String(rerollsPerPlayer)}
-                  />
-                  {designPreview && (
-                    <p className="mt-4 text-white/40" style={{ fontSize: 11, lineHeight: 1.5 }}>
-                      Design export also mocks template pick, NSFW, spectators — out of P1 scope.
-                    </p>
-                  )}
-                </div>
+                <LobbySettingsForm
+                  readOnly={!isHost}
+                  draft={settingsDraft}
+                  onChange={(next) => onSettingsDraftChange?.(next)}
+                  onSave={onSaveSettings}
+                  saving={settingsSaving}
+                  saveError={settingsError}
+                  maxPlayersBlocked={maxPlayersBlocked}
+                />
               ),
             },
             {
@@ -235,21 +256,48 @@ export function PartyLobbyScreen({
           ) : null,
         }}
       />
+      {kickTarget && onKickPlayer ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4">
+          <div className="w-full max-w-md border-2 border-[#FF2D87] bg-[#0a0a0a] p-5">
+            <h3 className="text-white" style={{ fontWeight: 900, fontSize: 18 }}>
+              {PARTY_COPY.lobbyKick}
+            </h3>
+            <p className="mt-2 text-white/70" style={{ fontSize: 13 }}>
+              {PARTY_COPY.lobbyKickConfirm(kickTarget.handle)}
+            </p>
+            <label className="mt-4 flex items-center gap-2 text-white/80" style={{ fontSize: 12 }}>
+              <input
+                type="checkbox"
+                checked={blockRejoin}
+                onChange={(e) => setBlockRejoin(e.target.checked)}
+              />
+              {PARTY_COPY.lobbyKickBlock}
+            </label>
+            <div className="mt-5 flex gap-2">
+              <PartyBtn
+                kind="ghost"
+                onClick={() => {
+                  setKickTarget(null);
+                  setBlockRejoin(false);
+                }}
+              >
+                Cancel
+              </PartyBtn>
+              <PartyBtn
+                kind="pink"
+                onClick={() => {
+                  onKickPlayer(kickTarget.userId, blockRejoin);
+                  setKickTarget(null);
+                  setBlockRejoin(false);
+                }}
+              >
+                {PARTY_COPY.lobbyKick}
+              </PartyBtn>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </Shell>
-  );
-}
-
-function SettingRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between border-b border-white/5 py-2.5 last:border-b-0">
-      <div className="flex items-center gap-2 text-white/60">
-        {icon}
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em" }}>{label}</span>
-      </div>
-      <span className="font-mono text-white" style={{ fontSize: 12, fontWeight: 800 }}>
-        {value}
-      </span>
-    </div>
   );
 }
 

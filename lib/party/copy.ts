@@ -11,6 +11,13 @@ export type PartyErrorCode =
   | "disconnected"
   | "everyone_left"
   | "network_error"
+  | "kicked"
+  | "banned_from_room"
+  | "not_in_room"
+  | "invalid_settings"
+  | "too_many_players"
+  | "cannot_kick_self"
+  | "cannot_kick_last"
   | "unknown";
 
 export type PartyErrorDefinition = {
@@ -97,6 +104,69 @@ export const PARTY_ERROR_DEFINITIONS: Record<PartyErrorCode, PartyErrorDefinitio
     title: "Network error.",
     body: "Couldn't reach the server. Check your connection and try again.",
     cta: "TRY AGAIN",
+  },
+  kicked: {
+    code: "kicked",
+    label: "KICKED",
+    icon: UserX,
+    color: "#9333ea",
+    title: "Host kicked you out.",
+    body: "You're out of this lobby. Find another room or start your own.",
+    cta: "BACK TO PARTY",
+  },
+  banned_from_room: {
+    code: "banned_from_room",
+    label: "BANNED FROM ROOM",
+    icon: Lock,
+    color: "#9333ea",
+    title: "Host kicked you out.",
+    body: "Probably for cause. Probably not. You can join a different room — but FIGHT-42K is closed to you for 24h.",
+    cta: "BROWSE LOBBIES",
+  },
+  not_in_room: {
+    code: "not_in_room",
+    label: "NOT IN ROOM",
+    icon: Lock,
+    color: "#FF2D87",
+    title: "You're not in this lobby.",
+    body: "Join with the room code first — or the host removed you before you got in.",
+    cta: "BACK TO PARTY",
+  },
+  invalid_settings: {
+    code: "invalid_settings",
+    label: "INVALID SETTINGS",
+    icon: AlertTriangle,
+    color: "#FFB800",
+    title: "Those settings don't work.",
+    body: "Double-check timers, player cap, and toggles — something's out of range.",
+    cta: "TRY AGAIN",
+  },
+  too_many_players: {
+    code: "too_many_players",
+    label: "TOO MANY PLAYERS",
+    icon: Users,
+    color: "#FFB800",
+    title: "Too many players for that cap.",
+    body: "Kick someone first or pick a higher max before saving.",
+    cta: "OK",
+  },
+  cannot_kick_self: {
+    code: "cannot_kick_self",
+    label: "CAN'T KICK SELF",
+    icon: UserX,
+    color: "#FFB800",
+    title: "You can't kick yourself.",
+    body: "Leave the lobby if you want out — the host stays until someone else hosts.",
+    cta: "OK",
+  },
+  cannot_kick_last: {
+    code: "cannot_kick_last",
+    label: "CAN'T KICK",
+    icon: UserX,
+    color: "#FFB800",
+    title: "Can't kick the last player.",
+    body: "The lobby needs at least the host. Leave instead if you want an empty room.",
+    cta: "OK",
   },
   unknown: {
     code: "unknown",
@@ -286,9 +356,22 @@ export const PARTY_COPY = {
   lobbyStart: "START GAME →",
   lobbyLeave: "LEAVE LOBBY",
   lobbySettings: "SETTINGS",
+  lobbySettingsSave: "SAVE SETTINGS",
+  lobbySettingsSaved: "Settings saved.",
+  lobbySettingsFailed: "Couldn't save settings.",
+  lobbyKick: "Kick",
+  lobbyKickConfirm: (handle: string) => `Kick @${handle} from the lobby?`,
+  lobbyKickBlock: "Block re-join for 24h",
+  lobbyMaxPlayersBlocked: "Too many players — kick someone or raise the cap.",
   lobbyCaptionTimer: "CAPTION TIMER",
+  lobbyCaptionPreset60: "60s",
+  lobbyCaptionPreset90: "90s",
+  lobbyCaptionCustom: "Custom",
   lobbyCanvasEditor: "CANVAS EDITOR",
   lobbyVoteTimer: "VOTE TIMER",
+  lobbyVotePreset20: "20s",
+  lobbyVotePreset30: "30s",
+  lobbyVotePreset45: "45s",
   lobbyPlayersSetting: "PLAYERS",
   lobbyRoundsSetting: "ROUNDS",
   lobbyRerollsSetting: "REROLLS",

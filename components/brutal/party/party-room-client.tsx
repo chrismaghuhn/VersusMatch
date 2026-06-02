@@ -18,6 +18,7 @@ import { Shell } from "@/components/brutal/party/shared/Shell";
 import { PARTY_COPY } from "@/lib/party/copy";
 import { PARTY_MIN_PLAYERS } from "@/lib/party/constants";
 import { decodePartyAvatar } from "@/lib/party/avatar";
+import type { LobbySettingsDraft } from "@/components/brutal/party/lobby-settings-form";
 import {
   isCaptionPhaseReady,
   isGuessPhaseReady,
@@ -54,6 +55,9 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const desktop = usePartyDesktop();
   const [snapshot, setSnapshot] = useState<PartySnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [settingsDraft, setSettingsDraft] = useState<LobbySettingsDraft | null>(null);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsSaveError, setSettingsSaveError] = useState<string | null>(null);
   const [captionDraft, setCaptionDraft] = useState("");
   const [showRerollDraftHint, setShowRerollDraftHint] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -79,6 +83,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   >(null);
   const hasCustomBoxesRef = useRef(false);
   const unknownPhaseRefreshRef = useRef(false);
+  const previousPhaseRef = useRef<string | null>(null);
 
   const advanceGuardsRef = useRef<AdvancePhaseGuards>({
     advancingRef,
@@ -123,7 +128,11 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
       const res = await fetch(`/api/party/rooms/${roomId}`, { cache: "no-store" });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
-        setError(data.error ?? "could_not_load_room");
+        const nextError = data.error ?? "could_not_load_room";
+        if (nextError === "kicked") {
+          setSnapshot(null);
+        }
+        setError(nextError);
         return;
       }
       const data = (await res.json()) as { snapshot: PartySnapshot };
@@ -275,6 +284,25 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     const poll = window.setInterval(() => void refresh(), pollMs);
     return () => window.clearInterval(poll);
   }, [refresh, phase]);
+
+  useEffect(() => {
+    if (!snapshot) return;
+    const roomPhase = snapshot.room.phase;
+    const enteredWaiting = roomPhase === "waiting" && previousPhaseRef.current !== "waiting";
+    if (enteredWaiting || (roomPhase === "waiting" && !settingsDraft)) {
+      setSettingsDraft({
+        captionDurationSeconds: snapshot.room.captionDurationSeconds,
+        voteDurationSeconds: snapshot.room.voteDurationSeconds as 20 | 30 | 45,
+        maxPlayers: snapshot.room.maxPlayers,
+        roundCount: snapshot.room.roundCount as 3 | 5 | 7,
+        rerollsPerPlayer: snapshot.room.rerollsPerPlayer,
+        canvasEditorEnabled: snapshot.room.canvasEditorEnabled,
+        roundModifiersEnabled: snapshot.room.roundModifiersEnabled,
+        authorGuessEnabled: snapshot.room.authorGuessEnabled,
+      });
+    }
+    previousPhaseRef.current = roomPhase;
+  }, [settingsDraft, snapshot]);
 
   useEffect(() => {
     const beat = window.setInterval(() => {
@@ -582,6 +610,72 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     void refresh();
   }
 
+  async function handleSaveSettings() {
+    if (!snapshot || !settingsDraft) return;
+    setSavingSettings(true);
+    setSettingsSaveError(null);
+    const payload = {
+      caption_duration_seconds: settingsDraft.captionDurationSeconds,
+      vote_duration_seconds: settingsDraft.voteDurationSeconds,
+      max_players: settingsDraft.maxPlayers,
+      round_count: settingsDraft.roundCount,
+      rerolls_per_player: settingsDraft.rerollsPerPlayer,
+      canvas_editor_enabled: settingsDraft.canvasEditorEnabled,
+      round_modifiers_enabled: settingsDraft.roundModifiersEnabled,
+      author_guess_enabled: settingsDraft.authorGuessEnabled,
+    };
+    try {
+      const res = await fetch(`/api/party/rooms/${roomId}/settings`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string; snapshot?: PartySnapshot };
+      if (!res.ok || data.error) {
+        setSettingsSaveError(PARTY_COPY.lobbySettingsFailed);
+        if (data.error) setError(data.error);
+        return;
+      }
+      if (data.snapshot) {
+        setSnapshot(data.snapshot);
+        setSettingsDraft({
+          captionDurationSeconds: data.snapshot.room.captionDurationSeconds,
+          voteDurationSeconds: data.snapshot.room.voteDurationSeconds as 20 | 30 | 45,
+          maxPlayers: data.snapshot.room.maxPlayers,
+          roundCount: data.snapshot.room.roundCount as 3 | 5 | 7,
+          rerollsPerPlayer: data.snapshot.room.rerollsPerPlayer,
+          canvasEditorEnabled: data.snapshot.room.canvasEditorEnabled,
+          roundModifiersEnabled: data.snapshot.room.roundModifiersEnabled,
+          authorGuessEnabled: data.snapshot.room.authorGuessEnabled,
+        });
+      } else {
+        await refresh();
+      }
+    } catch {
+      setSettingsSaveError(PARTY_COPY.lobbySettingsFailed);
+    } finally {
+      setSavingSettings(false);
+    }
+  }
+
+  async function handleKickPlayer(userId: string, blockRejoin: boolean) {
+    try {
+      const res = await fetch(`/api/party/rooms/${roomId}/kick`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, blockRejoin }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok || data.error) {
+        if (data.error) setError(data.error);
+        return;
+      }
+      await refresh();
+    } catch {
+      setError("network_error");
+    }
+  }
+
   function handleCopyLink() {
     if (!snapshot) return;
     const url = getAppUrl(`/party/join/${snapshot.room.code}`);
@@ -629,17 +723,34 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const minPlayers = PARTY_MIN_PLAYERS;
 
   if (snapshot.room.phase === "waiting") {
+    const draft = settingsDraft ?? {
+      captionDurationSeconds: snapshot.room.captionDurationSeconds,
+      voteDurationSeconds: snapshot.room.voteDurationSeconds as 20 | 30 | 45,
+      maxPlayers: snapshot.room.maxPlayers,
+      roundCount: snapshot.room.roundCount as 3 | 5 | 7,
+      rerollsPerPlayer: snapshot.room.rerollsPerPlayer,
+      canvasEditorEnabled: snapshot.room.canvasEditorEnabled,
+      roundModifiersEnabled: snapshot.room.roundModifiersEnabled,
+      authorGuessEnabled: snapshot.room.authorGuessEnabled,
+    };
     return (
       <PartyLobbyScreen
         code={snapshot.room.code}
-        roundCount={snapshot.room.roundCount as 3 | 5 | 7}
-        rerollsPerPlayer={snapshot.room.rerollsPerPlayer}
-        captionDurationSeconds={snapshot.room.captionDurationSeconds}
+        phase={snapshot.room.phase}
+        settingsDraft={draft}
+        settingsSaving={savingSettings}
+        settingsError={settingsSaveError}
+        maxPlayersBlocked={draft.maxPlayers < snapshot.players.length}
+        onSettingsDraftChange={setSettingsDraft}
+        onSaveSettings={isHost ? handleSaveSettings : undefined}
+        onKickPlayer={isHost ? handleKickPlayer : undefined}
+        maxPlayers={snapshot.room.maxPlayers}
         isHost={isHost}
         canStart={isHost && snapshot.players.length >= minPlayers}
         players={snapshot.players.map((p) => {
           const avatar = decodePartyAvatar(p.avatarUrl);
           return {
+            userId: p.userId,
             handle: p.isYou ? "you" : p.handle,
             avatarId: avatar.id,
             color: avatar.color,

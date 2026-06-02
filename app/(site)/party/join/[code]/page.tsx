@@ -65,6 +65,9 @@ export default async function PartyJoinCodePage({ params }: PageProps) {
 
   const result = parsePartyRpc(data);
   if (!result.ok || !result.room_id) {
+    if (result.error === "banned_from_room") {
+      redirect("/party?error=banned_from_room");
+    }
     redirect(`/party?error=${result.error ?? "bad_code"}`);
   }
 

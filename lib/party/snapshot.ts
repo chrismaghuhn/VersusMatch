@@ -33,6 +33,8 @@ type PartyRoomRow = {
   round_modifiers_enabled: boolean;
   current_modifier: PartyRoundModifier | null;
   caption_duration_seconds: number;
+  vote_duration_seconds: number;
+  max_players: number;
   phase_ends_at: string | null;
   template_id: string | null;
   phase_seed: number | null;
@@ -163,7 +165,7 @@ export async function buildPartySnapshot(
   const { data: room, error: roomError } = await (supabase as SupabaseClient)
     .from("party_rooms")
     .select(
-      "id, code, status, phase, current_round, round_count, rerolls_per_player, canvas_editor_enabled, round_modifiers_enabled, current_modifier, caption_duration_seconds, phase_ends_at, template_id, phase_seed, caption_count, votes_cast_count, author_guess_enabled, author_guesses_count, round_winner_submission_id"
+      "id, code, status, phase, current_round, round_count, rerolls_per_player, canvas_editor_enabled, round_modifiers_enabled, current_modifier, caption_duration_seconds, vote_duration_seconds, max_players, phase_ends_at, template_id, phase_seed, caption_count, votes_cast_count, author_guess_enabled, author_guesses_count, round_winner_submission_id"
     )
     .eq("id", roomId)
     .maybeSingle();
@@ -495,6 +497,8 @@ export async function buildPartySnapshot(
       currentModifier: roomRow.current_modifier,
       roundWinnerSubmissionId: roomRow.round_winner_submission_id ?? null,
       captionDurationSeconds: roomRow.caption_duration_seconds,
+      voteDurationSeconds: roomRow.vote_duration_seconds,
+      maxPlayers: roomRow.max_players,
       template: roomTemplate,
     },
     players: playersRows.map((p) => {

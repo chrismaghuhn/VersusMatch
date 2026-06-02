@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { parsePartyPeek } from "../lib/party/peek.ts";
+import { partyRpcStatus } from "../lib/party/rpc-response.ts";
 
 test("parsePartyPeek returns success payload", () => {
   const result = parsePartyPeek({
@@ -49,4 +50,15 @@ test("parsePartyPeek maps in_game responses to in_progress", () => {
     isFinished: false,
     phase: "in_progress",
   });
+});
+
+test("partyRpcStatus maps lobby and kick errors", () => {
+  assert.equal(partyRpcStatus("kicked"), 403);
+  assert.equal(partyRpcStatus("not_in_room"), 403);
+  assert.equal(partyRpcStatus("banned_from_room"), 409);
+  assert.equal(partyRpcStatus("invalid_settings"), 409);
+  assert.equal(partyRpcStatus("too_many_players"), 409);
+  assert.equal(partyRpcStatus("cannot_kick_self"), 409);
+  assert.equal(partyRpcStatus("cannot_kick_last"), 409);
+  assert.equal(partyRpcStatus("player_not_found"), 409);
 });

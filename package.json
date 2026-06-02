@@ -21,6 +21,7 @@
     "test:caption-layout": "node --experimental-strip-types scripts/test-caption-layout.mjs",
     "test:party-guess-author": "node --experimental-strip-types --test scripts/test-party-guess-author.mjs",
     "test:party-reveal-theatre": "node --experimental-strip-types --test scripts/test-party-reveal-theatre.mjs",
+    "test:party-lobby-settings": "node --experimental-strip-types --test scripts/test-party-lobby-settings.mjs",
     "party:analytics": "node scripts/party-analytics-report.mjs",
     "party:bulk-import": "node scripts/bulk-import-party-templates.mjs"
   },

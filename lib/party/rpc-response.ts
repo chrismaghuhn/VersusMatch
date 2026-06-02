@@ -44,6 +44,7 @@ export function partyRpcStatus(error: string | undefined): number {
       return 401;
     case "not_in_room":
     case "not_host":
+    case "kicked":
       return 403;
     case "not_found":
     case "bad_code":
@@ -72,6 +73,12 @@ export function partyRpcStatus(error: string | undefined): number {
     case "not_eligible":
     case "already_guessed":
     case "invalid_guess":
+    case "invalid_settings":
+    case "too_many_players":
+    case "cannot_kick_self":
+    case "cannot_kick_last":
+    case "player_not_found":
+    case "banned_from_room":
       return 409;
     default:
       return 400;
