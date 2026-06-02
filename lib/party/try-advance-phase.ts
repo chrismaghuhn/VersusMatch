@@ -43,7 +43,13 @@ export async function tryAdvancePhase(
   }
 
   const phase = snapshot.room.phase;
-  if (phase !== "caption" && phase !== "voting" && phase !== "guess" && phase !== "reveal") {
+  if (
+    phase !== "caption" &&
+    phase !== "voting" &&
+    phase !== "tie" &&
+    phase !== "guess" &&
+    phase !== "reveal"
+  ) {
     return { snapshot, advanced: false };
   }
 
@@ -53,10 +59,16 @@ export async function tryAdvancePhase(
   const timerExpired = !Number.isNaN(endsAt) && Date.now() >= endsAt;
   const allReady = isPhaseReadyForEarlyAdvance(snapshot);
 
-  if (!options?.forceTimer && phase !== "reveal" && !allReady && !timerExpired) {
+  if (
+    !options?.forceTimer &&
+    phase !== "reveal" &&
+    phase !== "tie" &&
+    !allReady &&
+    !timerExpired
+  ) {
     return { snapshot, advanced: false };
   }
-  if (phase === "reveal" && !timerExpired) {
+  if ((phase === "reveal" || phase === "tie") && !timerExpired) {
     return { snapshot, advanced: false };
   }
 

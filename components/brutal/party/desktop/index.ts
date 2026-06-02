@@ -17,6 +17,11 @@ export const PartyDesktopGuess = dynamic(
   { ssr: false }
 );
 
+export const PartyDesktopTie = dynamic(
+  () => import("./PartyDesktopTie").then((m) => m.PartyDesktopTie),
+  { ssr: false }
+);
+
 export const PartyDesktopReveal = dynamic(
   () => import("./PartyDesktopReveal").then((m) => m.PartyDesktopReveal),
   { ssr: false }

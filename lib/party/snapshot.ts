@@ -233,9 +233,25 @@ export async function buildPartySnapshot(
   let eligibleGuesserCount: number | undefined;
   let iAmWinnerAuthor: boolean | undefined;
   let guessReveal: PartySnapshot["guessReveal"] = null;
+  let voteTieCount: number | undefined;
+  let tiedVoteCount: number | undefined;
 
   if (phase !== "waiting" && roomRow.current_round > 0) {
-    if (phase === "guess") {
+    if (phase === "tie") {
+      submissions = [];
+      const { data: resultRows } = await (supabase as SupabaseClient)
+        .from("party_round_results")
+        .select("vote_count")
+        .eq("room_id", roomId)
+        .eq("round", roomRow.current_round);
+
+      const counts = ((resultRows ?? []) as { vote_count: number }[]).map(
+        (r) => r.vote_count
+      );
+      const top = counts.length > 0 ? Math.max(...counts) : 0;
+      tiedVoteCount = top;
+      voteTieCount = counts.filter((c) => c === top).length;
+    } else if (phase === "guess") {
       authorGuessesCastCount = roomRow.author_guesses_count ?? 0;
       submissions = [];
 
@@ -483,6 +499,8 @@ export async function buildPartySnapshot(
     eligibleGuesserCount,
     iAmWinnerAuthor,
     guessReveal,
+    voteTieCount,
+    tiedVoteCount,
     myTemplate,
     myRerollsRemaining,
     recentReactions,

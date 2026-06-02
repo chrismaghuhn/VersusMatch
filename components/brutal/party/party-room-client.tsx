@@ -9,6 +9,7 @@ import { PartyDesktopCaption } from "@/components/brutal/party/desktop";
 import { usePartyDesktop } from "@/lib/party/use-party-desktop";
 import { PartyRevealScreen } from "@/components/brutal/party/party-reveal-screen";
 import { PartyGuessScreen } from "@/components/brutal/party/party-guess-screen";
+import { PartyTieScreen } from "@/components/brutal/party/party-tie-screen";
 import { PartyVotingScreen } from "@/components/brutal/party/party-voting-screen";
 import { RerollConfirmDialog } from "@/components/brutal/party/caption-studio/RerollConfirmDialog";
 import { PartyLobbyScreen } from "@/components/brutal/party/screens/HostOnboarding";
@@ -37,6 +38,16 @@ import { getAppUrl } from "@/lib/utils";
 type PartyRoomClientProps = {
   roomId: string;
 };
+
+const PARTY_ROOM_PHASES = [
+  "waiting",
+  "caption",
+  "voting",
+  "tie",
+  "guess",
+  "reveal",
+  "finished",
+] as const;
 
 export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const router = useRouter();
@@ -67,6 +78,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     ((revision: number, draft: CaptionDocumentV3 | null) => void) | null
   >(null);
   const hasCustomBoxesRef = useRef(false);
+  const unknownPhaseRefreshRef = useRef(false);
 
   const advanceGuardsRef = useRef<AdvancePhaseGuards>({
     advancingRef,
@@ -141,6 +153,22 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
       setError("network_error");
     }
   }, [roomId]);
+
+  useEffect(() => {
+    const p = snapshot?.room.phase;
+    if (
+      !p ||
+      (PARTY_ROOM_PHASES as readonly string[]).includes(p)
+    ) {
+      unknownPhaseRefreshRef.current = false;
+      return;
+    }
+    if (unknownPhaseRefreshRef.current) return;
+    unknownPhaseRefreshRef.current = true;
+    void refresh().finally(() => {
+      unknownPhaseRefreshRef.current = false;
+    });
+  }, [snapshot?.room.phase, refresh]);
 
   const { isPending: everyoneLeftPending, isTriggered: everyoneLeft } =
     useEveryoneLeft(snapshot);
@@ -725,6 +753,10 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     );
   }
 
+  if (snapshot.room.phase === "tie") {
+    return <PartyTieScreen snapshot={snapshot} />;
+  }
+
   if (snapshot.room.phase === "guess") {
     return (
       <PartyGuessScreen
@@ -745,13 +777,21 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     );
   }
 
+  if (snapshot.room.phase === "finished") {
+    return (
+      <PartyFinishedScreen
+        snapshot={snapshot}
+        isHost={isHost}
+        rematching={phaseTransitioning}
+        rematchError={rematchError}
+        onRematch={isHost ? handleRematch : undefined}
+      />
+    );
+  }
+
   return (
-    <PartyFinishedScreen
-      snapshot={snapshot}
-      isHost={isHost}
-      rematching={phaseTransitioning}
-      rematchError={rematchError}
-      onRematch={isHost ? handleRematch : undefined}
-    />
+    <Shell>
+      <div className="px-6 py-20 text-center text-white/50">{PARTY_COPY.working}</div>
+    </Shell>
   );
 }
