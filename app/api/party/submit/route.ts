@@ -2,30 +2,12 @@ import { NextResponse } from "next/server";
 import { requirePartyApi } from "@/lib/party/api-auth";
 import { isCaptionValid, normalizeCaption } from "@/lib/party/caption";
 import { serializeCaptionPlain } from "@/lib/party/caption-rich/plain-text";
+import { isCaptionDocument } from "@/lib/party/caption-rich/validate-document";
 import type { CaptionDocument } from "@/lib/party/caption-rich/types";
 import { captionHasProfanity } from "@/lib/party/profanity";
 import { parsePartyRpc, partyRpcStatus } from "@/lib/party/rpc-response";
 import { buildPartySnapshot } from "@/lib/party/snapshot";
 import { partySubmitCaptionRpc } from "@/lib/supabase/party-rpc";
-
-function isCaptionDocument(value: unknown): value is CaptionDocument {
-  if (!value || typeof value !== "object") return false;
-  const doc = value as {
-    v?: unknown;
-    boxes?: unknown;
-    layoutRevision?: unknown;
-    rawTexts?: unknown;
-  };
-  if (doc.v === 2) return Array.isArray(doc.boxes);
-  if (doc.v === 3) {
-    return (
-      Array.isArray(doc.boxes) &&
-      typeof doc.layoutRevision === "number" &&
-      Array.isArray(doc.rawTexts)
-    );
-  }
-  return false;
-}
 
 export async function POST(request: Request) {
   const auth = await requirePartyApi();
