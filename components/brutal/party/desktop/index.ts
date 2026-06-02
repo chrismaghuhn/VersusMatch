@@ -12,6 +12,11 @@ export const PartyDesktopVoting = dynamic(
   { ssr: false }
 );
 
+export const PartyDesktopGuess = dynamic(
+  () => import("./PartyDesktopGuess").then((m) => m.PartyDesktopGuess),
+  { ssr: false }
+);
+
 export const PartyDesktopReveal = dynamic(
   () => import("./PartyDesktopReveal").then((m) => m.PartyDesktopReveal),
   { ssr: false }

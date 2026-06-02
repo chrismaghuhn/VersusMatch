@@ -20,6 +20,7 @@ function PartyPageClientInner() {
   const [roundCount, setRoundCount] = useState<3 | 5 | 7>(5);
   const [rerollsPerPlayer, setRerollsPerPlayer] = useState(0);
   const [roundModifiersEnabled, setRoundModifiersEnabled] = useState(false);
+  const [authorGuessEnabled, setAuthorGuessEnabled] = useState(true);
   const [tutorialSeen, setTutorialSeen] = useState(true);
 
   useEffect(() => {
@@ -88,6 +89,7 @@ function PartyPageClientInner() {
           rerollsPerPlayer,
           canvasEditorEnabled: true,
           roundModifiersEnabled,
+          authorGuessEnabled,
         }),
       });
       const data = (await res.json()) as { roomId?: string; error?: string };
@@ -131,6 +133,8 @@ function PartyPageClientInner() {
         onRerollsPerPlayerChange={setRerollsPerPlayer}
         roundModifiersEnabled={roundModifiersEnabled}
         onRoundModifiersEnabledChange={setRoundModifiersEnabled}
+        authorGuessEnabled={authorGuessEnabled}
+        onAuthorGuessEnabledChange={setAuthorGuessEnabled}
         onJoin={handleJoin}
         onCreate={handleCreate}
       />

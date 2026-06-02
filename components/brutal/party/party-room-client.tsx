@@ -8,6 +8,7 @@ import { PartyMobileCaption } from "@/components/brutal/party/mobile/PartyMobile
 import { PartyDesktopCaption } from "@/components/brutal/party/desktop";
 import { usePartyDesktop } from "@/lib/party/use-party-desktop";
 import { PartyRevealScreen } from "@/components/brutal/party/party-reveal-screen";
+import { PartyGuessScreen } from "@/components/brutal/party/party-guess-screen";
 import { PartyVotingScreen } from "@/components/brutal/party/party-voting-screen";
 import { RerollConfirmDialog } from "@/components/brutal/party/caption-studio/RerollConfirmDialog";
 import { PartyLobbyScreen } from "@/components/brutal/party/screens/HostOnboarding";
@@ -16,7 +17,11 @@ import { Shell } from "@/components/brutal/party/shared/Shell";
 import { PARTY_COPY } from "@/lib/party/copy";
 import { PARTY_MIN_PLAYERS } from "@/lib/party/constants";
 import { decodePartyAvatar } from "@/lib/party/avatar";
-import { isCaptionPhaseReady, isVotingPhaseReady } from "@/lib/party/phase-ready";
+import {
+  isCaptionPhaseReady,
+  isGuessPhaseReady,
+  isVotingPhaseReady,
+} from "@/lib/party/phase-ready";
 import { usePartyRealtime } from "@/lib/party/realtime";
 import { useEveryoneLeft } from "@/lib/party/use-everyone-left";
 import { tryAdvancePhase, type AdvancePhaseGuards } from "@/lib/party/try-advance-phase";
@@ -46,6 +51,7 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const [rerollConfirmOpen, setRerollConfirmOpen] = useState(false);
   const [rerollError, setRerollError] = useState<string | null>(null);
   const [voting, setVoting] = useState(false);
+  const [guessing, setGuessing] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [retractingVote, setRetractingVote] = useState(false);
   const [phaseTransitioning, setPhaseTransitioning] = useState(false);
@@ -143,6 +149,8 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   const playerCount = snapshot?.players.length ?? 0;
   const captionCount = snapshot?.captionCount ?? 0;
   const votesCastCount = snapshot?.votesCastCount ?? 0;
+  const authorGuessesCastCount = snapshot?.authorGuessesCastCount ?? 0;
+  const eligibleGuesserCount = snapshot?.eligibleGuesserCount ?? 0;
   const phaseEndsAt = snapshot?.room.phaseEndsAt ?? null;
   const currentRound = snapshot?.room.currentRound ?? 0;
 
@@ -161,14 +169,24 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
   }, [currentRound]);
 
   useEffect(() => {
-    if (phase !== "caption" && phase !== "voting") return;
+    if (phase !== "caption" && phase !== "voting" && phase !== "guess") return;
     const snap = snapshotRef.current;
     if (!snap) return;
     if (phase === "caption" && !isCaptionPhaseReady(snap)) return;
     if (phase === "voting" && !isVotingPhaseReady(snap)) return;
+    if (phase === "guess" && !isGuessPhaseReady(snap)) return;
 
     void runAdvance(snap);
-  }, [roomId, phase, captionCount, votesCastCount, playerCount, runAdvance]);
+  }, [
+    roomId,
+    phase,
+    captionCount,
+    votesCastCount,
+    authorGuessesCastCount,
+    eligibleGuesserCount,
+    playerCount,
+    runAdvance,
+  ]);
 
   useEffect(() => {
     if (!phaseEndsAt) return;
@@ -486,6 +504,26 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     }
   }
 
+  async function handleGuess(guessedUserId: string) {
+    setGuessing(true);
+    try {
+      const res = await fetch("/api/party/guess-author", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId, guessedUserId }),
+      });
+      const data = (await res.json()) as { snapshot?: PartySnapshot; error?: string };
+      if (data.snapshot) {
+        setSnapshot(data.snapshot);
+        await runAdvance(data.snapshot);
+      } else if (data.error) {
+        setError(data.error);
+      }
+    } finally {
+      setGuessing(false);
+    }
+  }
+
   async function handleLeaveLobby() {
     teardownRealtime();
     const res = await fetch("/api/party/leave", {
@@ -683,6 +721,16 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         retracting={retractingVote}
         retractDisabled={phaseTransitioning}
         phaseTransitioning={phaseTransitioning}
+      />
+    );
+  }
+
+  if (snapshot.room.phase === "guess") {
+    return (
+      <PartyGuessScreen
+        snapshot={snapshot}
+        onGuess={handleGuess}
+        guessing={guessing}
       />
     );
   }
