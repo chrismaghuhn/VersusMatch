@@ -1,7 +1,14 @@
 import type { CaptionDocument, CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
 import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 
-export type PartyPhase = "waiting" | "caption" | "voting" | "guess" | "reveal" | "finished";
+export type PartyPhase =
+  | "waiting"
+  | "caption"
+  | "voting"
+  | "tie"
+  | "guess"
+  | "reveal"
+  | "finished";
 
 export type PartyRoomStatus = "open" | "in_progress" | "finished" | "abandoned";
 
@@ -96,6 +103,10 @@ export type PartySnapshot = {
   eligibleGuesserCount?: number;
   iAmWinnerAuthor?: boolean;
   guessReveal?: PartyGuessReveal | null;
+  /** Tie phase: how many submissions share the top vote count */
+  voteTieCount?: number;
+  /** Tie phase: shared top vote count */
+  tiedVoteCount?: number;
   myTemplate: PartyTemplateView | null;
   myRerollsRemaining: number;
   recentReactions: Array<{

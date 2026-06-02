@@ -208,6 +208,10 @@ Branch `feat/p2.6a-canvas-readability` — `node --experimental-strip-types --te
 | W2 | Only 1 submission -> skip guess | ☐ |
 | W2 | Rematch preserves Author Guess setting | ☐ |
 | W2 | Double advance from guess does not double-award score | ☐ |
+| W2 | Tie screen ~3s when 2+ memes share top votes and top count > 0 | ☐ |
+| W2 | No tie screen when top memes are tied at 0 votes (straight to guess/reveal) | ☐ |
+| W2 | Player scores unchanged during tie; update after tie ends | ☐ |
+| W2 | Room advances from tie/guess when all tabs backgrounded (cron ~15s) | ☐ |
 | W2 | Tie winner is stable across refreshes/clients | ☐ |
 | W2 | Guess snapshot does not expose winner userId/handle before reveal | ☐ |
 | W2 | Winner author cannot submit RPC guess even by manual request | ☐ |
