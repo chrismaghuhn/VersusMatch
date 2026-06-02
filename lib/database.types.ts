@@ -774,7 +774,7 @@ export type Database = {
       };
       party_update_lobby_settings: {
         Args: { p_room_id: string; p_settings: Json };
-        Returns: Json;
+        Returns: Record<string, unknown>;
       };
       party_kick_player: {
         Args: {
@@ -782,7 +782,7 @@ export type Database = {
           p_target_user_id: string;
           p_block_rejoin?: boolean;
         };
-        Returns: Json;
+        Returns: Record<string, unknown>;
       };
       party_user_was_room_member: {
         Args: { p_room_id: string; p_user_id: string };
@@ -815,22 +815,6 @@ export type Database = {
       party_join_room: {
         Args: { p_code: string };
         Returns: Record<string, unknown>;
-      };
-      party_kick_player: {
-        Args: {
-          p_room_id: string;
-          p_target_user_id: string;
-          p_block_rejoin?: boolean;
-        };
-        Returns: Record<string, unknown>;
-      };
-      party_update_lobby_settings: {
-        Args: { p_room_id: string; p_settings: Json };
-        Returns: Record<string, unknown>;
-      };
-      party_user_was_room_member: {
-        Args: { p_room_id: string; p_user_id: string };
-        Returns: boolean;
       };
       party_peek_room: {
         Args: { p_code: string };

@@ -12,12 +12,20 @@ export async function GET(_request: Request, context: RouteContext) {
   const snapshot = await buildPartySnapshot(auth.supabase, id, auth.user.id);
 
   if (!snapshot) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
   const isMember = snapshot.players.some((p) => p.isYou);
   if (!isMember) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const { data: joinedBefore } = await auth.supabase.rpc("party_user_was_room_member", {
+      p_room_id: id,
+      p_user_id: auth.user.id,
+    });
+    const wasMember = Boolean(joinedBefore);
+    if (wasMember) {
+      return NextResponse.json({ error: "kicked" }, { status: 403 });
+    }
+    return NextResponse.json({ error: "not_in_room" }, { status: 403 });
   }
 
   return NextResponse.json({ snapshot });

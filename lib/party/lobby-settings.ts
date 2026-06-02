@@ -67,30 +67,41 @@ export function validateLobbySettingsPatch(
     (patch as Record<string, unknown>)[key] = value;
   }
 
-  if (patch.round_count !== undefined && !ROUND_COUNTS.has(patch.round_count)) {
-    return { ok: false, error: "invalid_settings" };
+  if (patch.round_count !== undefined) {
+    if (!requireInt(patch.round_count) || !ROUND_COUNTS.has(patch.round_count)) {
+      return { ok: false, error: "invalid_settings" };
+    }
   }
-  if (
-    patch.vote_duration_seconds !== undefined &&
-    !VOTE_SECONDS.has(patch.vote_duration_seconds)
-  ) {
-    return { ok: false, error: "invalid_settings" };
+  if (patch.vote_duration_seconds !== undefined) {
+    if (!requireInt(patch.vote_duration_seconds) || !VOTE_SECONDS.has(patch.vote_duration_seconds)) {
+      return { ok: false, error: "invalid_settings" };
+    }
   }
   if (patch.caption_duration_seconds !== undefined) {
+    if (!requireInt(patch.caption_duration_seconds)) {
+      return { ok: false, error: "invalid_settings" };
+    }
     const c = patch.caption_duration_seconds;
     if (c < 30 || c > 120 || c % 15 !== 0) return { ok: false, error: "invalid_settings" };
   }
   if (patch.max_players !== undefined) {
+    if (!requireInt(patch.max_players)) {
+      return { ok: false, error: "invalid_settings" };
+    }
     const m = patch.max_players;
     if (m < 2 || m > 8) return { ok: false, error: "invalid_settings" };
   }
-  if (patch.rerolls_per_player !== undefined && patch.rerolls_per_player < 0) {
+  if (
+    patch.rerolls_per_player !== undefined &&
+    (!requireInt(patch.rerolls_per_player) || patch.rerolls_per_player < 0)
+  ) {
     return { ok: false, error: "invalid_settings" };
   }
 
   const effectiveRounds = patch.round_count ?? context?.roundCount;
   if (
     patch.rerolls_per_player !== undefined &&
+    requireInt(patch.rerolls_per_player) &&
     effectiveRounds !== undefined &&
     patch.rerolls_per_player > effectiveRounds
   ) {
