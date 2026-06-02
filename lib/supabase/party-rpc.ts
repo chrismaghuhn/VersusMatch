@@ -18,13 +18,15 @@ export function partyCreateRoomRpc(
   roundCount: number = 5,
   rerollsPerPlayer: number = 0,
   canvasEditorEnabled: boolean = false,
-  roundModifiersEnabled: boolean = false
+  roundModifiersEnabled: boolean = false,
+  authorGuessEnabled: boolean = true
 ) {
   return callRpc(supabase, "party_create_room", {
     p_round_count: roundCount,
     p_rerolls_per_player: rerollsPerPlayer,
     p_canvas_editor_enabled: canvasEditorEnabled,
     p_round_modifiers_enabled: roundModifiersEnabled,
+    p_author_guess_enabled: authorGuessEnabled,
   });
 }
 
@@ -70,6 +72,17 @@ export function partyCastVoteRpc(
   return callRpc(supabase, "party_cast_vote", {
     p_room_id: roomId,
     p_submission_id: submissionId,
+  });
+}
+
+export function partySubmitAuthorGuessRpc(
+  supabase: RpcSupabase,
+  roomId: string,
+  guessedUserId: string
+) {
+  return callRpc(supabase, "party_submit_author_guess", {
+    p_room_id: roomId,
+    p_guessed_user_id: guessedUserId,
   });
 }
 

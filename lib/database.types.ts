@@ -705,6 +705,7 @@ export type Database = {
           p_rerolls_per_player?: number;
           p_canvas_editor_enabled?: boolean;
           p_round_modifiers_enabled?: boolean;
+          p_author_guess_enabled?: boolean;
         };
         Returns: Record<string, unknown>;
       };
@@ -778,6 +779,10 @@ export type Database = {
           p_caption: string;
           p_caption_rich?: unknown | null;
         };
+        Returns: Record<string, unknown>;
+      };
+      party_submit_author_guess: {
+        Args: { p_room_id: string; p_guessed_user_id: string };
         Returns: Record<string, unknown>;
       };
       party_validate_round_modifier: {

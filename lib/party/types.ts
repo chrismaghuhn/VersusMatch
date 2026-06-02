@@ -1,7 +1,7 @@
 import type { CaptionDocument, CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
 import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 
-export type PartyPhase = "waiting" | "caption" | "voting" | "reveal" | "finished";
+export type PartyPhase = "waiting" | "caption" | "voting" | "guess" | "reveal" | "finished";
 
 export type PartyRoomStatus = "open" | "in_progress" | "finished" | "abandoned";
 
@@ -33,6 +33,20 @@ export type PartyTemplateView = {
   textBoxes: TextBox[];
 };
 
+export type PartyRoundWinnerSubmission = {
+  id: string;
+  caption: string;
+  captionRich?: CaptionDocument | null;
+  template?: PartyTemplateView;
+};
+
+export type PartyGuessReveal = {
+  winnerUserId: string;
+  correctGuesses: number;
+  eligibleGuessers: number;
+  myGuessCorrect: boolean | null;
+};
+
 export type PartySnapshot = {
   room: {
     id: string;
@@ -45,7 +59,9 @@ export type PartySnapshot = {
     phaseEndsAt: string | null;
     canvasEditorEnabled: boolean;
     roundModifiersEnabled: boolean;
+    authorGuessEnabled: boolean;
     currentModifier: PartyRoundModifier | null;
+    roundWinnerSubmissionId: string | null;
     captionDurationSeconds: number;
     /** @deprecated Use myTemplate (caption) or submission.template (vote/reveal) */
     template: PartyTemplateView | null;
@@ -74,6 +90,12 @@ export type PartySnapshot = {
   votesCastCount: number;
   mySubmission: { id: string; caption: string; captionRich?: CaptionDocument | null } | null;
   myVote: { submissionId: string } | null;
+  roundWinnerSubmission?: PartyRoundWinnerSubmission | null;
+  myAuthorGuess?: { guessedUserId: string } | null;
+  authorGuessesCastCount?: number;
+  eligibleGuesserCount?: number;
+  iAmWinnerAuthor?: boolean;
+  guessReveal?: PartyGuessReveal | null;
   myTemplate: PartyTemplateView | null;
   myRerollsRemaining: number;
   recentReactions: Array<{

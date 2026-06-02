@@ -69,6 +69,9 @@ export function partyRpcStatus(error: string | undefined): number {
     case "modifier_violation":
     case "not_finished":
     case "room_closed":
+    case "not_eligible":
+    case "already_guessed":
+    case "invalid_guess":
       return 409;
     default:
       return 400;
