@@ -71,6 +71,8 @@ export type PartySnapshot = {
     currentModifier: PartyRoundModifier | null;
     roundWinnerSubmissionId: string | null;
     captionDurationSeconds: number;
+    voteDurationSeconds: number;
+    maxPlayers: number;
     /** @deprecated Use myTemplate (caption) or submission.template (vote/reveal) */
     template: PartyTemplateView | null;
   };

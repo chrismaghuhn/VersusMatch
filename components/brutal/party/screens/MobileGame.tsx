@@ -21,6 +21,8 @@ const mockVotingSnapshot: PartySnapshot = {
     roundWinnerSubmissionId: "s1",
     currentModifier: null,
     captionDurationSeconds: 60,
+    voteDurationSeconds: 30,
+    maxPlayers: 8,
     template: null,
   },
   players: [
