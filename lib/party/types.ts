@@ -1,4 +1,5 @@
 import type { CaptionDocument, CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
+import type { LobbyPollSnapshot } from "@/lib/party/lobby-polls";
 import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 
 export type PartyPhase =
@@ -116,4 +117,6 @@ export type PartySnapshot = {
     reactionKey: PartyReactionKey;
     createdAt: string;
   }>;
+  /** Waiting lobby only — warmup poll */
+  lobbyPoll?: LobbyPollSnapshot | null;
 };

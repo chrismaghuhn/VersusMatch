@@ -12,6 +12,7 @@ import { PARTY_COPY } from "@/lib/party/copy";
 import { captionBoxFieldLabel, captionFieldLabels, defaultCaptionTextBoxes } from "@/lib/party/caption-fields";
 import type { CaptionSubmitPayload } from "@/lib/party/caption-submit";
 import { modifierBlocksCaption } from "@/lib/party/caption-submit";
+import { PARTY_EMOJI_ALLOWLIST } from "@/lib/party/caption-rich/emoji";
 import type { CaptionDocumentV3 } from "@/lib/party/caption-rich/types";
 import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 
@@ -197,6 +198,8 @@ export function PartyCaptionInput({
       onSnapHorizontal={canvasEditor.snapActiveBoxHorizontal}
       onSnapVertical={canvasEditor.snapActiveBoxVertical}
       onTogglePeek={canvasEditor.togglePeekMode}
+      canAddEmojiBox={canvasEditor.canAddEmojiBox}
+      onAddEmojiBox={canvasEditor.addEmojiBox}
     />
   ) : null;
 
@@ -247,6 +250,42 @@ export function PartyCaptionInput({
         {editorBoxes
           ? editorBoxes.map((box, index) => {
               const inputId = `party-caption-${index}`;
+              if (box.kind === "emoji") {
+                const isActive = canvasEditor?.activeBoxId === box.id;
+                return (
+                  <div key={box.id} className="space-y-2">
+                    <div
+                      className="text-white/50"
+                      style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.14em" }}
+                    >
+                      {captionBoxFieldLabel(box, labelBoxes)}
+                    </div>
+                    <p className="text-white/40" style={{ fontSize: 12 }}>
+                      {PARTY_COPY.canvasEmojiHint}
+                    </p>
+                    <div
+                      className={`flex gap-2 overflow-x-auto pb-1 ${isActive ? "ring-1 ring-[#CCFF00]/50" : ""}`}
+                      onFocus={() => canvasEditor?.selectBox(box.id)}
+                    >
+                      {PARTY_EMOJI_ALLOWLIST.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          disabled={inputDisabled}
+                          onClick={() => canvasEditor?.setActiveEmoji(emoji)}
+                          className={`min-h-[44px] min-w-[44px] shrink-0 border text-2xl transition ${
+                            (fieldTexts[index] ?? "") === emoji
+                              ? "border-[#CCFF00] bg-[#CCFF00]/10"
+                              : "border-white/20 hover:border-[#CCFF00]"
+                          }`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
               return (
                 <CaptionField
                   key={box.id}

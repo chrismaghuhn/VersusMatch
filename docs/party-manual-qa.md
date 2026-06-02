@@ -7,6 +7,7 @@ Use this checklist when changing party RPCs, Realtime, or UI. Run with at least 
 ## Prerequisites
 
 - `npm run typecheck` and `npm run test:party-handle` pass
+- Caption/canvas scripts (2026-06-02): `test:caption-rich`, `test:caption-layout`, `test:caption-fields`, `test:party-guess-author`, `test:party-reveal-theatre`, `test:party-modifiers` — all green
 - Supabase migrations applied through **`20260608120000_party_canvas_editor`** (production VersusApp)
 - **20** licensed templates in Supabase Storage (`node scripts/extract-party-templates.mjs` → `node scripts/upload-party-templates.mjs`; see `assets/party-templates/import/LICENSE`)
 - UI copy: `lib/party/copy.ts` (English)
@@ -192,6 +193,43 @@ Branch `feat/p2.6a-canvas-readability` — `node --experimental-strip-types --te
 | W1 | Copy recap link from ShareCard | ☐ |
 | W1 | Finished screen shows public recap disclosure | ☐ |
 | W1 | Caption progress copy visible | ☐ |
+
+---
+
+## Wave 2.5 — Lobby warmup polls
+
+| # | Case | Pass |
+|---|------|------|
+| W25 | Waiting lobby shows warmup poll question + 3 options | ☐ |
+| W25 | Vote updates tallies for all players within ~3s | ☐ |
+| W25 | One vote per player; changing vote updates tally | ☐ |
+| W25 | Poll hidden after host starts game | ☐ |
+| W25 | Poll returns on rematch to waiting lobby | ☐ |
+
+Spec: [`docs/superpowers/specs/2026-06-04-party-wave-2.5-lobby-polls-design.md`](superpowers/specs/2026-06-04-party-wave-2.5-lobby-polls-design.md)
+
+---
+
+## Bulk template staging
+
+| # | Case | Pass |
+|---|------|------|
+| BULK | `node scripts/bulk-import-party-templates.mjs --dry-run --write-review` → ~522 importable rows in `bulk-review.csv` | [x] |
+| BULK | License gate documented in [`docs/party-templates-license.md`](party-templates-license.md) | [x] |
+| BULK | Pilot import `--max=50 --active=false` (optional before mass upload) | ☐ |
+| BULK | `--activate-reviewed` only flips approved manifest rows | ☐ |
+| BULK | Live pool count matches `active=true` rows (no “500+” marketing until verified) | ☐ |
+
+---
+
+## P2.6c — Emoji layer
+
+- [x] **+ Emoji** adds one emoji box; second rejected
+- [x] **Allowlist picker** — 12 emoji; tap sets box text
+- [x] **No textarea** for emoji row — picker only
+- [x] **WYSIWYG** — native emoji render in editor (no Impact stroke)
+- [ ] **Voting/reveal/ShareCard** — emoji visible on all surfaces (manual)
+- [ ] **Validation** — non-allowlist emoji rejected on submit
 
 ---
 

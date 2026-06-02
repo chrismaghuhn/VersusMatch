@@ -8,7 +8,9 @@ import { PartyLayout } from "@/components/brutal/party/shared/PartyLayout";
 import { CountChip, PartyBtn } from "@/components/brutal/party/shared/PartyPrimitives";
 import { Avatar, type AvatarId } from "@/components/brutal/party/shared/Avatar";
 import { PARTY_MAX_PLAYERS, PARTY_MIN_PLAYERS } from "@/lib/party/constants";
+import { LobbyWarmupPoll } from "@/components/brutal/party/lobby-warmup-poll";
 import { PARTY_COPY } from "@/lib/party/copy";
+import type { LobbyPollSnapshot } from "@/lib/party/lobby-polls";
 import { PARTY_DESIGN } from "@/lib/party/design";
 import type { PartyReactionKey } from "@/lib/party/types";
 
@@ -34,6 +36,9 @@ export type PartyLobbyScreenProps = {
   onCopyLink?: () => void;
   onStartGame?: () => void;
   onLeave?: () => void;
+  lobbyPoll?: LobbyPollSnapshot | null;
+  onLobbyPollVote?: (optionIndex: number) => void;
+  lobbyPollBusy?: boolean;
   /** Show extended host playbook from design export */
   designPreview?: boolean;
 };
@@ -59,6 +64,9 @@ export function PartyLobbyScreen({
   onCopyLink,
   onStartGame,
   onLeave,
+  lobbyPoll = null,
+  onLobbyPollVote,
+  lobbyPollBusy = false,
   designPreview = false,
 }: PartyLobbyScreenProps) {
   const [localReactions, setLocalReactions] = useState<LobbyReactionFeedItem[]>(recentReactions);
@@ -150,6 +158,13 @@ export function PartyLobbyScreen({
                   </span>
                 </div>
               </div>
+              {lobbyPoll && onLobbyPollVote ? (
+                <LobbyWarmupPoll
+                  poll={lobbyPoll}
+                  disabled={lobbyPollBusy}
+                  onVote={onLobbyPollVote}
+                />
+              ) : null}
             </div>
           ),
           asides: [

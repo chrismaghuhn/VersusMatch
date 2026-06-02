@@ -8,6 +8,7 @@ import {
   defaultTemplateBoxes,
   hitTestBox,
   nextCustomBox,
+  nextEmojiBox,
   snapLayoutCenterHorizontal,
   snapLayoutCenterVertical,
   sortBoxesByZ,
@@ -145,6 +146,14 @@ test("snapLayoutCenterVertical centers box", () => {
   const layout = { x: 0.1, y: 0.2, w: 0.4, h: 0.2, align: "center" };
   const snapped = snapLayoutCenterVertical(layout);
   assert.equal(snapped.y, 0.4);
+});
+
+test("nextEmojiBox adds one emoji box", () => {
+  const boxes = defaultTemplateBoxes(TEMPLATE_BOXES);
+  const emoji = nextEmojiBox(boxes);
+  assert.ok(emoji);
+  assert.equal(emoji.kind, "emoji");
+  assert.equal(nextEmojiBox([...boxes, emoji]), null);
 });
 
 test("bringBoxToFront assigns highest z", () => {

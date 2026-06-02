@@ -275,6 +275,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      party_lobby_poll_votes: {
+        Row: {
+          created_at: string;
+          option_index: number;
+          poll_key: string;
+          room_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          option_index: number;
+          poll_key: string;
+          room_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          option_index?: number;
+          poll_key?: string;
+          room_id?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       party_reactions: {
         Row: {
           created_at: string;
@@ -796,6 +820,10 @@ export type Database = {
       };
       party_reroll_template: {
         Args: { p_room_id: string };
+        Returns: Record<string, unknown>;
+      };
+      party_cast_lobby_poll_vote: {
+        Args: { p_room_id: string; p_option_index: number };
         Returns: Record<string, unknown>;
       };
       party_send_reaction: {

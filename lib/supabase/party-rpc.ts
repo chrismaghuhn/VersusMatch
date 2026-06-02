@@ -90,6 +90,17 @@ export function partyHeartbeatRpc(supabase: RpcSupabase, roomId: string) {
   return callRpc(supabase, "party_heartbeat", { p_room_id: roomId });
 }
 
+export function partyCastLobbyPollVoteRpc(
+  supabase: RpcSupabase,
+  roomId: string,
+  optionIndex: number
+) {
+  return callRpc(supabase, "party_cast_lobby_poll_vote", {
+    p_room_id: roomId,
+    p_option_index: optionIndex,
+  });
+}
+
 export function partySendReactionRpc(
   supabase: RpcSupabase,
   roomId: string,

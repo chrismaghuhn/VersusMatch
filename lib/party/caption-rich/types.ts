@@ -26,7 +26,7 @@ export type BoxLayout = {
 
 export type CaptionBox = {
   id: string;
-  kind: "template" | "custom";
+  kind: "template" | "custom" | "emoji";
   templateIndex?: number;
   segments: CaptionSegment[];
   layout: BoxLayout;

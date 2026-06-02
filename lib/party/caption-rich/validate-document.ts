@@ -1,6 +1,7 @@
 import { clampLayout, LAYOUT_MIN_H, LAYOUT_MIN_W } from "./layout.ts";
 import type { CaptionDocumentV3, CaptionBox } from "./types.ts";
 import type { TextBox } from "@/lib/party/types";
+import { validateEmojiBoxText } from "./emoji.ts";
 import { plainTextLengthFromBoxes } from "./plain-text.ts";
 
 /** Client + server shape validation for canvas-on submit. Caller must only invoke when room.canvasEditorEnabled — server rejects v3 on canvas-off rooms independently. */
@@ -14,9 +15,11 @@ export function validateCaptionDocumentV3(
   const templateCount = templateBoxes.length;
   const templateBoxesInDoc = doc.boxes.filter((b) => b.kind === "template");
   const customBoxes = doc.boxes.filter((b) => b.kind === "custom");
+  const emojiBoxes = doc.boxes.filter((b) => b.kind === "emoji");
 
   if (templateBoxesInDoc.length !== templateCount) return { ok: false, error: "invalid_caption" };
   if (customBoxes.length > 2) return { ok: false, error: "invalid_caption" };
+  if (emojiBoxes.length > 1) return { ok: false, error: "invalid_caption" };
   if (doc.boxes.length > 6) return { ok: false, error: "invalid_caption" };
 
   for (let i = 0; i < templateCount; i++) {
@@ -29,6 +32,10 @@ export function validateCaptionDocumentV3(
     if (err) return { ok: false, error: err };
     const styleErr = validateBoxStyle(box);
     if (styleErr) return { ok: false, error: styleErr };
+    if (box.kind === "emoji") {
+      const text = box.segments.map((s) => s.text).join("");
+      if (text && !validateEmojiBoxText(text)) return { ok: false, error: "invalid_caption" };
+    }
   }
 
   const len = plainTextLengthFromBoxes(doc.boxes);

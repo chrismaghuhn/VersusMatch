@@ -68,6 +68,19 @@ export function applyCardFit(layout: BoxLayout, fit: CardFitTransform): BoxLayou
   });
 }
 
+export function nextEmojiBox(existing: CaptionBox[]): CaptionBox | null {
+  if (existing.some((b) => b.kind === "emoji")) return null;
+  if (existing.length >= 6) return null;
+  const maxZ = Math.max(-1, ...existing.map((b, i) => b.z ?? i));
+  return {
+    id: "emoji-1",
+    kind: "emoji",
+    segments: [{ text: "" }],
+    layout: clampLayout({ x: 0.35, y: 0.42, w: 0.3, h: 0.16, align: "center" }),
+    z: maxZ + 1,
+  };
+}
+
 export function nextCustomBox(existing: CaptionBox[]): CaptionBox | null {
   const customCount = existing.filter((b) => b.kind === "custom").length;
   if (customCount >= 2 || existing.length >= 6) return null;

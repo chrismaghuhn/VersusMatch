@@ -10,7 +10,15 @@ import {
 import type { CanvasSubmitOptions, CaptionSubmitPayload } from "@/lib/party/caption-submit";
 import { prepareCaptionSubmit } from "@/lib/party/caption-submit";
 import { finalizeCaptionDocumentV3 } from "@/lib/party/caption-rich/document";
-import { defaultTemplateBoxes, nextCustomBox, bringBoxToFront, snapLayoutCenterHorizontal, snapLayoutCenterVertical } from "@/lib/party/caption-rich/layout";
+import { isAllowedPartyEmoji } from "@/lib/party/caption-rich/emoji";
+import {
+  defaultTemplateBoxes,
+  nextCustomBox,
+  nextEmojiBox,
+  bringBoxToFront,
+  snapLayoutCenterHorizontal,
+  snapLayoutCenterVertical,
+} from "@/lib/party/caption-rich/layout";
 import { parseMarkup } from "@/lib/party/caption-rich/parse-markup";
 import { plainTextLengthFromBoxes } from "@/lib/party/caption-rich/plain-text";
 import {
@@ -244,10 +252,12 @@ export function useMemeCanvasEditor({
   );
 
   const canAddCustomBox = useMemo(() => nextCustomBox(boxes) !== null, [boxes]);
+  const canAddEmojiBox = useMemo(() => nextEmojiBox(boxes) !== null, [boxes]);
   const canDeleteActiveCustomBox =
-    activeBoxIndex >= 0 && boxes[activeBoxIndex]?.kind === "custom";
+    activeBoxIndex >= 0 &&
+    (boxes[activeBoxIndex]?.kind === "custom" || boxes[activeBoxIndex]?.kind === "emoji");
   const hasCustomBoxes = useMemo(
-    () => boxes.some((b) => b.kind === "custom"),
+    () => boxes.some((b) => b.kind === "custom" || b.kind === "emoji"),
     [boxes]
   );
 
@@ -470,9 +480,43 @@ export function useMemeCanvasEditor({
     skipDebounceRef.current = false;
   }, [boxes, fieldTexts, segmentOverrides, pushUndo, commitTextHistory]);
 
+  const addEmojiBox = useCallback(() => {
+    commitTextHistory();
+    pushUndo(takeSnapshot(boxes, fieldTexts, segmentOverrides));
+    const next = nextEmojiBox(boxes);
+    if (!next) return;
+    setBoxes((prev) => [...prev, next]);
+    setFieldTexts((prev) => [...prev, ""]);
+    setSegmentOverrides((prev) => [...prev, null]);
+    setActiveBoxIdState(next.id);
+    skipDebounceRef.current = false;
+  }, [boxes, fieldTexts, segmentOverrides, pushUndo, commitTextHistory]);
+
+  const setActiveEmoji = useCallback(
+    (emoji: string) => {
+      if (!activeBoxId || !isAllowedPartyEmoji(emoji)) return;
+      const idx = boxes.findIndex((b) => b.id === activeBoxId);
+      if (idx < 0 || boxes[idx]?.kind !== "emoji") return;
+      commitTextHistory();
+      pushUndo(takeSnapshot(boxes, fieldTexts, segmentOverrides));
+      const nextTexts = [...fieldTexts];
+      nextTexts[idx] = emoji;
+      setFieldTexts(nextTexts);
+      setSegmentOverrides((prev) => {
+        const updated = [...prev];
+        updated[idx] = [{ text: emoji }];
+        return updated;
+      });
+      skipDebounceRef.current = false;
+      onChange(buildCaptionFromFieldTexts(nextTexts));
+    },
+    [activeBoxId, boxes, fieldTexts, segmentOverrides, pushUndo, commitTextHistory, onChange]
+  );
+
   const deleteActiveCustomBox = useCallback(() => {
     const idx = boxes.findIndex((b) => b.id === activeBoxId);
-    if (idx < 0 || boxes[idx]?.kind !== "custom") return;
+    const kind = boxes[idx]?.kind;
+    if (idx < 0 || (kind !== "custom" && kind !== "emoji")) return;
 
     commitTextHistory();
     pushUndo(takeSnapshot(boxes, fieldTexts, segmentOverrides));
@@ -582,6 +626,9 @@ export function useMemeCanvasEditor({
     deleteActiveCustomBox,
     resetLayout,
     canAddCustomBox,
+    canAddEmojiBox,
+    addEmojiBox,
+    setActiveEmoji,
     canDeleteActiveCustomBox,
     hasCustomBoxes,
     resetCanvasFromRevision,

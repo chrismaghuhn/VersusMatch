@@ -29,6 +29,8 @@ type CanvasLayoutToolbarProps = {
   onSnapHorizontal: () => void;
   onSnapVertical: () => void;
   onTogglePeek: () => void;
+  canAddEmojiBox?: boolean;
+  onAddEmojiBox?: () => void;
 };
 
 const btnClass =
@@ -60,6 +62,8 @@ export function CanvasLayoutToolbar({
   onSnapHorizontal,
   onSnapVertical,
   onTogglePeek,
+  canAddEmojiBox = false,
+  onAddEmojiBox,
 }: CanvasLayoutToolbarProps) {
   const labelStyle = { fontWeight: 800, fontSize: 11, letterSpacing: "0.12em" } as const;
   const styleDisabled = disabled || !styleControlsEnabled;
@@ -100,6 +104,17 @@ export function CanvasLayoutToolbar({
       >
         {PARTY_COPY.canvasAddText}
       </button>
+      {onAddEmojiBox ? (
+        <button
+          type="button"
+          disabled={disabled || !canAddEmojiBox}
+          onClick={onAddEmojiBox}
+          className={btnClass}
+          style={labelStyle}
+        >
+          {PARTY_COPY.canvasAddEmoji}
+        </button>
+      ) : null}
       {canDeleteActiveCustomBox ? (
         <button
           type="button"

@@ -152,7 +152,34 @@ export function PartyTemplateFrame({
         ? v3Boxes.map(({ box, layout }) => {
             const segments = box.segments;
             const text = boxPlainText(segments);
+            if (!text && box.kind !== "emoji") return null;
             const align = layout.align ?? "center";
+
+            if (box.kind === "emoji") {
+              const emojiSize = Math.max(24, Math.round(layout.h * (big ? 420 : mini ? 120 : 280)));
+              return (
+                <div
+                  key={box.id}
+                  className="absolute flex items-center justify-center"
+                  style={{
+                    ...positionedBoxStyle(layout, align),
+                    zIndex: 10 + (box.z ?? 0),
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: emojiSize,
+                      lineHeight: 1,
+                      userSelect: "none",
+                    }}
+                    aria-hidden
+                  >
+                    {text}
+                  </span>
+                </div>
+              );
+            }
+
             const fittedSize = fitMemeFontSize(
               text,
               fontSize,

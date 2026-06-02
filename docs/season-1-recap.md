@@ -1,7 +1,7 @@
 # MemeFight — Season 1 Recap
 
 **Zeitraum:** 31. Mai – 1. Juni 2026  
-**Stand:** 1. Juni 2026 (nach Commit `66077af`)  
+**Stand:** 2. Juni 2026 (nach Wave 2 + P2.6a/b auf `main`)  
 **Production:** [memefight.lol](https://memefight.lol) — `PARTY_ENABLED=true`
 
 Diese Datei fasst alles zusammen, was in Season 1 (Brutalist-Launch → Stabilization → Growth → Battle Pass → Party) umgesetzt wurde — und was noch offen ist.
@@ -19,8 +19,12 @@ Diese Datei fasst alles zusammen, was in Season 1 (Brutalist-Launch → Stabiliz
 | MemeFight Party P1 + P1.9 + P1.10 | ✅ Live auf Production |
 | Party Arena Design (Desktop lg+) | ✅ Live, Smoke OK |
 | Party P2 Caption Studio (Spaces, Styling) | ✅ Live auf Production — [`2026-06-02-party-caption-studio`](superpowers/plans/2026-06-02-party-caption-studio.md) |
-| Party P2.5 Meme Canvas Editor | ✅ Shipped on branch `feat/party-meme-canvas-p25` — pending merge + deploy |
-| Party Phase 3 (Public Lobbies, Spectator, …) | ⏳ Nicht gestartet |
+| Party P2.5 Meme Canvas Editor | ✅ Merged on `main` |
+| Party P2.6a/b (readability + layout QoL) | ✅ On `main` — manual QA in [`party-manual-qa.md`](party-manual-qa.md) |
+| Party Wave 1 + Wave 2 (rematch, modifiers, guess, tie, theatre) | ✅ On `main` |
+| Wave 2.5 Lobby polls | ✅ Shipped (migration `20260615120000`) |
+| Bulk template staging (~522 importable) | ✅ Script + `bulk-review.csv`; live activation gated |
+| Party Phase 3 (Public Lobbies, Spectator, UGC) | 📋 Split plan — [`wave-3-split`](superpowers/plans/2026-06-04-party-wave-3-split.md) |
 
 ---
 
@@ -185,9 +189,9 @@ Optional host toggle at room create turns the caption phase into a drag/resize m
 | P2.5a | v3 types, layout helpers, DB migration `20260608120000_party_canvas_editor`, canvas toggle, draft sync, template drag/resize, WYSIWYG editor layouts in voting/reveal |
 | P2.5b | Custom boxes, `RerollConfirmDialog`, undo/redo stack (depth 10), manual QA checklist in [`party-manual-qa.md`](party-manual-qa.md) |
 
-**Branch:** `feat/party-meme-canvas-p25` (HEAD `043fde1`) — **not merged to `main` yet**; Vercel production deploy follows merge.
+**Status:** Merged to `main` with P2.6 canvas QoL follow-ups.
 
-**Supabase:** Migration applied to VersusApp (`srimmoqxrbwxlyyfgdhs`) — `party_canvas_editor` + RPC follow-ups.
+**Supabase:** Migration `20260608120000_party_canvas_editor` on VersusApp.
 
 Plan: [`docs/superpowers/plans/2026-06-03-party-meme-canvas-editor.md`](superpowers/plans/2026-06-03-party-meme-canvas-editor.md)  
 Spec: [`docs/superpowers/specs/2026-06-03-party-meme-canvas-editor-design.md`](superpowers/specs/2026-06-03-party-meme-canvas-editor-design.md)

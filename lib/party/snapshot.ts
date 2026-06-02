@@ -5,6 +5,10 @@ import type { Database } from "@/lib/database.types";
 import { limitTextBoxes } from "@/lib/party/limit-text-boxes";
 import { seededShuffle } from "@/lib/party/shuffle";
 import { partyGetMyVoteRpc } from "@/lib/supabase/party-rpc";
+import {
+  buildLobbyPollTallies,
+  lobbyPollForRoom,
+} from "@/lib/party/lobby-polls";
 import { getPartyTemplateUrl } from "@/lib/party/template-url";
 import type { PartyRoundModifier } from "@/lib/party/round-modifiers";
 import type {
@@ -425,8 +429,24 @@ export async function buildPartySnapshot(
     }
   }
 
+  let lobbyPoll: PartySnapshot["lobbyPoll"] = null;
   let recentReactions: PartySnapshot["recentReactions"] = [];
   if (phase === "waiting") {
+    const pollDef = lobbyPollForRoom(roomId);
+    const { data: pollVotes } = await (supabase as SupabaseClient)
+      .from("party_lobby_poll_votes")
+      .select("user_id, option_index")
+      .eq("room_id", roomId)
+      .eq("poll_key", pollDef.key);
+
+    const voteRows =
+      (pollVotes as Array<{ user_id: string; option_index: number }> | null) ?? [];
+    const myVote = voteRows.find((row) => row.user_id === userId);
+    lobbyPoll = buildLobbyPollTallies(
+      pollDef,
+      voteRows.map((row) => ({ option_index: row.option_index })),
+      myVote ? myVote.option_index : null
+    );
     const fiveSecondsAgo = new Date(Date.now() - 5000).toISOString();
     const { data: reactionRows } = await (supabase as SupabaseClient)
       .from("party_reactions")
@@ -504,6 +524,7 @@ export async function buildPartySnapshot(
     myTemplate,
     myRerollsRemaining,
     recentReactions,
+    lobbyPoll,
     layoutRevision,
     captionDraft,
   };

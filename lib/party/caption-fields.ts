@@ -22,9 +22,10 @@ export function splitCaptionToFields(caption: string): [string, string] {
 
 /** Label for a v3 caption box (template or custom). */
 export function captionBoxFieldLabel(
-  box: { id: string; kind: "template" | "custom"; templateIndex?: number },
+  box: { id: string; kind: "template" | "custom" | "emoji"; templateIndex?: number },
   textBoxes: Array<{ id: string }>
 ): string {
+  if (box.kind === "emoji") return "Emoji";
   if (box.kind === "custom") {
     const match = /^custom-(\d+)$/.exec(box.id);
     return match ? `Custom ${match[1]}` : "Custom";

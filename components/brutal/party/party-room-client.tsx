@@ -294,6 +294,22 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
     return () => window.clearInterval(beat);
   }, [roomId]);
 
+  async function handleLobbyPollVote(optionIndex: number) {
+    if (!snapshot?.room.id) return;
+    try {
+      const res = await fetch("/api/party/lobby-poll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId: snapshot.room.id, optionIndex }),
+      });
+      const data = (await res.json()) as { snapshot?: PartySnapshot; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "vote_failed");
+      if (data.snapshot) setSnapshot(data.snapshot);
+    } catch {
+      /* poll is optional warmup — ignore transient errors */
+    }
+  }
+
   async function handleSendReaction(key: PartyReactionKey) {
     const res = await fetch("/api/party/reaction", {
       method: "POST",
@@ -632,6 +648,8 @@ export function PartyRoomClient({ roomId }: PartyRoomClientProps) {
         })}
         recentReactions={lobbyReactions}
         onSendReaction={handleSendReaction}
+        lobbyPoll={snapshot.lobbyPoll ?? null}
+        onLobbyPollVote={handleLobbyPollVote}
         onCopyLink={handleCopyLink}
         onStartGame={handleStartGame}
         onLeave={handleLeaveLobby}
