@@ -76,6 +76,7 @@ function parseArgs(argv) {
     contactSheet: false,
     resume: false,
     activateReviewed: false,
+    activateAll: false,
     max: Infinity,
     active: false,
     concurrency: 8,
@@ -86,6 +87,7 @@ function parseArgs(argv) {
     else if (arg === "--contact-sheet") opts.contactSheet = true;
     else if (arg === "--resume") opts.resume = true;
     else if (arg === "--activate-reviewed") opts.activateReviewed = true;
+    else if (arg === "--activate-all") opts.activateAll = true;
     else if (arg === "--active=false") opts.active = false;
     else if (arg === "--active=true") opts.active = true;
     else if (arg.startsWith("--max=")) opts.max = Number(arg.slice(6));
@@ -100,6 +102,7 @@ function parseArgs(argv) {
   --active=true          Force active on import (avoid for bulk)
   --resume               Skip paths already in bulk-manifest.json
   --activate-reviewed    Set active=true for manifest rows with review_status=approved
+  --activate-all         Set active=true on all party_templates with bulk-* image_path
   --concurrency=N        Upload parallelism (default 8)`);
       process.exit(0);
     }
@@ -407,7 +410,7 @@ async function importRows(supabase, rows, opts) {
     const ext = extname(row.storage_name).toLowerCase();
     const contentType = MIME[ext];
     const body = readFileSync(row.source_path);
-    const active = opts.active && row.review_status === "approved";
+    const active = opts.active && row.review_status !== "rejected";
 
     if (opts.dryRun) {
       console.log("[dry-run] would upload", row.storage_name, `active=${active}`);
@@ -466,6 +469,20 @@ async function importRows(supabase, rows, opts) {
   manifest.rows = rows;
   manifest.imported = importedMap;
   saveManifest(manifest);
+}
+
+async function activateAllBulk(supabase) {
+  const { data, error } = await supabase
+    .from("party_templates")
+    .update({ active: true })
+    .like("image_path", "bulk-%")
+    .select("id");
+
+  if (error) {
+    console.error("activate-all failed", error.message);
+    process.exit(1);
+  }
+  console.log(`Activated ${data?.length ?? 0} bulk templates (bulk-* paths)`);
 }
 
 async function activateReviewed(supabase) {
@@ -541,6 +558,11 @@ async function main() {
     return;
   }
 
+  if (opts.activateAll) {
+    await activateAllBulk(supabase);
+    return;
+  }
+
   console.log("Scanning", extractedRoot);
   let rows = await scanAll(opts);
   const importable = rows.filter((r) => !r.block_reason && r.storage_name);
@@ -563,8 +585,10 @@ async function main() {
     return;
   }
 
-  const toImport = importable.slice(0, opts.max);
-  await importRows(supabase, rows, { ...opts, max: toImport.length });
+  await importRows(supabase, rows, opts);
+  if (opts.active) {
+    await activateAllBulk(supabase);
+  }
   if (opts.writeReview) writeReviewCsv(rows);
   console.log("Done.");
 }
