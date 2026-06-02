@@ -43,7 +43,7 @@ export async function tryAdvancePhase(
   }
 
   const phase = snapshot.room.phase;
-  if (phase !== "caption" && phase !== "voting" && phase !== "reveal") {
+  if (phase !== "caption" && phase !== "voting" && phase !== "guess" && phase !== "reveal") {
     return { snapshot, advanced: false };
   }
 
