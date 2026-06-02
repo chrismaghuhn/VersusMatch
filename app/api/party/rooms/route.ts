@@ -10,11 +10,13 @@ export async function POST(request: Request) {
   let roundCount = 5;
   let rerollsPerPlayer = 0;
   let roundModifiersEnabled = false;
+  let authorGuessEnabled = true;
   try {
     const body = (await request.json()) as {
       roundCount?: number;
       rerollsPerPlayer?: number;
       roundModifiersEnabled?: boolean;
+      authorGuessEnabled?: boolean;
     };
     if (body.roundCount === 3 || body.roundCount === 5 || body.roundCount === 7) {
       roundCount = body.roundCount;
@@ -29,6 +31,9 @@ export async function POST(request: Request) {
     if (typeof body.roundModifiersEnabled === "boolean") {
       roundModifiersEnabled = body.roundModifiersEnabled;
     }
+    if (typeof body.authorGuessEnabled === "boolean") {
+      authorGuessEnabled = body.authorGuessEnabled;
+    }
   } catch {
     // default round count
   }
@@ -38,7 +43,8 @@ export async function POST(request: Request) {
     roundCount,
     rerollsPerPlayer,
     true,
-    roundModifiersEnabled
+    roundModifiersEnabled,
+    authorGuessEnabled
   );
   if (error) {
     console.error("party_create_room rpc failed:", error.message);

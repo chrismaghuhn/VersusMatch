@@ -195,6 +195,29 @@ Branch `feat/p2.6a-canvas-readability` — `node --experimental-strip-types --te
 
 ---
 
+## Wave 2 Parallel
+
+| # | Case | Pass |
+|---|------|------|
+| W2 | Create room: Author Guess toggle default ON | ☐ |
+| W2 | Create room: Author Guess OFF -> no guess phase, voting -> reveal | ☐ |
+| W2 | Guess ON: winning meme anonymous during guess | ☐ |
+| W2 | Winner author cannot guess; sees locked copy | ☐ |
+| W2 | Correct guess -> +1 score on reveal | ☐ |
+| W2 | All eligible guessed -> early advance to reveal | ☐ |
+| W2 | Only 1 submission -> skip guess | ☐ |
+| W2 | Rematch preserves Author Guess setting | ☐ |
+| W2 | Double advance from guess does not double-award score | ☐ |
+| W2 | Tie winner is stable across refreshes/clients | ☐ |
+| W2 | Guess snapshot does not expose winner userId/handle before reveal | ☐ |
+| W2 | Winner author cannot submit RPC guess even by manual request | ☐ |
+| W2 | Reveal Theatre: PHOTO FINISH on 1-vote margin | ☐ |
+| W2 | Reveal Theatre: LANDSLIDE / UNANIMOUS spot check | ☐ |
+| W2 | Recap OG image loads (social debugger / tab preview) | ☐ |
+| W2 | Recap OG fallback when game not finished | ☐ |
+
+---
+
 ## Notes
 
 Record room IDs, browser versions, and any console/network errors when filing bugs.

@@ -20,6 +20,8 @@ export type PartyJoinScreenProps = {
   onRerollsPerPlayerChange?: (count: number) => void;
   roundModifiersEnabled?: boolean;
   onRoundModifiersEnabledChange?: (enabled: boolean) => void;
+  authorGuessEnabled?: boolean;
+  onAuthorGuessEnabledChange?: (enabled: boolean) => void;
   onJoin?: (code: string) => void;
   onCreate?: () => void;
 };
@@ -32,6 +34,8 @@ export function PartyJoinScreen({
   onRerollsPerPlayerChange,
   roundModifiersEnabled = false,
   onRoundModifiersEnabledChange,
+  authorGuessEnabled = true,
+  onAuthorGuessEnabledChange,
   onJoin,
   onCreate,
 }: PartyJoinScreenProps) {
@@ -188,6 +192,32 @@ export function PartyJoinScreen({
                       {roundModifiersEnabled ? "ON" : "OFF"}
                     </span>
                   </button>
+                </div>
+              ) : null}
+
+              {onAuthorGuessEnabledChange ? (
+                <div className="mb-4">
+                  <Meta>{PARTY_COPY.authorGuessToggleLabel.toUpperCase()}</Meta>
+                  <button
+                    type="button"
+                    onClick={() => onAuthorGuessEnabledChange(!authorGuessEnabled)}
+                    className={
+                      "mt-2 flex w-full items-center justify-between border-2 px-3 py-2.5 transition " +
+                      (authorGuessEnabled
+                        ? "border-[#FF2D87] bg-[#FF2D87]/15 text-[#FF2D87]"
+                        : "border-white/10 text-white/50 hover:border-white/30 hover:text-white")
+                    }
+                  >
+                    <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.12em" }}>
+                      {PARTY_COPY.authorGuessToggleLabel.toUpperCase()}
+                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em" }}>
+                      {authorGuessEnabled ? "ON" : "OFF"}
+                    </span>
+                  </button>
+                  <p className="mt-1 text-white/40" style={{ fontSize: 11, lineHeight: 1.45 }}>
+                    {PARTY_COPY.authorGuessToggleHint}
+                  </p>
                 </div>
               ) : null}
 

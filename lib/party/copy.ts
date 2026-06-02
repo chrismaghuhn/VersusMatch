@@ -237,6 +237,8 @@ export const PARTY_COPY = {
   joinRerolls: "REROLLS / PLAYER",
   joinCanvasEditor: "Canvas Editor (move text + extra boxes)",
   joinCanvasEditorHint: "90s caption timer · advanced layout",
+  authorGuessToggleLabel: "Author Guess",
+  authorGuessToggleHint: 'Add a 10s "who wrote this?" phase before reveal.',
   captionToolbarSlant: "Slant",
   joinCreateTitle: "CREATE NEW LOBBY",
   joinCreateSub: "Be the host. Invite friends with a 6-character code.",
@@ -298,6 +300,14 @@ export const PARTY_COPY = {
   tutorialNext: "NEXT",
   tutorialDone: "LET'S GO",
   tutorialProgress: (i: number, total: number) => `${i} OF ${total}`,
+  guessPhaseTitle: "WHO WROTE THE WINNER?",
+  guessPhaseSubtitle: "Guess who cooked this cursed caption.",
+  guessPhaseLocked: "You wrote this one. Act surprised.",
+  guessErrors: {
+    not_eligible: "You wrote the winner — no guessing for you.",
+    already_guessed: "You already guessed this round.",
+    invalid_guess: "That player isn't in the room.",
+  } as const,
 } as const;
 
 export const PARTY_TUTORIAL_SLIDES = [

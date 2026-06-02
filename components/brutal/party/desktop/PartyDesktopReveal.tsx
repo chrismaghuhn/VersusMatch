@@ -9,6 +9,8 @@ import {
 import { Meta, Shell } from "@/components/brutal/party/shared/Shell";
 import { PARTY_COPY } from "@/lib/party/copy";
 import { PARTY_DESIGN } from "@/lib/party/design";
+import { formatGuessRevealLine } from "@/lib/party/guess-author";
+import { getRevealTheatreLabel } from "@/lib/party/reveal-theatre";
 import type { PartyReactionKey, PartySnapshot } from "@/lib/party/types";
 
 type PartyDesktopRevealProps = {
@@ -26,11 +28,23 @@ export function PartyDesktopReveal({
   const sorted = [...snapshot.submissions].sort(
     (a, b) => (b.voteCount ?? 0) - (a.voteCount ?? 0)
   );
-  const winner = sorted[0];
+  const winnerId = snapshot.room.roundWinnerSubmissionId;
+  const winner = winnerId
+    ? snapshot.submissions.find((submission) => submission.id === winnerId)
+    : undefined;
   const winnerPlayer = winner
     ? snapshot.players.find((p) => p.userId === winner.userId)
     : undefined;
   const others = sorted.slice(1);
+  const theatreLabel = getRevealTheatreLabel(snapshot.submissions);
+  const guessLine =
+    snapshot.guessReveal && winnerPlayer
+      ? formatGuessRevealLine(
+          snapshot.guessReveal.correctGuesses,
+          snapshot.guessReveal.eligibleGuessers,
+          winnerPlayer.handle
+        )
+      : "";
 
   return (
     <Shell>
@@ -40,7 +54,7 @@ export function PartyDesktopReveal({
           eyebrow: PARTY_COPY.roundMeta(
             snapshot.room.currentRound,
             snapshot.room.roundCount,
-            PARTY_COPY.phaseResults
+            theatreLabel ?? PARTY_COPY.phaseResults
           ),
           title: winnerPlayer ? (
             <>
@@ -51,7 +65,12 @@ export function PartyDesktopReveal({
             PARTY_COPY.revealAll
           ),
           subtitle: winner
-            ? `${PARTY_COPY.revealVotes(winner.voteCount ?? 0)} · ${PARTY_COPY.revealWinner}`
+            ? [
+                `${PARTY_COPY.revealVotes(winner.voteCount ?? 0)} · ${PARTY_COPY.revealWinner}`,
+                guessLine,
+              ]
+                .filter(Boolean)
+                .join(" · ")
             : undefined,
           headRight: (
             <HeadCluster

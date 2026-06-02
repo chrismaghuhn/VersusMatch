@@ -34,6 +34,9 @@ type PartyRoomRow = {
   phase_seed: number | null;
   caption_count: number;
   votes_cast_count: number;
+  author_guess_enabled: boolean;
+  author_guesses_count: number;
+  round_winner_submission_id: string | null;
 };
 
 type PartyPlayerRow = {
@@ -156,7 +159,7 @@ export async function buildPartySnapshot(
   const { data: room, error: roomError } = await (supabase as SupabaseClient)
     .from("party_rooms")
     .select(
-      "id, code, status, phase, current_round, round_count, rerolls_per_player, canvas_editor_enabled, round_modifiers_enabled, current_modifier, caption_duration_seconds, phase_ends_at, template_id, phase_seed, caption_count, votes_cast_count"
+      "id, code, status, phase, current_round, round_count, rerolls_per_player, canvas_editor_enabled, round_modifiers_enabled, current_modifier, caption_duration_seconds, phase_ends_at, template_id, phase_seed, caption_count, votes_cast_count, author_guess_enabled, author_guesses_count, round_winner_submission_id"
     )
     .eq("id", roomId)
     .maybeSingle();
@@ -224,73 +227,176 @@ export async function buildPartySnapshot(
 
   let submissions: PartySnapshot["submissions"] = [];
   let mySubmission: PartySnapshot["mySubmission"] = null;
+  let roundWinnerSubmission: PartySnapshot["roundWinnerSubmission"] = null;
+  let myAuthorGuess: PartySnapshot["myAuthorGuess"] = null;
+  let authorGuessesCastCount: number | undefined;
+  let eligibleGuesserCount: number | undefined;
+  let iAmWinnerAuthor: boolean | undefined;
+  let guessReveal: PartySnapshot["guessReveal"] = null;
 
   if (phase !== "waiting" && roomRow.current_round > 0) {
-    const { data: submissionRows } = await (supabase as SupabaseClient)
-      .from("party_submissions")
-      .select("id, user_id, caption, caption_rich, template_id")
-      .eq("room_id", roomId)
-      .eq("round", roomRow.current_round);
+    if (phase === "guess") {
+      authorGuessesCastCount = roomRow.author_guesses_count ?? 0;
+      submissions = [];
 
-    const allSubmissions = (submissionRows ?? []) as PartySubmissionRow[];
-    const mine = allSubmissions.find((s) => s.user_id === userId);
+      const winnerId = roomRow.round_winner_submission_id;
+      if (winnerId) {
+        const { data: winnerRow } = await (supabase as SupabaseClient)
+          .from("party_submissions")
+          .select("id, user_id, caption, caption_rich, template_id")
+          .eq("id", winnerId)
+          .maybeSingle();
 
-    if (mine) {
-      mySubmission = {
-        id: mine.id,
-        caption: mine.caption,
-        captionRich: parseCaptionRich(mine.caption_rich),
-      };
-    }
+        const winner = winnerRow as PartySubmissionRow | null;
+        if (winner) {
+          iAmWinnerAuthor = winner.user_id === userId;
+          const winnerInRoom = playersRows.some((p) => p.user_id === winner.user_id);
+          eligibleGuesserCount = Math.max(0, playersRows.length - (winnerInRoom ? 1 : 0));
 
-    const templateIds = allSubmissions
-      .map((s) => s.template_id)
-      .filter((id): id is string => Boolean(id));
-    const templatesById = await loadTemplatesByIds(supabase, templateIds, true);
+          let winnerTemplate: PartyTemplateView | undefined;
+          if (winner.template_id) {
+            const winnerTemplates = await loadTemplatesByIds(
+              supabase,
+              [winner.template_id],
+              true
+            );
+            winnerTemplate = winnerTemplates.get(winner.template_id);
+          }
 
-    if (phase === "caption") {
-      submissions = mine
-        ? [
-            {
-              id: mine.id,
-              userId: mine.user_id,
-              caption: mine.caption,
-              captionRich: parseCaptionRich(mine.caption_rich),
-              ...(mine.template_id
-                ? { template: templatesById.get(mine.template_id) }
-                : {}),
-            },
-          ]
-        : [];
+          roundWinnerSubmission = {
+            id: winner.id,
+            caption: winner.caption,
+            captionRich: parseCaptionRich(winner.caption_rich),
+            ...(winnerTemplate ? { template: winnerTemplate } : {}),
+          };
+        } else {
+          iAmWinnerAuthor = false;
+          eligibleGuesserCount = playersRows.length;
+        }
+      } else {
+        iAmWinnerAuthor = false;
+        eligibleGuesserCount = playersRows.length;
+      }
+
+      const { data: myGuessRow } = await (supabase as SupabaseClient)
+        .from("party_author_guesses")
+        .select("guessed_user_id")
+        .eq("room_id", roomId)
+        .eq("round", roomRow.current_round)
+        .eq("voter_id", userId)
+        .maybeSingle();
+
+      if (myGuessRow?.guessed_user_id) {
+        myAuthorGuess = { guessedUserId: myGuessRow.guessed_user_id };
+      }
     } else {
-      const voteCounts = new Map<string, number>();
-      if (phase === "reveal" || phase === "finished") {
-        const { data: results } = await (supabase as SupabaseClient)
-          .from("party_round_results")
-          .select("submission_id, vote_count")
+      const { data: submissionRows } = await (supabase as SupabaseClient)
+        .from("party_submissions")
+        .select("id, user_id, caption, caption_rich, template_id")
+        .eq("room_id", roomId)
+        .eq("round", roomRow.current_round);
+
+      const allSubmissions = (submissionRows ?? []) as PartySubmissionRow[];
+      const mine = allSubmissions.find((s) => s.user_id === userId);
+
+      if (mine) {
+        mySubmission = {
+          id: mine.id,
+          caption: mine.caption,
+          captionRich: parseCaptionRich(mine.caption_rich),
+        };
+      }
+
+      const templateIds = allSubmissions
+        .map((s) => s.template_id)
+        .filter((id): id is string => Boolean(id));
+      const templatesById = await loadTemplatesByIds(supabase, templateIds, true);
+
+      if (phase === "caption") {
+        submissions = mine
+          ? [
+              {
+                id: mine.id,
+                userId: mine.user_id,
+                caption: mine.caption,
+                captionRich: parseCaptionRich(mine.caption_rich),
+                ...(mine.template_id
+                  ? { template: templatesById.get(mine.template_id) }
+                  : {}),
+              },
+            ]
+          : [];
+      } else {
+        const voteCounts = new Map<string, number>();
+        if (phase === "reveal" || phase === "finished") {
+          const { data: results } = await (supabase as SupabaseClient)
+            .from("party_round_results")
+            .select("submission_id, vote_count")
+            .eq("room_id", roomId)
+            .eq("round", roomRow.current_round);
+
+          for (const row of (results ?? []) as PartyRoundResultRow[]) {
+            voteCounts.set(row.submission_id, row.vote_count);
+          }
+        }
+
+        const mapped = allSubmissions.map((s) => ({
+          id: s.id,
+          userId: s.user_id,
+          caption: s.caption,
+          captionRich: parseCaptionRich(s.caption_rich),
+          ...(s.template_id ? { template: templatesById.get(s.template_id) } : {}),
+          ...(phase === "reveal" || phase === "finished"
+            ? { voteCount: voteCounts.get(s.id) ?? 0 }
+            : {}),
+        }));
+
+        submissions =
+          phase === "voting" || phase === "reveal" || phase === "finished"
+            ? seededShuffle(mapped, roomRow.phase_seed ?? 0, (s) => s.id)
+            : mapped;
+      }
+    }
+  }
+
+  if ((phase === "reveal" || phase === "finished") && roomRow.current_round > 0) {
+    const winnerId = roomRow.round_winner_submission_id;
+    if (winnerId) {
+      const { data: winnerAuthorRow } = await (supabase as SupabaseClient)
+        .from("party_submissions")
+        .select("user_id")
+        .eq("id", winnerId)
+        .maybeSingle();
+
+      const winnerUserId = winnerAuthorRow?.user_id ?? null;
+      if (winnerUserId) {
+        const winnerInRoom = playersRows.some((p) => p.user_id === winnerUserId);
+        const eligibleGuessers = Math.max(
+          0,
+          playersRows.length - (winnerInRoom ? 1 : 0)
+        );
+
+        const { data: guessRows } = await (supabase as SupabaseClient)
+          .from("party_author_guesses")
+          .select("voter_id, guessed_user_id")
           .eq("room_id", roomId)
           .eq("round", roomRow.current_round);
 
-        for (const row of (results ?? []) as PartyRoundResultRow[]) {
-          voteCounts.set(row.submission_id, row.vote_count);
-        }
+        const guesses =
+          (guessRows as Array<{ voter_id: string; guessed_user_id: string }> | null) ?? [];
+        const myGuess = guesses.find((row) => row.voter_id === userId) ?? null;
+        const correctGuesses = guesses.filter(
+          (row) =>
+            row.voter_id !== winnerUserId && row.guessed_user_id === winnerUserId
+        ).length;
+
+        guessReveal = {
+          winnerUserId,
+          correctGuesses,
+          eligibleGuessers,
+          myGuessCorrect: myGuess ? myGuess.guessed_user_id === winnerUserId : null,
+        };
       }
-
-      const mapped = allSubmissions.map((s) => ({
-        id: s.id,
-        userId: s.user_id,
-        caption: s.caption,
-        captionRich: parseCaptionRich(s.caption_rich),
-        ...(s.template_id ? { template: templatesById.get(s.template_id) } : {}),
-        ...(phase === "reveal" || phase === "finished"
-          ? { voteCount: voteCounts.get(s.id) ?? 0 }
-          : {}),
-      }));
-
-      submissions =
-        phase === "voting" || phase === "reveal" || phase === "finished"
-          ? seededShuffle(mapped, roomRow.phase_seed ?? 0, (s) => s.id)
-          : mapped;
     }
   }
 
@@ -349,7 +455,9 @@ export async function buildPartySnapshot(
       phaseEndsAt: roomRow.phase_ends_at,
       canvasEditorEnabled: roomRow.canvas_editor_enabled,
       roundModifiersEnabled: roomRow.round_modifiers_enabled,
+      authorGuessEnabled: roomRow.author_guess_enabled,
       currentModifier: roomRow.current_modifier,
+      roundWinnerSubmissionId: roomRow.round_winner_submission_id ?? null,
       captionDurationSeconds: roomRow.caption_duration_seconds,
       template: roomTemplate,
     },
@@ -369,6 +477,12 @@ export async function buildPartySnapshot(
     votesCastCount: roomRow.votes_cast_count,
     mySubmission,
     myVote,
+    roundWinnerSubmission,
+    myAuthorGuess,
+    authorGuessesCastCount,
+    eligibleGuesserCount,
+    iAmWinnerAuthor,
+    guessReveal,
     myTemplate,
     myRerollsRemaining,
     recentReactions,
