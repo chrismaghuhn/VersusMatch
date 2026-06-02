@@ -121,7 +121,8 @@ test("resolveSegmentFill defaults to white", () => {
 test("strokeStylesForFill inverts outline for black fill", () => {
   const styles = strokeStylesForFill("black");
   assert.equal(styles.color, "#000");
-  assert.match(String(styles.WebkitTextStroke), /#fff/i);
+  assert.match(String(styles.textShadow), /#fff/i);
+  assert.equal(styles.WebkitTextStroke, undefined);
 });
 
 test("strokeStylesForFill export mode uses text-shadow only", () => {

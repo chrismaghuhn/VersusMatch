@@ -14,8 +14,8 @@ export const MEME_STROKE_STYLES = strokeStylesForFill("white");
 export function memeBoxContainerStyle(align: TextBox["align"]): React.CSSProperties {
   return {
     fontFamily: "Impact, 'Arial Black', sans-serif",
-    letterSpacing: "0.02em",
-    lineHeight: 1.05,
+    letterSpacing: "0.06em",
+    lineHeight: 1.1,
     textAlign: align,
     padding: "0 8px",
     width: "100%",
@@ -53,8 +53,8 @@ export function CaptionSegments({
           <span
             key={i}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
+              display: "inline-block",
+              verticalAlign: "baseline",
               transform: slant ? `skewX(${slant}deg)` : undefined,
               marginInline: skewMarginInline(slant),
               fontSize: baseFontSize * scale,

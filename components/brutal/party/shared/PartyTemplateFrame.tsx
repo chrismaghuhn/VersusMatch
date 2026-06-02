@@ -21,19 +21,18 @@ import {
 } from "@/lib/party/caption-rich/types";
 import type { TextBox } from "@/lib/party/types";
 import type { StrokeRenderMode } from "@/lib/party/caption-rich/fill";
+import { strokeStylesForFill } from "@/lib/party/caption-rich/fill";
 
 export type FrameDensity = "editor" | "card" | "export";
 
 const memeTextStyle = (fontSize: number, align: TextBox["align"]): React.CSSProperties => ({
+  ...strokeStylesForFill("white"),
   fontFamily: "Impact, 'Arial Black', sans-serif",
-  color: "#fff",
   textTransform: "uppercase",
-  letterSpacing: "0.02em",
-  lineHeight: 1.05,
+  letterSpacing: "0.06em",
+  lineHeight: 1.1,
   textAlign: align,
   padding: "0 8px",
-  textShadow: "2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000",
-  WebkitTextStroke: "1.5px #000",
   fontSize,
   width: "100%",
   whiteSpace: "pre-wrap",
